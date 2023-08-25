@@ -34,7 +34,6 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     ch_WepStats.Checked(class'UTComp_Scoreboard'.default.bDrawStats);
     ch_PickupStats.Checked(class'UTComp_Scoreboard'.default.bDrawPickups);
     ch_FootSteps.Checked(class'UTComp_xPawn'.default.bPlayOwnFootSteps);
-    ch_FootSteps.bVisible=false; // bPlayOwnFootSteps doesn't actually work, even in base engine code
     ch_MatchHudColor.Checked(HUDSettings.bMatchHudColor);
     ch_UseEyeHeightAlgo.Checked(Settings.bUseNewEyeHeightAlgorithm);
     ch_UseNewNet.Checked(Settings.bEnableEnhancedNetCode);
@@ -64,10 +63,7 @@ function InternalOnChange( GUIComponent C )
         case ch_WepStats:  class'UTComp_Scoreboard'.default.bDrawStats=ch_WepStats.IsChecked();
                            BS_xPlayer(PlayerOwner()).SetBStats(class'UTComp_Scoreboard'.default.bDrawStats);break;
         case ch_PickupStats:  class'UTComp_Scoreboard'.default.bDrawPickups=ch_PickupStats.IsChecked(); break;
-        case ch_FootSteps: 
-            class'UTComp_xPawn'.default.bPlayOwnFootSteps=ch_FootSteps.IsChecked(); 
-            UTComp_xPawn(BS_xPlayer(PlayerOwner()).Pawn).bPlayOwnFootSteps = ch_FootSteps.IsChecked();
-            break;
+        case ch_FootSteps: class'UTComp_xPawn'.default.bPlayOwnFootSteps=ch_FootSteps.IsChecked(); break;
         case ch_MatchHudColor:  HUDSettings.bMatchHudColor=ch_MatchHudColor.IsChecked(); break;
         case ch_UseEyeHeightAlgo:
             Settings.bUseNewEyeHeightAlgorithm=ch_UseEyeHeightAlgo.IsChecked();

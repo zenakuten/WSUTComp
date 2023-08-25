@@ -25,10 +25,7 @@ function InitComponent(GUIController MyController, GUIComponent MyComponent)
 	super.InitComponent(MyController, MyComponent);
     Settings = BS_xPlayer(PlayerOwner()).Settings;
     HUDSettings = BS_xPlayer(PlayerOwner()).HUDSettings;
-
 }
-
-
 
 function bool InternalOnClick(GUIComponent C)
 {
@@ -55,7 +52,6 @@ function bool InternalOnClick(GUIComponent C)
 
     else if(C==UTCompMenuButtons[7])
         PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Miscellaneous'));
-
 
     return false;
 }
@@ -228,4 +224,5 @@ defaultproperties
 	 WinLeft=0.000000
 	 WinTop=0.114990
 	 bPersistent=true
+
 }

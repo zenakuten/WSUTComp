@@ -20,6 +20,7 @@ event Opened(GUIComponent Sender)
          case 1:  l_Vote[2].Caption="change Brightskins Mode"; break;
          case 2:  l_Vote[2].Caption="change Hitsounds Mode"; break;
          case 3:  l_Vote[2].Caption="change Team Overlay Mode"; break;
+         case 4:  l_Vote[2].Caption="change Warmup Mode"; break;
          case 5:  l_Vote[2].Caption="Restart The Map"; break;
          case 6:  l_Vote[2].Caption="Change Gametype"; break;
          case 7:  l_Vote[2].Caption="Change Map"; break;

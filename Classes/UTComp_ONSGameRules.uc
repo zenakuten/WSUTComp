@@ -4,6 +4,9 @@ Class UTComp_ONSGameRules extends GameRules;
 //var ONSPlusGameReplicationInfo OPGRI;
 //var ONSPlusMutator MutatorOwner;
 
+//var config bool bEnableEndRoundCheckScore;  // flag to use end round fix or not Removed pooty 03/2023
+var config bool bDebugRules;  // general debug
+
 var GameReplicationInfo OPGRI;
 var MutUTComp MutatorOwner;
 
@@ -14,6 +17,7 @@ var array<GameObjective.ScorerRecord> SavedScorers;
 
 var bool bGrabResult;
 var int PreIsolated;
+
 
 // var float DamageScoreQuota;
 var float IsolateBonusPctPerNode;
@@ -36,10 +40,10 @@ function OPInitialise()
 
 	if (MutatorOwner == none)
 	{
-		Log("ERROR: UTComp_ONSGameRules.MutatorOwner IS NONE IN OPInitialise", 'UTCompError');
+		Log("ERROR: UTComp_ONSGameRules.MutatorOwner IS NONE IN OPInitialise", 'UTCompOmni_Error');
 		return;
 	}
-
+	
 	if (ONSOnslaughtGame(level.game) == none)
 		return;
 
@@ -147,55 +151,64 @@ function OPInitialise()
 			VehicleSpawnMonitors[VehicleSpawnMonitors.Length-1].Tag = VF.Event;
 		}
 	}
+	if (bDebugRules) log("Finished OPInitialise",'UTCompOmni_ONSGameRules_OPInitialise');
 }
 
 // snarf attempt to fix the after round shenanigans
+// Removed as custom score getting refactored and this should never be needed. 03/2023 Pooty
+/*
 function bool CheckScore(PlayerReplicationInfo Scorer)
 {
     local PlayerController PC;
     local Controller C;
     local ONSOnslaughtGame ONS;
     local int deadCore;
-    local bool retval;
+    //local bool retval;
 
-    retval = false;
-    if(NextGameRules != none)
-        retval = NextGameRules.CheckScore(Scorer);
+    if (bEnableEndRoundCheckScore) {
 
-    deadCore = -1;
-    ONS = ONSOnslaughtGame(Level.Game);
-    if(ONS != none && ONS.PowerCores[ONS.FinalCore[0]].Health <= 0)
-        deadCore = 0;
-    else if(ONS != none && ONS.PowerCores[ONS.FinalCore[1]].Health <= 0)
-        deadCore = 1;
+			Global.timer(); //clears all timers
+			
+	    deadCore = -1;
+	    ONS = ONSOnslaughtGame(Level.Game);
+	    if(ONS != none && ONS.PowerCores[ONS.FinalCore[0]].Health <= 0)
+	        deadCore = 0;
+	    else if(ONS != none && ONS.PowerCores[ONS.FinalCore[1]].Health <= 0)
+	        deadCore = 1;
 
-        //round has ended
-    if(deadCore >= 0)
-    {
-        if(Level != None)
-            C = Level.ControllerList;
+	        //round has ended
+	    if(deadCore >= 0)
+	    {
+	        if(Level != None)
+	            C = Level.ControllerList;
 
-        while(C != None)
-        {
-            PC = PlayerController(C);
-            if (PC != None)
-            {
-                PC.ClientSetBehindView(true);
-                PC.ClientSetViewTarget(ONS.PowerCores[ONS.FinalCore[deadCore]]);
-                PC.SetViewTarget(ONS.PowerCores[ONS.FinalCore[deadCore]]);
-                PC.ClientRoundEnded();
+	// lots of checking on C since there's been a few crashes when someone leaves
+	// maybe this catches it.
+	        while(C != None)
+	        {
+	            if(C != None) PC = PlayerController(C);
+	            if (PC != None) PC.ClientSetBehindView(true);
+	            if (PC != None) PC.ClientSetViewTarget(ONS.PowerCores[ONS.FinalCore[deadCore]]);
+	            if (PC != None) PC.SetViewTarget(ONS.PowerCores[ONS.FinalCore[deadCore]]);
+	            if (PC != None) PC.ClientRoundEnded();
+	            
 
-            }
+	            if(C != None) C.RoundHasEnded();  // We know round has ended just set client views commented out. 03/2023 pooty
 
-            if(C != None)
-                C.RoundHasEnded();
+	            if(C != None) C = C.NextController;
+	        } // while
+	        if (bDebugRules) log("Finished Resetting ClientViews",'UTCompOmni_ONSGameRules_CheckScore');
+	    } // dead core
+	  }  // end bEnableEndRoundCheckScore
 
-            C = C.NextController;
-        }
-    }
+// Moved here to match other gamerules. other examples always show this at the end 03/2023 pooty
+ if ( NextGameRules != None )
+        return NextGameRules.CheckScore(Scorer);
 
-    return retval;
+    return false;
 }
+
+*/
 
 // Initialise the vehicle spawn list for a certain player
 //function InitialiseVehicleSpawnList(ONSPlusPlayerReplicationInfo NewPlayer)
@@ -263,65 +276,38 @@ function UpdateLinkStateHook(ONSPowerCore Node)
 	}
 }
 
-//points for damaging vehicles 
-// Updated for 1.40 by pOOty to fix damage points inconsistencies.
 function int NetDamage(int OriginalDamage, int Damage, pawn injured, pawn instigatedBy, vector HitLocation, out vector Momentum, class<DamageType> DamageType)
 {
-	//local float CurDamage;
-	local int CurDamage;
-	local float DamagePts;
-  local bool bDebug;
+	local int CurDamage, ptsDamage;
 
-  bDebug = MutatorOwner.RepInfo.bDebugLogging; // for somereason this always false??
-  // bDebug = True;
-  Log("UTComp:ONSGameRules-Debug "$bDebug$"Vehicle Damage Points="$MutatorOwner.RepInfo.VehicleDamagePoints);
-	//CurDamage = Super.NetDamage(OriginalDamage, Damage, injured, instigatedBy, HitLocation, Momentum, DamageType);
 	CurDamage = Damage;
+    if ( NextGameRules != None )
+		CurDamage = NextGameRules.NetDamage( OriginalDamage,Damage,injured,instigatedBy,HitLocation,Momentum,DamageType );
 
-//	if (DamageType != Class'DamTypeLinkShaft' && DamageType != Class'DamTypeLinkPlasma' && injured != None
-//		&& Vehicle(injured) != None && !Vehicle(injured).IsVehicleEmpty() && instigatedBy != None
-//		&& instigatedBy != injured && CurDamage > 0 && instigatedBy.Controller != none
-//		&& instigatedBy.Controller.PlayerReplicationInfo != none
-//		&& UTComp_ONSPlayerReplicationInfo(instigatedBy.Controller.PlayerReplicationInfo) != none)
-	if (CurDamage > 0) { // check this first, if 0 or less rest is pointless (ok bad pun)
-		if (DamageType != Class'DamTypeLinkShaft' ) { // ignore linkshaft damage, but lets keep LinkPlasma, shaft might double points on healing/node linking
-			 if (injured != None && Vehicle(injured) != None && !Vehicle(injured).IsVehicleEmpty()) { // vehicle and occupied
-			    if (instigatedBy != None && instigatedBy != injured && instigatedBy.Controller != none) { // have a player who damaged and not themself
-			 			  if (instigatedBy.Controller.PlayerReplicationInfo != none && UTComp_ONSPlayerReplicationInfo(instigatedBy.Controller.PlayerReplicationInfo) != none)  // have PRI objects
-			 			  { // we've passed all the checks award bonus points, refactored the ugly if for debugging
-								if (bDebug) Log("UTComp:ONSGameRules-Passed all DamagePoint Checks, Assigning OPGRI for PlayerName:"$instigatedBy.Controller.PlayerReplicationInfo.PlayerName$" dealt "$CurDamage$" points of Damage");
-								if (OPGRI == none && PlayerController(instigatedBy.Controller) != none && PlayerController(instigatedBy.Controller).GameReplicationInfo != none)
-									OPGRI = PlayerController(instigatedBy.Controller).GameReplicationInfo;
-							     
-									if (OPGRI != none) 	{
-										DamagePts = float(CurDamage) / float(MutatorOwner.RepInfo.VehicleDamagePoints);
-										if (Vehicle(injured).Team != instigatedBy.Controller.PlayerReplicationInfo.TeamID)
-							        {
-											UTComp_ONSPlayerReplicationInfo(instigatedBy.Controller.PlayerReplicationInfo).AddVehicleDamageBonus(DamagePts);
-											if (bDebug) Log("UTComp:ONSGameRules-Awarding PlayerName:"$instigatedBy.Controller.PlayerReplicationInfo.PlayerName$" Damage Points ("$DamagePts$") for "$CurDamage$" dealt");
-							        }
-										else
-							        {
-											UTComp_ONSPlayerReplicationInfo(instigatedBy.Controller.PlayerReplicationInfo).AddVehicleDamageBonus(-1.0 * DamagePts);
-											if (bDebug) Log("UTComp:ONSGameRules-Subtracting  PlayerName:"$instigatedBy.Controller.PlayerReplicationInfo.PlayerName$" Damage Points ("$DamagePts$") for "$CurDamage$" dealt to own team");
-							        }
-								} // OPGRI !none
-								else { if (bDebug) Log("UTComp:ONSGameRules-OPGRI=None ");}	
-							} // end point awards
-							else { if (bDebug) Log("UTComp:ONSGameRules-No PRI ");}	
-						} // player checks
-						else { if (bDebug) Log("UTComp:ONSGameRules-No InstigatedBy, or self, or no controller");}	
-					} // vehicle checks
-					else { if (bDebug) Log("UTComp:ONSGameRules-Not an occupied, injured vehicle ");}	
-				} // Damge type checks
-				else { if (bDebug) Log("UTComp:ONSGameRules-Not allowed Damage Type ");}	
-			} // CurDamage < 0 check
-			else { if (bDebug) Log("UTComp:ONSGameRules-CurDamage < 0 (CurDamage="$CurDamage$")");}	
-     
-  if ( NextGameRules != None )
-		return NextGameRules.NetDamage( OriginalDamage,Damage,injured,instigatedBy,HitLocation,Momentum,DamageType );
+	if (DamageType != Class'DamTypeLinkShaft' && injured != None
+		&& Vehicle(injured) != None && !Vehicle(injured).IsVehicleEmpty() && instigatedBy != None
+		&& instigatedBy != injured && CurDamage > 0 && instigatedBy.Controller != none
+		&& instigatedBy.Controller.PlayerReplicationInfo != none
+		&& UTComp_ONSPlayerReplicationInfo(instigatedBy.Controller.PlayerReplicationInfo) != none)
+	{
+		if (OPGRI == none && PlayerController(instigatedBy.Controller) != none && PlayerController(instigatedBy.Controller).GameReplicationInfo != none)
+			OPGRI = PlayerController(instigatedBy.Controller).GameReplicationInfo;
 
-	return Damage;  // Was CurDamge
+		if (OPGRI != none)
+		{
+            ptsDamage = Min(curDamage, Vehicle(Injured).Health);
+			if (Vehicle(injured).Team != instigatedBy.Controller.PlayerReplicationInfo.TeamID)
+            {
+				UTComp_ONSPlayerReplicationInfo(instigatedBy.Controller.PlayerReplicationInfo).AddVehicleDamageBonus(float(ptsDamage) / float(MutatorOwner.RepInfo.VehicleDamagePoints));
+            }
+			else
+            {
+				UTComp_ONSPlayerReplicationInfo(instigatedBy.Controller.PlayerReplicationInfo).AddVehicleDamageBonus(-1.0 * float(ptsDamage) / float(MutatorOwner.RepInfo.VehicleDamagePoints));
+            }
+		}
+	}
+    
+	return CurDamage;
 }
 
 function NavigationPoint FindPlayerStart(Controller Player, optional byte InTeam, optional string incomingName)
@@ -345,13 +331,16 @@ function NavigationPoint FindPlayerStart(Controller Player, optional byte InTeam
 	return Super.FindPlayerStart(Player, InTeam, incomingName);
 }
 
+/*
 function GetServerDetails(out GameInfo.ServerResponseLine ServerState)
 {
 }
-
+*/
 
 defaultproperties
 {
     // DamageScoreQuota=100.0
     IsolateBonusPctPerNode=20.0
+    
+    bDebugRules=False
 }

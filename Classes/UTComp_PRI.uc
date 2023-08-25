@@ -166,6 +166,16 @@ function PassVote(byte b, byte switch, string Options, optional string Caller, o
 {
     local UTComp_VotingHandler uVote;
 
+    // Fixes privilege escalation exploit by client-side mutators that call this
+    // function directly.
+    if (Owner == none ||
+        Owner.IsA('Controller') == false ||
+        Controller(Owner).PlayerReplicationInfo == none ||
+        Controller(Owner).PlayerReplicationInfo.bAdmin == false
+    ) {
+        return;
+    }
+
     foreach DynamicActors(class'UTComp_VotingHandler', uVote)
     {
         if(uVote.StartVote(b,switch,Options, caller, p2, options2, True))

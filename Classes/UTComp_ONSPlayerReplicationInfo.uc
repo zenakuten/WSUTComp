@@ -633,7 +633,7 @@ function AddVehicleDamageBonus(float Bonus)
 	{
 		Level.Game.ScoreObjective(self, PendingVehicleDamageBonus);
 		Level.Game.ScoreEvent(self, PendingVehicleDamageBonus, "hurt_vehicle");
-		PendingVehicleDamageBonus = Max(0.0, PendingVehicleHealBonus - 1.0);
+		PendingVehicleDamageBonus = Max(0.0, PendingVehicleDamageBonus - 1.0);
 	}
 }
 

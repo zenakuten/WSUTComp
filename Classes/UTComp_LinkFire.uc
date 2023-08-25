@@ -50,12 +50,12 @@ simulated function ModeTick(float dt)
 	local float Step, ls;
 	local bot B;
 	local bool bShouldStop, bIsHealingObjective;
-	local int AdjustedDamage, i;
-    local float DamageAmount;
+	local int i;
+    local float AdjustedDamage,DamageAmount;
 	local LinkBeamEffect LB;
 	local DestroyableObjective HealObjective;
 	local Vehicle LinkedVehicle;
-    local int score;
+ //   local int score;
     local ONSPowerNode Node;
 
 	if (!bIsFiring)
@@ -389,21 +389,29 @@ simulated function ModeTick(float dt)
 				LinkGun.ConsumeAmmo(ThisModeNum, -AmmoPerFire);
 			else
             {
-                score = 1;
+            	// Changed scoring pooty -07-2023
+            	if(LinkedVehicle.HealDamage(AdjustedDamage, Instigator.Controller, DamageType))
+	     			   if (ONSPlayerReplicationInfo(Instigator.Controller.PlayerReplicationInfo) != None && !LinkedVehicle.IsVehicleEmpty())
+                  ONSPlayerReplicationInfo(Instigator.Controller.PlayerReplicationInfo).AddHealBonus(FMin((AdjustedDamage * LinkedVehicle.LinkHealMult) / VehicleHealScore, LinkedVehicle.HealthMax - LinkedVehicle.Health)); 
+                /*score = 1;
                 if(LinkedVehicle.default.Health >= VehicleHealScore)
                     score = LinkedVehicle.default.Health / VehicleHealScore;
                  DamageAmount = (AdjustedDamage/1.5)/(LinkGun.LockingPawns.Length+1);
 
                 if (ONSPlayerReplicationInfo(Instigator.Controller.PlayerReplicationInfo) != None && !LinkedVehicle.IsVehicleEmpty())
                     ONSPlayerReplicationInfo(Instigator.Controller.PlayerReplicationInfo).AddHealBonus(DamageAmount / LinkedVehicle.default.Health * score);
-
+*/
 				for (i=0; i<LinkGun.LockingPawns.Length; i++)
                 {
 					if(LinkedVehicle.HealDamage(AdjustedDamage / (LinkGun.LockingPawns.Length + 1), LinkGun.LockingPawns[i].Controller, DamageType))
                     {
                         //if (OPGRI != None && OPGRI.bVehicleHealScoreFix && ONSPlayerReplicationInfo(LinkGun.LockingPawns[i].Controller.PlayerReplicationInfo) != None && !LinkedVehicle.IsVehicleEmpty())
-                        if (ONSPlayerReplicationInfo(LinkGun.LockingPawns[i].Controller.PlayerReplicationInfo) != None && !LinkedVehicle.IsVehicleEmpty())
-                            ONSPlayerReplicationInfo(LinkGun.LockingPawns[i].Controller.PlayerReplicationInfo).AddHealBonus(DamageAmount / LinkedVehicle.default.Health * score);
+                       // if (ONSPlayerReplicationInfo(LinkGun.LockingPawns[i].Controller.PlayerReplicationInfo) != None && !LinkedVehicle.IsVehicleEmpty())
+                       //     ONSPlayerReplicationInfo(LinkGun.LockingPawns[i].Controller.PlayerReplicationInfo).AddHealBonus(DamageAmount / LinkedVehicle.default.Health * score);
+                       // changed pooty 07-2023
+                         if (ONSPlayerReplicationInfo(LinkGun.LockingPawns[i].Controller.PlayerReplicationInfo) != None && !LinkedVehicle.IsVehicleEmpty())
+                             ONSPlayerReplicationInfo(LinkGun.LockingPawns[i].Controller.PlayerReplicationInfo).AddHealBonus(FMin((Damage * LinkedVehicle.LinkHealMult) / VehicleHealScore, LInkedVehicle.HealthMax - LinkedVehicle.Health));
+                       
                     }
                 }
             }

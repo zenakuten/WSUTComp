@@ -10,6 +10,7 @@ var bool bEnablePowerupsOverlay;
 var bool bEnableExtraHudClock;
 var byte EnableHitSoundsMode;
 var bool bEnableScoreboard;
+var bool bEnableWarmup;
 var bool bEnableWeaponStats;
 var bool bEnablePowerupStats;
 var bool benableDoubleDamage;
@@ -18,6 +19,7 @@ var bool bEnableTimedOvertimeVoting;
 
 var bool bEnableBrightskinsVoting;
 var bool bEnableHitsoundsVoting;
+var bool bEnableWarmupVoting;
 var bool bEnableTeamOverlayVoting;
 var bool bEnablePowerupsOverlayVoting;
 var bool bEnableMapVoting;
@@ -65,12 +67,12 @@ replication
     reliable if(Role==Role_Authority)
         bEnableVoting, EnableBrightSkinsMode, EnableHitSoundsMode,
         bEnableClanSkins, bEnableTeamOverlay, bEnablePowerupsOverlay,
-        bEnableBrightskinsVoting,
+        bEnableWarmup, bEnableBrightskinsVoting,
         bEnableHitsoundsVoting, bEnableTeamOverlayVoting, bEnablePowerupsOverlayVoting,
         bEnableMapVoting, bEnableGametypeVoting, VotingNames,
         benableDoubleDamage, ServerMaxPlayers, bEnableTimedOvertime,
         MaxPlayersClone, bEnableAdvancedVotingOptions, VotingOptions, LinePRI, bEnableTimedOvertimeVoting,
-        bEnableEnhancedNetCodeVoting,bEnableEnhancedNetCode,NewNetUpdateFrequency,PingTweenTime,
+        bEnableEnhancedNetCodeVoting,bEnableEnhancedNetCode, bEnableWarmupVoting,NewNetUpdateFrequency,PingTweenTime,
         bAllowRestartVoteEvenIfMapVotingIsTurnedOff, MaxMultiDodges, MinNetSpeed, MaxNetSpeed,
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
@@ -86,10 +88,12 @@ defaultproperties
      bEnablePowerupsOverlay=True
      EnableHitSoundsMode=1
      bEnableScoreboard=True
+     bEnableWarmup=True
      bEnableWeaponStats=True
      bEnablePowerupStats=True
      bEnableBrightskinsVoting=True
      bEnableHitsoundsVoting=False
+     bEnableWarmupVoting=True
      bEnableTeamOverlayVoting=True
      bEnablePowerupsOverlayVoting=True
      bEnableMapVoting=True

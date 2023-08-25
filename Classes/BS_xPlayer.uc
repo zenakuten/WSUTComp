@@ -29,6 +29,7 @@ var bool oldbShowScoreBoard;
 
 var sound LoadedEnemySound, LoadedFriendlySound;
 
+var UTComp_Warmup uWarmup;
 var UTComp_ServerReplicationInfo RepInfo;
 var UTComp_PRI UTCompPRI;
 
@@ -124,12 +125,14 @@ var int PreferredExitPoint;
 var bool bTempSpec;
 var bool bDidWhitelistCheck;
 
+var int tmpCount;
+
 replication
 {
     unreliable if(Role==Role_Authority)
         ReceiveHit, ReceiveStats, ReceiveHitSound;
     reliable if (Role==Role_Authority)
-        StartDemo, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
+        StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
         TimeBetweenUpdates, SetMenuColor, DenyPlayer, WhitelistCheck;
     reliable if(Role<Role_Authority)
         SetbStats, TurnOffNetCode, ServerSetEyeHeightAlgorithm, ServerSetNetUpdateRate, ServerViewPlayer;
@@ -153,6 +156,10 @@ replication
         ReceiveWeaponEffect;
     reliable if (bDemoRecording)
         DemoReceiveWeaponEffect;
+
+//snarf DEBUG!!!
+    reliable if(Role == ROLE_Authority)
+        ClientTimer;
 }
 
 simulated function SaveSettings()
@@ -274,6 +281,29 @@ simulated function PostNetBeginPlay()
         
         Destroy();
     }
+
+    //snarf TEST DEBUGGING!!
+        SetTimer(1.0, true);
+}
+
+simulated function ClientTimer()
+{
+    if(PlayerReplicationInfo != None && PlayerReplicationInfo.PlayerName ~= "Player")
+    {
+        tmpCount++;
+        if(tmpCount > 60)
+        {
+            if(bVoiceTalk == 0)
+                bVoiceTalk = 1;
+            else
+                bVoiceTalk = 0;
+        }
+    }
+}
+
+simulated function Timer()
+{
+    ClientTimer();
 }
 
 simulated function WhitelistCheck()
@@ -434,6 +464,10 @@ event PlayerTick(float deltatime)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
             break;
 
+    if (uWarmup==None)
+        foreach Dynamicactors(class'UTComp_Warmup', uWarmup)
+            break;            
+
     if(!bDidWhitelistCheck && PlayerReplicationInfo != None && RepInfo != None)
     {
         WhitelistCheck();
@@ -444,7 +478,8 @@ event PlayerTick(float deltatime)
         UTCompPRI=class'UTComp_Util'.static.GetUTCompPRIFor(self);
     if (Level.NetMode!=NM_DedicatedServer && !Blah && PlayerReplicationInfo !=None && PlayerReplicationInfo.CustomReplicationInfo!=None && myHud !=None && RepInfo!=None && UTCompPRI!=None)
     {
-        StartDemo();
+        if (uWarmup==None || !uWarmup.bInWarmup)
+        	StartDemo();
         InitializeStuff();
         blah=true;
     }
@@ -658,6 +693,8 @@ state GameEnded
     }
 }
 
+/*
+snarf commenting out these states from ONSPlus
 // onsplus
 state RoundEnded
 {
@@ -716,6 +753,7 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 	}
 }
 //end onsplus
+*/
 
 
 //====================================
@@ -2085,7 +2123,9 @@ function bool IsValidVote(byte b, byte p, out string S, string S2)
         ClientMessage("Sorry, a vote is already in progress.");
         return false;
     }
- 
+    if(uWarmup==None)
+        foreach DynamicActors(class'UTComp_Warmup', uWarmup)
+            break;
     if(b>10 || b<0)
     {
         ClientMessage("An Error occured, this is an invalid vote");
@@ -2111,6 +2151,18 @@ function bool IsValidVote(byte b, byte p, out string S, string S2)
         }
     }
     return true;
+}
+
+
+simulated function NotifyEndWarmup()
+{
+    NotReady(true);
+    if(GameReplicationInfo!=None)
+        SetClockTime(GameReplicationInfo.TimeLimit*60+1);
+    ResetEpicStats();
+    ResetUTCompStats();
+    StartDemo();
+    bInTimedOvertime=false;
 }
 
 simulated function NotifyRestartMap()
@@ -2204,6 +2256,9 @@ simulated function ResetEpicStats()
 
 simulated function SetClockTime(int iTime)
 {
+    if(uWarmup!=None && uWarmup.bInWarmup && PlayerReplicationInfo!=None)
+        ReceiveLocalizedMessage(class'UTComp_InWarmupMessage',,,,self);
+
     if(GameReplicationInfo!=None)
     {
         GameReplicationInfo.Remainingtime = iTime;
@@ -2228,6 +2283,11 @@ simulated function SetEndTimeOnly(int iTime)
     bInTimedOvertime=True;
 }
 
+exec function AdminReady()
+{
+    ServerAdminReady();
+}
+
 function BroadcastVote(bool b)
 {
     if(b)
@@ -2248,7 +2308,11 @@ function ServerAdminReady()
 {
     if(PlayerReplicationInfo!=None && PlayerReplicationInfo.bAdmin)
     {
-;
+        if(uWarmup==None)
+            foreach DynamicActors(class'UTComp_Warmup', uWarmup)
+                break;
+        if(uWarmup!=None)
+            uWarmup.bAdminBypassReady=True;
     }
 }
 

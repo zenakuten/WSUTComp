@@ -57,7 +57,7 @@ struct ClanSkinTripple
 };
 
 var config string FallbackCharacterName;
-
+var config bool bEnemyBasedSkins;
 var config byte ClientSkinModeRedTeammate;
 var config byte ClientSkinModeBlueEnemy;
 var config byte PreferredSkinColorRedTeammate;
@@ -66,7 +66,6 @@ var config color BlueEnemyUTCompSkinColor;
 var config color RedTeammateUTCompSkinColor;
 var config bool bBlueEnemyModelsForced;
 var config bool bRedTeammateModelsForced;
-
 var config string BlueEnemyModelName;
 var config string RedTeammateModelName;
 var config bool bEnableDarkSkinning;
@@ -75,7 +74,6 @@ var config array<string> DisallowedEnemyNames;
 var config bool bEnemyBasedModels;
 var config bool bUseNewEyeHeightAlgorithm;
 var config float DesiredNetUpdateRate;
-var config bool bEnemyBasedSkins;
 
 var UTComp_Settings instance;
 
@@ -109,7 +107,7 @@ defaultproperties
 {
     Version=0
     bFirstRun=True
-    bStats=False
+    bStats=True
     DemoRecordingMask="%d-(%t)-%m-%p"
     ScreenShotMask="%d-(%t)-%m-%p"
     FriendlySound="UTCompOmni.Sounds.HitSoundFriendly"
@@ -120,7 +118,7 @@ defaultproperties
     CPMAPitchModifier=1.40
     SavedSpectateSpeed=800.00
     bShowSelfInTeamOverlay=True
-    bEnableEnhancedNetCode=False
+    bEnableEnhancedNetCode=True
     ballowcoloredmessages=True
     bEnableColoredNamesInTalk=True
     CurrentSelectedColoredName=255

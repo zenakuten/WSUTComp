@@ -340,16 +340,23 @@ function bool PreventDeath(Pawn Victim, Controller Killer, class<DamageType> dam
 
 function bool CheckEndGame(PlayerReplicationInfo Winner, string Reason)
 {
-    if(ONSOnslaughtGame(Level.Game) != none)
-    {
-        return true;
-    }
-
-    if(UTCompMutator.bEnableTimedOvertime && Level.Game.bOverTime)
+    if(UTCompMutator.WarmupClass!=None && UTCompMutator.WarmupClass.bInWarmup)
+        return false;
+    if(UTCompMutator.bEnableTimedOvertime && Level.Game.bOverTime && !Level.Game.IsA('UTComp_ClanArena'))
     {
         if(!OvertimeOver())
             return false;
     }
+    if(ONSOnslaughtGame(Level.Game) != none)
+    {
+        if ( NextGameRules != None )
+            return NextGameRules.CheckEndGame(Winner,Reason);
+
+        //for ONS, return false to use default endgame logic from engine
+    	 return false; 
+    }
+
+
     if ( NextGameRules != None )
 		return NextGameRules.CheckEndGame(Winner,Reason);
 	return true;
@@ -373,6 +380,15 @@ function UpdateClock(float F)
     if(bFirstEndOT && F<=0.0)
     {
         bFirstEndOt=False;
+    }
+    if(UTCompMutator!=None && UTCompMutator.WarmupClass!=None)
+    {
+        UTCompMutator.WarmupClass.SetClientTimerOnly(int(Round(F)));
+        if(bFirstEndOT && F<=0.0)
+        {
+            UTCompMutator.WarmupClass.SetEndTimeOnly(int(Round(F)));
+            bFirstEndOt=False;
+        }
     }
 }
 

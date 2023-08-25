@@ -190,12 +190,18 @@ simulated function DrawTimer(Canvas C)
 {
 	local GameReplicationInfo GRI;
 	local int Minutes, Hours, Seconds;
+    local UTComp_Warmup uWarmup;
 
 	GRI = PlayerOwner.GameReplicationInfo;
+    if(BS_xPlayer(PlayerOwner)!=None)
+    {
+        if(BS_xPlayer(PlayerOwner).uWarmup!=None)
+           uWarmup=BS_xPlayer(PlayerOwner).uWarmup;
+    }
 
     if(GRI.TimeLimit==0)
         Seconds=GRI.ElapsedTime;
-    else if(GRI.RemainingTime>0 || GRI.ElapsedTime<60)
+    else if(GRI.RemainingTime>0 || GRI.ElapsedTime<60 || (uWarmup!=None && uWarmup.bInWarmup))
         Seconds=GRI.RemainingTime;
     else
         Seconds=GRI.ElapsedTime-GRI.TimeLimit*60-1;

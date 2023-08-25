@@ -467,7 +467,7 @@ function DrawPowerups(Canvas canvas, PlayerReplicationInfo PRI)
   local float nextRespawn;
   local float iconHeight;
 
-  if (!PRI.bOnlySpectator || PC.IsCoaching() || !default.PowerupOverlayEnabled)
+  if (PC.uWarmup.bInWarmup || !PRI.bOnlySpectator || PC.IsCoaching() || !default.PowerupOverlayEnabled)
     return;
 
   iconHeight = GetPowerupIconHeight();

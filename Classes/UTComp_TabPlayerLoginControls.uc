@@ -32,6 +32,7 @@ function bool ContextMenuOpened(GUIContextMenu Menu)
 	local GameReplicationInfo GRI;
 	local int PlayerID;
 
+
 	GRI = GetGRI();
 
 	if (GRI == None)
@@ -41,10 +42,8 @@ function bool ContextMenuOpened(GUIContextMenu Menu)
 
 	if (List == None)
 	{
-		Log(Name@"ContextMenuOpened active control was not a list - active:"$Controller.ActiveControl.Name);
 		return False;
 	}
-
 
 	if (!List.IsValid())
 		return False;
@@ -57,7 +56,9 @@ function bool ContextMenuOpened(GUIContextMenu Menu)
 	PRI = GRI.FindPlayerByID(PlayerID);
 
 	if (PRI == None || PRI.bBot || PlayerIDIsMine(PlayerID))
+    {
 		return False;
+    }
 
 	Restriction = PlayerOwner().ChatManager.GetPlayerRestriction(PlayerID);
 
@@ -86,19 +87,21 @@ function bool ContextMenuOpened(GUIContextMenu Menu)
 	Menu.ContextItems[5] = "Spectate Player";
 	Menu.ContextItems[6] = BuddyText;
 
+    Menu.ContextItems[7] = "WhoIs";
+
 	if (PlayerOwner().PlayerReplicationInfo.bAdmin)
 	{
-		Menu.ContextItems[7] = "-";
-		Menu.ContextItems[8] = KickPlayer$"["$List.Get()$"]";
-		Menu.ContextItems[9] = BanPlayer$"["$List.Get()$"]";
+		Menu.ContextItems[8] = "-";
+		Menu.ContextItems[9] = KickPlayer$"["$List.Get()$"]";
+		Menu.ContextItems[10] = BanPlayer$"["$List.Get()$"]";
         if(RepInfo != None && RepInfo.bUseDefaultScoreboardColor)
         {
-            Menu.ContextItems[10] = "UTComp ban "$"["$List.Get()$"]";
+            Menu.ContextItems[11] = "UTComp ban "$"["$List.Get()$"]";
         }
 	}
-	else if (Menu.ContextItems.Length > 7)
+	else if (Menu.ContextItems.Length > 8)
 	{
-		Menu.ContextItems.Remove(7, Menu.ContextItems.Length - 7);
+		Menu.ContextItems.Remove(8, Menu.ContextItems.Length - 8);
 	}
 
 	return True;
@@ -133,19 +136,19 @@ function ContextClick(GUIContextMenu Menu, int ClickIndex)
 	if (PRI == None)
 		return;
 
-	if (ClickIndex > 6)	// Admin stuff
+	if (ClickIndex > 7)	// Admin stuff
 	{
 		switch (ClickIndex)
 		{
-			case 7:
 			case 8:
+			case 9:
 				PC.AdminCommand("admin kick"@List.GetExtra());
 				break;
 
-			case 9:
+			case 10:
 				PC.AdminCommand("admin kickban"@List.GetExtra());
 				break;
-            case 10:
+            case 11:
                 if(BS_xPlayer(PC) != None)
                     BS_xPlayer(PC).ServerSetMenuColor(List.GetExtra());
 				PC.AdminCommand("admin kickban"@List.GetExtra());
@@ -169,7 +172,13 @@ function ContextClick(GUIContextMenu Menu, int ClickIndex)
 
 				break;
 			case 6:
-				Controller.AddBuddy(List.Get());
+				Controller.AddBuddy(List.Get());                
+				break;
+			case 7:
+                PC.ClientMessage("²*** Running Whois on"@PRI.PlayerName@"***");
+                // try both. AntiTCC and ClanManager version
+                // PC.ConsoleCommand("WhoIs"@StripColorCodes(PRI.PlayerName));
+                PC.ConsoleCommand("CM WhoIs"@StripColorCodes(PRI.PlayerName));                
 				break;
 			case 4:
 		}

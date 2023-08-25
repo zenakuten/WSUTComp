@@ -9,6 +9,7 @@ var font MainFont, NotReducedFont, sortareducedfont, ReducedFont, SoTiny;
 var localized string  fraglimitteam ;
 var int TmpFontSize ;
 var float tmp1,tmp2,tmp3;
+var UTComp_Warmup uWarmup;
 var config bool bEnableColoredNamesOnScoreboard;
 var config bool bDrawStats;
 var config bool bDrawPickups;
@@ -483,7 +484,17 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
 
     C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*tmp3)+YOffset);
 
-    if(PRI.bReadyToPlay && !GRI.bMatchHasBegun)
+    if(uWarmup==None)
+       foreach DynamicActors(class'UTComp_Warmup', uWarmup)
+           break;
+    if(uWarmup!=None && uWarmup.bInWarmup)
+    {
+       if(!uPRI.bIsReady)
+          C.DrawText("Not Ready");
+       else
+          C.DrawText("Ready");
+    }
+    else if(PRI.bReadyToPlay && !GRI.bMatchHasBegun)
         C.DrawText("Ready");
     else if(!GRI.bMatchHasBegun)
         C.DrawText("Not Ready");
