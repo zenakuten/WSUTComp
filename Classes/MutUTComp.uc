@@ -2,6 +2,7 @@ class MutUTComp extends Mutator;
 
 // #exec OBJ LOAD FILE="Textures\minimegatex.utx" PACKAGE=UTCompOmni
 #exec OBJ LOAD FILE="Textures\minimegatex.utx"
+#exec OBJ LOAD FILE="Textures\TeamColorTex.utx" PACKAGE=UTCompOmni
 
 var bool bEnableVoting;
 var config bool bEnableBrightskinsVoting;
@@ -87,6 +88,7 @@ var config bool bSilentAdmin;
 var config bool bEnableWhitelist;
 var config bool bUseWhitelist;
 var config string WhitelistBanMessage;
+var config bool bAllowColorWeapons;
 
 struct MapVotePair
 {
@@ -862,6 +864,7 @@ function SpawnReplicationClass()
     RepInfo.WhitelistBanMessage=WhitelistBanMessage;
     RepInfo.bUseDefaultScoreboardColor = bUseDefaultScoreboardColor;
     RepInfo.bDebugLogging = bDebugLogging;
+    RepInfo.bAllowColorWeapons = bAllowColorWeapons;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1816,4 +1819,6 @@ defaultproperties
      SuicideInterval = 3
 
      IgnoredHitSounds(0)="FireKill"
+
+     bAllowColorWeapons=true
 }

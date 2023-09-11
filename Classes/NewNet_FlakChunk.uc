@@ -1,5 +1,5 @@
 
-class NewNet_FlakChunk extends FlakChunk;
+class NewNet_FlakChunk extends TeamColorFlakChunk;
 
 var int ChunkNum;
 var PlayerController PC;

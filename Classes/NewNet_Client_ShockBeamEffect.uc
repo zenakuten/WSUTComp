@@ -1,5 +1,5 @@
 
-class NewNet_Client_ShockBeamEffect extends ShockBeamEffect;
+class NewNet_Client_ShockBeamEffect extends TeamColorShockBeamEffect;
 
 defaultproperties
 {

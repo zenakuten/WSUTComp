@@ -16,4 +16,5 @@ event ModeDoFire()
 
 defaultproperties
 {
+    ProjectileClass=class'TeamColorRocketProj'
 }

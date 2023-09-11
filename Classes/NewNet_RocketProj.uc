@@ -1,5 +1,5 @@
 
-class NewNet_RocketProj extends RocketProj;
+class NewNet_RocketProj extends TeamColorRocketProj;
 
 var PlayerController PC;
 var vector DesiredDeltaFake;

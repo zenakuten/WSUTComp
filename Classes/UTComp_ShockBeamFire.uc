@@ -1,6 +1,6 @@
 
 
-class UTComp_ShockBeamFire extends ShockBeamFire;
+class UTComp_ShockBeamFire extends TeamColorShockBeamFire;
 
 event ModeDoFire()
 {

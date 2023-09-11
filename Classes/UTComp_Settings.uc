@@ -75,6 +75,14 @@ var config bool bEnemyBasedModels;
 var config bool bUseNewEyeHeightAlgorithm;
 var config float DesiredNetUpdateRate;
 
+var config bool bTeamColorRockets;
+var config bool bTeamColorBio;
+var config bool bTeamColorFlak;
+var config bool bTeamColorShock;
+var config bool bTeamColorSniper;
+var config Color TeamColorRed, TeamColorBlue;
+var config bool bTeamColorUseTeam;
+
 var UTComp_Settings instance;
 
 function CheckSettings() {
@@ -157,6 +165,15 @@ defaultproperties
     bEnemyBasedSkins=False
     bEnemyBasedModels=False
     bUseDefaultScoreboard=True
+
+    bTeamColorRockets=true
+    bTeamColorBio=true
+    bTeamColorFlak=true
+    bTeamColorShock=true
+    bTeamColorSniper=true
+    TeamColorRed=(R=255,G=80,B=80,A=255)
+    TeamColorBlue=(R=80,G=80,B=255,A=255)
+    bTeamColorUseTeam=true
 
     instance=none
 }

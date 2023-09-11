@@ -62,6 +62,8 @@ var string WhitelistBanMessage;
 var bool bUseDefaultScoreboardColor;
 var bool bDebugLogging;
 
+var bool bAllowColorWeapons;
+
 replication
 {
     reliable if(Role==Role_Authority)
@@ -76,7 +78,8 @@ replication
         bAllowRestartVoteEvenIfMapVotingIsTurnedOff, MaxMultiDodges, MinNetSpeed, MaxNetSpeed,
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
-        bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging;
+        bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
+        bAllowColorWeapons;
 }
 
 defaultproperties
@@ -118,5 +121,7 @@ defaultproperties
      WhitelistBanMessage="Not allowed.  Contact the server adminstrator to gain access."
      bUseDefaultScoreboardColor=false
      bDebugLogging = false
+
+     bAllowColorWeapons=true
 }
 

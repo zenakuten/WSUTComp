@@ -2,6 +2,8 @@
 
 class UTComp_Util extends xUtil;
 
+var UTComp_ServerReplicationInfo RepInfo;
+
 simulated static function UTComp_PRI GetUTCompPRI(PlayerReplicationInfo PRI)
 {
     local LinkedReplicationInfo lPRI;
@@ -24,6 +26,15 @@ simulated static function UTComp_PRI GetUTCompPRI(PlayerReplicationInfo PRI)
             return UTComp_PRI(lPRI);
     }
     return none;
+}
+
+simulated static function UTComp_ServerReplicationInfo GetServerReplicationInfo(Actor A)
+{
+    if (default.RepInfo==None)
+        foreach A.DynamicActors(Class'UTComp_ServerReplicationInfo', default.RepInfo)
+            break;
+
+    return default.RepInfo;
 }
 
 static function string MakeColorCode(color NewColor)
@@ -82,4 +93,5 @@ simulated static function UTComp_PRI GetUTCompPRIForPawn(Pawn P)
 
 defaultproperties
 {
+    RepInfo=None
 }

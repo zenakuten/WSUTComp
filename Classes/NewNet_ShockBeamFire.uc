@@ -396,11 +396,20 @@ simulated function SpawnClientBeamEffect(Vector Start, Rotator Dir, Vector HitLo
 function SpawnBeamEffect(Vector Start, Rotator Dir, Vector HitLocation, Vector HitNormal, int ReflectNum)
 {
     local ShockBeamEffect Beam;
+    local int TeamNum;
+
+    TeamNum=255;
+    if(Instigator != None && Instigator.Controller != None)
+        TeamNum = class'TeamColorManager'.static.GetTeamNum(Instigator.Controller,Level);
+
     if(!bUseEnhancedNetCode)
     {
         if (Weapon != None)
         {
-            Beam = Weapon.Spawn(Class'XWeapons.ShockBeamEffect',,, Start, Dir);
+            Beam = Weapon.Spawn(Class'TeamColorShockBeamEffect',,, Start, Dir);
+            if(Beam != None && TeamColorShockBeamEffect(Beam) != None)
+                TeamColorShockBeamEffect(Beam).TeamNum = TeamNum;
+
             if (ReflectNum != 0) Beam.Instigator = None; // prevents client side repositioning of beam start
                 Beam.AimAt(HitLocation, HitNormal);
         }
@@ -410,6 +419,8 @@ function SpawnBeamEffect(Vector Start, Rotator Dir, Vector HitLocation, Vector H
     if (Weapon != None)
     {
         Beam = Weapon.Spawn(BeamEffectClass,Weapon.Owner,, Start, Dir);
+       if(Beam != None && TeamColorShockBeamEffect(Beam) != None)
+            TeamColorShockBeamEffect(Beam).TeamNum = TeamNum;        
         if (ReflectNum != 0) Beam.Instigator = None; // prevents client side repositioning of beam start
             Beam.AimAt(HitLocation, HitNormal);
     }

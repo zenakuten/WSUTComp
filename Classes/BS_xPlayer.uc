@@ -125,7 +125,7 @@ var int PreferredExitPoint;
 var bool bTempSpec;
 var bool bDidWhitelistCheck;
 
-var int tmpCount;
+
 
 replication
 {
@@ -156,10 +156,6 @@ replication
         ReceiveWeaponEffect;
     reliable if (bDemoRecording)
         DemoReceiveWeaponEffect;
-
-//snarf DEBUG!!!
-    reliable if(Role == ROLE_Authority)
-        ClientTimer;
 }
 
 simulated function SaveSettings()
@@ -281,29 +277,6 @@ simulated function PostNetBeginPlay()
         
         Destroy();
     }
-
-    //snarf TEST DEBUGGING!!
-        SetTimer(1.0, true);
-}
-
-simulated function ClientTimer()
-{
-    if(PlayerReplicationInfo != None && PlayerReplicationInfo.PlayerName ~= "Player")
-    {
-        tmpCount++;
-        if(tmpCount > 60)
-        {
-            if(bVoiceTalk == 0)
-                bVoiceTalk = 1;
-            else
-                bVoiceTalk = 0;
-        }
-    }
-}
-
-simulated function Timer()
-{
-    ClientTimer();
 }
 
 simulated function WhitelistCheck()
@@ -3317,6 +3290,7 @@ function int FractionCorrection(float in, out float fraction) {
     return result;
 }
 
+//from 3SPHorst
 function UpdateRotation(float DeltaTime, float maxPitch)
 {
     local rotator newRotation, ViewRotation;
@@ -4455,4 +4429,5 @@ defaultproperties
 
      PreferredExitPoint=-1
      bDidWhitelistCheck=False
+
 }

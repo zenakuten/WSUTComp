@@ -729,27 +729,27 @@ function AddGameSpecificInventory(Pawn P)
     local inventory inv;
     if(!class'MutUTComp'.default.bEnableEnhancedNetCode)
     {
-        GiveWeaponTo("UTCompv18c.UTComp_ShieldGun", P, -1, -1);
-        GiveWeaponTo("UTCompv18c.UTComp_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
-        GiveWeaponTo("UTCompv18c.UTComp_BioRifle", P, BioRifleAmmo, -2);
-        GiveWeaponTo("UTCompv18c.UTComp_ShockRifle", P, ShockRifleAmmo, -2);
-        GiveWeaponTo("UTCompv18c.UTComp_LinkGun", P, LinkGunAmmo, -2);
-        GiveWeaponTo("UTCompv18c.UTComp_MiniGun", P, MinigunAmmo, -2);
-        GiveWeaponTo("UTCompv18c.UTComp_FlakCannon", P, FlakCannonAmmo, -2);
-        GiveWeaponTo("UTCompv18c.UTComp_RocketLauncher", P, RocketLauncherAmmo, -2);
-        GiveWeaponTo("UTCompv18c.UTComp_SniperRifle", P, LightningGunAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_ShieldGun", P, -1, -1);
+        GiveWeaponTo("UTCompOmni.UTComp_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
+        GiveWeaponTo("UTCompOmni.UTComp_BioRifle", P, BioRifleAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_ShockRifle", P, ShockRifleAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_LinkGun", P, LinkGunAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_MiniGun", P, MinigunAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_FlakCannon", P, FlakCannonAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_RocketLauncher", P, RocketLauncherAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_SniperRifle", P, LightningGunAmmo, -2);
     }
     else
     {
-        GiveWeaponTo("UTCompv18c.UTComp_ShieldGun", P, -1, -1);
-        GiveWeaponTo("UTCompv18c.NewNet_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
-        GiveWeaponTo("UTCompv18c.NewNet_BioRifle", P, BioRifleAmmo, -2);
-        GiveWeaponTo("UTCompv18c.NewNet_ShockRifle", P, ShockRifleAmmo, -2);
-        GiveWeaponTo("UTCompv18c.NewNet_LinkGun", P, LinkGunAmmo, -2);
-        GiveWeaponTo("UTCompv18c.NewNet_MiniGun", P, MinigunAmmo, -2);
-        GiveWeaponTo("UTCompv18c.NewNet_FlakCannon", P, FlakCannonAmmo, -2);
-        GiveWeaponTo("UTCompv18c.NewNet_RocketLauncher", P, RocketLauncherAmmo, -2);
-        GiveWeaponTo("UTCompv18c.NewNet_SniperRifle", P, LightningGunAmmo, -2);
+        GiveWeaponTo("UTCompOmni.UTComp_ShieldGun", P, -1, -1);
+        GiveWeaponTo("UTCompOmni.NewNet_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
+        GiveWeaponTo("UTCompOmni.NewNet_BioRifle", P, BioRifleAmmo, -2);
+        GiveWeaponTo("UTCompOmni.NewNet_ShockRifle", P, ShockRifleAmmo, -2);
+        GiveWeaponTo("UTCompOmni.NewNet_LinkGun", P, LinkGunAmmo, -2);
+        GiveWeaponTo("UTCompOmni.NewNet_MiniGun", P, MinigunAmmo, -2);
+        GiveWeaponTo("UTCompOmni.NewNet_FlakCannon", P, FlakCannonAmmo, -2);
+        GiveWeaponTo("UTCompOmni.NewNet_RocketLauncher", P, RocketLauncherAmmo, -2);
+        GiveWeaponTo("UTCompOmni.NewNet_SniperRifle", P, LightningGunAmmo, -2);
     }
     P.SuperHealthMax = MaxHealth;
     xPawn(P).ShieldStrengthMax = MaxArmor;

@@ -1,5 +1,5 @@
 
-class NewNet_FlakShell extends FlakShell
+class NewNet_FlakShell extends TeamColorFlakShell
 	HideDropDown
 	CacheExempt;
 

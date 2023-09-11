@@ -1,5 +1,5 @@
 
-class NewNet_ShockBeamEffect extends ShockBeamEffect;
+class NewNet_ShockBeamEffect extends TeamColorShockBeamEffect;
 
 function AimAt(Vector hl, Vector hn)
 {
@@ -31,7 +31,7 @@ simulated function PostNetBeginPlay()
 
 simulated function SpawnEffects()
 {
-    local ShockBeamCoil Coil;
+    //local ShockBeamCoil Coil;
     local xWeaponAttachment Attachment;
     local playercontroller pc;
     if(Level.NetMode == NM_Client)

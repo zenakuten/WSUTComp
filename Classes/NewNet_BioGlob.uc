@@ -1,5 +1,5 @@
 
-class NewNet_BioGlob extends BioGlob
+class NewNet_BioGlob extends TeamColorBioGlob
 	HideDropDown
 	CacheExempt;
 

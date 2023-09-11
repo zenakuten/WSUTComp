@@ -7,6 +7,26 @@ var bool bUseEnhancedNetCode;
 const PROJ_TIMESTEP = 0.0201;
 const MAX_PROJECTILE_FUDGE = 0.07500;
 
+function projectile OldNetSpawnProjectile(Vector Start, Rotator Dir)
+{
+    local BioGlob Glob;
+
+    GotoState('');
+
+    if (GoopLoad == 0) return None;
+
+    Glob = Weapon.Spawn(class'TeamColorBioGlob',,, Start, Dir);
+    if ( Glob != None )
+    {
+		Glob.Damage *= DamageAtten;
+		Glob.SetGoopLevel(GoopLoad);
+		Glob.AdjustSpeed();
+    }
+    GoopLoad = 0;
+    if ( Weapon.AmmoAmount(ThisModeNum) <= 0 )
+        Weapon.OutOfAmmo();
+    return Glob;
+}
 
 function projectile SpawnProjectile(Vector Start, Rotator Dir)
 {
@@ -22,7 +42,7 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
     if (GoopLoad == 0) return None;
 
     if(!bUseEnhancedNetCode)
-        return super.SpawnProjectile(start,Dir);
+        return OldNetSpawnProjectile(start,Dir);
     if( class'BioGlob' != none )
     {
         if(PingDT > 0.0 && Weapon.Owner!=None)

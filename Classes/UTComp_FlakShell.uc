@@ -11,7 +11,7 @@ Fix for flak shell.
 ******************************************************************************/
 
 
-class UTComp_FlakShell extends FlakShell;
+class UTComp_FlakShell extends TeamColorFlakShell;
 
 
 //=============================================================================
