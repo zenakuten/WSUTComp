@@ -56,6 +56,9 @@ function bool InternalOnClick(GUIComponent C)
     else if(C==UTCompMenuButtons[8])
         PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_ColorWeapons'));
 
+    else if(C==UTCompMenuButtons[9])
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Extra'));
+
     return false;
 }
 
@@ -184,6 +187,17 @@ defaultproperties
      End Object
      UTCompMenuButtons(8)=GUIButton'WeaponConfigButton'
 
+     Begin Object class=GUIButton name=ExtraButton
+         Caption="Extra"
+         WinTop=0.220000
+         WinLeft=0.7525
+         //WinWidth=0.180000
+         WinWidth=0.144
+         WinHeight=0.060000
+         OnClick=InternalOnClick
+     End Object
+     UTCompMenuButtons(9)=GUIButton'ExtraButton'
+
      Begin Object class=GUIButton name=AdminButton
          Caption="Admin"
          WinTop=0.720000
@@ -194,7 +208,7 @@ defaultproperties
          OnClick=InternalOnClick
          bVisible=false
      End Object
-     UTCompMenuButtons(9)=GUIButton'AdminButton'
+     UTCompMenuButtons(10)=GUIButton'AdminButton'
 
      Begin Object Class=GUITabControl Name=LoginMenuTC
          bFillSpace=True

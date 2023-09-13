@@ -4,6 +4,21 @@ class UTComp_Hud_Assault extends HUD_Assault;
 
 var UTComp_HUDSettings HUDSettings;
 
+#include Classes\Include\_HudCommon.h.uci
+#include Classes\Include\_HudCommon.uci
+
+#include Classes\Include\_Internal\DrawChargeBar.uci
+#include Classes\Include\_Internal\DrawCrosshair.uci
+#include Classes\Include\Team\Assault\_Internal\DrawHudPassA.uci
+#include Classes\Include\Team\Assault\_Internal\DrawTeamVS.uci
+#include Classes\Include\_Internal\DrawUDamage.uci
+#include Classes\Include\_Internal\DrawVehicleChargeBar.uci
+#include Classes\Include\_Internal\DrawWeaponBar.uci
+#include Classes\Include\Team\Assault\_Internal\ShowTeamScorePassA.uci
+#include Classes\Include\Team\_Internal\ShowVersusIcon.uci
+
+#include Classes\Include\_HudCommon.p.uci
+
 simulated event PostBeginPlay() {
     Super.PostBeginPlay();
 
@@ -82,7 +97,7 @@ simulated function DrawUTCompCrosshair (Canvas C)
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
     for(i=0; i<CHTexture.Length; i++)
-        DrawSpriteWidget (C, CHTexture[i]);
+        DrawSpriteTileWidget (C, CHTexture[i]);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
 
@@ -172,13 +187,79 @@ simulated function OldDrawCrosshair(Canvas C)
     HudScale=1;
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
-    DrawSpriteWidget (C, CHTexture);
+    DrawSpriteTileWidget (C, CHTexture);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
     CHTexture.TextureScale = NormalScale;
 
 	DrawEnemyName(C);
 }
+
+simulated function DrawChargeBar(Canvas C)
+{
+    if(HUDSettings.bEnableWidescreenFix)
+        WideDrawChargeBar(C);
+    else
+        Super.DrawChargeBar(C);
+}
+
+
+simulated function DrawHudPassA(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		TeamAssaultWideDrawHudPassA(C);
+	else
+		Super.DrawHudPassA(C);
+}
+
+simulated function DrawTeamVS(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		TeamAssaultWideDrawTeamVS(C);
+	else
+		Super.DrawTeamVS(C);
+}
+
+simulated function DrawUDamage(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawUDamage(C);
+	else
+		Super.DrawUDamage(C);
+}
+
+simulated function DrawVehicleChargeBar(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawVehicleChargeBar(C);
+	else
+		Super.DrawVehicleChargeBar(C);
+}
+
+simulated function DrawWeaponBar(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawWeaponBar(C);
+	else
+		Super.DrawWeaponBar(C);
+}
+
+simulated function ShowTeamScorePassA(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		TeamAssaultWideShowTeamScorePassA(C);
+	else
+		Super.ShowTeamScorePassA(C);
+}
+
+simulated function ShowVersusIcon(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		TeamWideShowVersusIcon(C);
+	else
+		Super.ShowVersusIcon(C);
+}
+
 
 DefaultProperties
 {

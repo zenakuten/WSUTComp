@@ -29,6 +29,22 @@ var float RadarWidth, CenterRadarPosX, CenterRadarPosY;
 var float LastCoreCheck;
 var float LastVInfoUpdate;
 
+#include Classes\Include\_HudCommon.h.uci
+#include Classes\Include\_HudCommon.uci
+
+#include Classes\Include\_Internal\DrawAdrenaline.uci
+#include Classes\Include\_Internal\DrawChargeBar.uci
+#include Classes\Include\_Internal\DrawCrosshair.uci
+#include Classes\Include\Team\_Internal\DrawHudPassA.uci
+#include Classes\Include\_Internal\DrawTimer.uci
+#include Classes\Include\_Internal\DrawUDamage.uci
+#include Classes\Include\_Internal\DrawVehicleChargeBar.uci
+#include Classes\Include\_Internal\DrawWeaponBar.uci
+#include Classes\Include\Team\Onslaught\_Internal\ShowTeamScorePassA.uci
+#include Classes\Include\Team\_Internal\ShowVersusIcon.uci
+
+#include Classes\Include\_HudCommon.p.uci
+
 simulated event PostBeginPlay() {
     Super.PostBeginPlay();
 
@@ -185,7 +201,7 @@ simulated function OldDrawCrosshair(Canvas C)
     HudScale=1;
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
-    DrawSpriteWidget (C, CHTexture);
+    DrawSpriteTileWidget (C, CHTexture);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
     CHTexture.TextureScale = NormalScale;
@@ -216,9 +232,9 @@ simulated function DrawTimer(Canvas C)
 	TimerBackground.Tints[TeamIndex] = HudColorBlack;
     TimerBackground.Tints[TeamIndex].A = 150;
 
-	DrawSpriteWidget( C, TimerBackground);
-	DrawSpriteWidget( C, TimerBackgroundDisc);
-	DrawSpriteWidget( C, TimerIcon);
+	DrawSpriteTileWidget( C, TimerBackground);
+	DrawSpriteTileWidget( C, TimerBackgroundDisc);
+	DrawSpriteTileWidget( C, TimerIcon);
 
 	TimerMinutes.OffsetX = default.TimerMinutes.OffsetX - 80;
 	TimerSeconds.OffsetX = default.TimerSeconds.OffsetX - 80;
@@ -230,7 +246,7 @@ simulated function DrawTimer(Canvas C)
         Hours = Seconds / 3600;
         Seconds -= Hours * 3600;
 
-		DrawNumericWidget( C, TimerHours, DigitsBig);
+		DrawNumericTileWidget( C, TimerHours, DigitsBig);
         TimerHours.Value = Hours;
 
 		if(Hours>9)
@@ -245,9 +261,9 @@ simulated function DrawTimer(Canvas C)
 			TimerDigitSpacer[0].OffsetX = Default.TimerDigitSpacer[0].OffsetX - 32;
 			TimerDigitSpacer[1].OffsetX = Default.TimerDigitSpacer[1].OffsetX - 32;
 		}
-		DrawSpriteWidget( C, TimerDigitSpacer[0]);
+		DrawSpriteTileWidget( C, TimerDigitSpacer[0]);
 	}
-	DrawSpriteWidget( C, TimerDigitSpacer[1]);
+	DrawSpriteTileWidget( C, TimerDigitSpacer[1]);
 
 	Minutes = Seconds / 60;
     Seconds -= Minutes * 60;
@@ -255,121 +271,9 @@ simulated function DrawTimer(Canvas C)
     TimerMinutes.Value = Min(Minutes, 60);
 	TimerSeconds.Value = Min(Seconds, 60);
 
-	DrawNumericWidget( C, TimerMinutes, DigitsBig);
-	DrawNumericWidget( C, TimerSeconds, DigitsBig);
+	DrawNumericTileWidget( C, TimerMinutes, DigitsBig);
+	DrawNumericTileWidget( C, TimerSeconds, DigitsBig);
 }
-
-/*
-// snarf removed this and replace with simplier system
-function SetVehicleData(class<Vehicle> VehicleClass, out color RadarColour)
-{
-	local int i, j;
-	local class CurDataHolderClass;
-	local object CurDataHolder;
-	local string sTempStr, CurClass, CurPackage, CurColour, CurDataPrefix;
-
-	for (i=0; i<VehicleData.Length; ++i)
-	{
-		if (VehicleData[i].VehicleClass == VehicleClass)
-		{
-			RadarColour = VehicleData[i].RadarColour;
-			return;
-		}
-	}
-
-	// If the code reaches here that means the vehicle is not yet listed
-	VehicleData.Length = VehicleData.Length + 1;
-	i = VehicleData.Length - 1;
-
-	VehicleData[i].VehicleClass = VehicleClass;
-
-	// Get the raw string representation of the package the current vehicle class is located in and the classname of the vehicle
-	sTempStr = string(VehicleClass);
-
-	CurClass = GetItemName(sTempStr);
-
-	CurPackage = Left(sTempStr, Len(sTempStr) - 1 - Len(CurClass));
-
-
-	CurDataHolder = none;
-
-	// Check if the current package already has a dataholder
-	for (j=0; j<DataHolders.Length; j++)
-	{
-		if (Left(GetItemName(string(DataHolders[j].Class)), Len(CurPackage)) ~= CurPackage)
-		{
-			CurDataHolder = DataHolders[j];
-			break;
-		}
-	}
-
-	// If the current package is not currently in the dataholder list see if there is a dataholder object in that package and if so, add it to the list
-	if (CurDataHolder == none)
-	{
-		j = InStr(CurPackage, "_");
-
-		if (j == -1)
-			CurDataPrefix = CurPackage;
-		else
-			CurDataPrefix = Left(CurPackage, j);
-
-		CurDataHolderClass = Class(DynamicLoadObject(CurPackage$"."$CurDataPrefix$"VehicleRadarData", Class'Class'));
-
-		// If the class exists try to create the data object and if that is created successfully then add it to the list
-		if (CurDataHolderClass != none)
-		{
-			CurDataHolder = new(none, "ONSPlus") CurDataHolderClass;
-
-			if (CurDataHolder != none)
-				DataHolders[DataHolders.Length] = CurDataHolder;
-		}
-	}
-
-	// If this is true then we know that we are dealing with a custom vehicle, default its colour
-	if (CurDataHolder == none)
-	{
-		VehicleData[i].RadarColour.R = 0;
-		VehicleData[i].RadarColour.G = 0;
-		VehicleData[i].RadarColour.B = 0;
-
-		VehicleName = VehicleClass.default.VehicleNameString;
-		RadarColour = VehicleData[i].RadarColour;
-
-		return;
-	}
-
-	// If the code reaches this point then we know the DataHolder was created, check if the current vehicle class has an entry in the data holder
-	CurColour = CurDataHolder.GetPropertyText(CurClass$"RadarColour");
-
-	// If it does then gather the data and add the data to the list, if not then treat it like a custom vehicle
-	if (CurColour != "")
-	{
-		// If the colour hasn't been entered into the data holder then default it
-		if (CurColour != "")
-		{
-			// A hack for my laziness (actually...upon further thought this is FASTER than any other alternative)
-			SetPropertyText("TempColour", CurColour);
-
-			VehicleData[i].RadarColour = TempColour;
-		}
-		else
-		{
-			VehicleData[i].RadarColour.R = 0;
-			VehicleData[i].RadarColour.G = 0;
-			VehicleData[i].RadarColour.B = 0;
-		}
-	}
-	else
-	{
-		VehicleData[i].RadarColour.R = 0;
-		VehicleData[i].RadarColour.G = 0;
-		VehicleData[i].RadarColour.B = 0;
-	}
-
-	VehicleName = VehicleClass.default.VehicleNameString;
-	RadarColour = VehicleData[i].RadarColour;
-}
-*/
 
 function SetVehicleData(class<Vehicle> VehicleClass, out color RadarColour, out float U, out float V)
 {
@@ -749,6 +653,69 @@ simulated function Actor LocateSpawnArea(float PosX, float PosY, float RadarWidt
 	return BestSpawnArea;
 }
 
+simulated function DrawAdrenaline(Canvas C)
+{
+    if (HUDSettings.bEnableWidescreenFix)
+        WideDrawAdrenaline(C);
+    else
+        Super.DrawAdrenaline(C);
+}
+
+simulated function DrawChargeBar(Canvas C)
+{
+    if (HUDSettings.bEnableWidescreenFix)
+        WideDrawChargeBar(C);
+    else
+        Super.DrawChargeBar(C);
+}
+
+simulated function DrawHudPassA(Canvas C)
+{
+    if (HUDSettings.bEnableWidescreenFix)
+        TeamWideDrawHudPassA(C);
+    else
+        Super.DrawHudPassA(C);
+}
+
+simulated function DrawUDamage(Canvas C)
+{
+    if (HUDSettings.bEnableWidescreenFix)
+        WideDrawUDamage(C);
+    else
+        Super.DrawUDamage(C);
+}
+
+simulated function DrawVehicleChargeBar(Canvas C)
+{
+    if (HUDSettings.bEnableWidescreenFix)
+        WideDrawVehicleChargeBar(C);
+    else
+        Super.DrawVehicleChargeBar(C);
+}
+
+simulated function DrawWeaponBar(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawWeaponBar(C);
+	else
+		Super.DrawWeaponBar(C);
+}
+
+simulated function ShowTeamScorePassA(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		TeamOnslaughtWideShowTeamScorePassA(C);
+	else
+		Super.ShowTeamScorePassA(C);
+}
+
+simulated function ShowVersusIcon(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		TeamWideShowVersusIcon(C);
+	else
+		Super.ShowVersusIcon(C);
+}
 
 defaultproperties
 {

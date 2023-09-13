@@ -14,6 +14,7 @@ struct SpecialCrosshair
 var config array<SpecialCrosshair> UTCompCrosshairs;
 var config bool bEnableUTCompCrosshairs;
 var config bool bEnableCrosshairSizing;
+var config bool bEnableWidescreenFix;
 
 var config bool bMatchHudColor;
 
@@ -22,4 +23,5 @@ var SpecialCrosshair TempxHair;
 defaultproperties
 {
     bEnableCrosshairSizing=True
+    bEnableWidescreenFix=True
 }

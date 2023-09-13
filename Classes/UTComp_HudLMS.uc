@@ -3,6 +3,21 @@ class UTComp_HudLMS extends HudLMS;
 
 var UTComp_HUDSettings HUDSettings;
 
+#include Classes\Include\_HudCommon.h.uci
+#include Classes\Include\_HudCommon.uci
+
+#include Classes\Include\_Internal\DrawAdrenaline.uci
+#include Classes\Include\_Internal\DrawChargeBar.uci
+#include Classes\Include\_Internal\DrawCrosshair.uci
+#include Classes\Include\_Internal\DrawHudPassA.uci
+#include Classes\Include\_Internal\DrawTimer.uci
+#include Classes\Include\_Internal\DrawUDamage.uci
+#include Classes\Include\_Internal\DrawVehicleChargeBar.uci
+#include Classes\Include\_Internal\DrawWeaponBar.uci
+#include Classes\Include\LastManStanding\_Internal\UpdateRankAndSpread.uci
+
+#include Classes\Include\_HudCommon.p.uci
+
 simulated event PostBeginPlay() {
     Super.PostBeginPlay();
 
@@ -87,7 +102,7 @@ simulated function DrawUTCompCrosshair (Canvas C)
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
     for(i=0; i<CHTexture.Length; i++)
-        DrawSpriteWidget (C, CHTexture[i]);
+        DrawSpriteTileWidget (C, CHTexture[i]);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
 
@@ -176,7 +191,7 @@ simulated function OldDrawCrosshair(Canvas C)
     HudScale=1;
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
-    DrawSpriteWidget (C, CHTexture);
+    DrawSpriteTileWidget (C, CHTexture);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
     CHTexture.TextureScale = NormalScale;
@@ -207,9 +222,9 @@ simulated function DrawTimer(Canvas C)
 	TimerBackground.Tints[TeamIndex] = HudColorBlack;
     TimerBackground.Tints[TeamIndex].A = 150;
 
-	DrawSpriteWidget( C, TimerBackground);
-	DrawSpriteWidget( C, TimerBackgroundDisc);
-	DrawSpriteWidget( C, TimerIcon);
+	DrawSpriteTileWidget( C, TimerBackground);
+	DrawSpriteTileWidget( C, TimerBackgroundDisc);
+	DrawSpriteTileWidget( C, TimerIcon);
 
 	TimerMinutes.OffsetX = default.TimerMinutes.OffsetX - 80;
 	TimerSeconds.OffsetX = default.TimerSeconds.OffsetX - 80;
@@ -221,7 +236,7 @@ simulated function DrawTimer(Canvas C)
         Hours = Seconds / 3600;
         Seconds -= Hours * 3600;
 
-		DrawNumericWidget( C, TimerHours, DigitsBig);
+		DrawNumericTileWidget( C, TimerHours, DigitsBig);
         TimerHours.Value = Hours;
 
 		if(Hours>9)
@@ -236,9 +251,9 @@ simulated function DrawTimer(Canvas C)
 			TimerDigitSpacer[0].OffsetX = Default.TimerDigitSpacer[0].OffsetX - 32;
 			TimerDigitSpacer[1].OffsetX = Default.TimerDigitSpacer[1].OffsetX - 32;
 		}
-		DrawSpriteWidget( C, TimerDigitSpacer[0]);
+		DrawSpriteTileWidget( C, TimerDigitSpacer[0]);
 	}
-	DrawSpriteWidget( C, TimerDigitSpacer[1]);
+	DrawSpriteTileWidget( C, TimerDigitSpacer[1]);
 
 	Minutes = Seconds / 60;
     Seconds -= Minutes * 60;
@@ -246,8 +261,64 @@ simulated function DrawTimer(Canvas C)
     TimerMinutes.Value = Min(Minutes, 60);
 	TimerSeconds.Value = Min(Seconds, 60);
 
-	DrawNumericWidget( C, TimerMinutes, DigitsBig);
-	DrawNumericWidget( C, TimerSeconds, DigitsBig);
+	DrawNumericTileWidget( C, TimerMinutes, DigitsBig);
+	DrawNumericTileWidget( C, TimerSeconds, DigitsBig);
+}
+
+simulated function DrawAdrenaline(Canvas C)
+{
+    if (HUDSettings.bEnableWidescreenFix)
+        WideDrawAdrenaline(C);
+    else
+        Super.DrawAdrenaline(C);
+}
+
+simulated function DrawChargeBar(Canvas C)
+{
+    if(HUDSettings.bEnableWidescreenFix)
+        WideDrawChargeBar(C);
+    else
+        Super.DrawChargeBar(C);
+}
+
+simulated function DrawHudPassA(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawHudPassA(C);
+	else
+		Super.DrawHudPassA(C);
+}
+
+simulated function DrawUDamage(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawUDamage(C);
+	else
+		Super.DrawUDamage(C);
+}
+
+simulated function DrawVehicleChargeBar(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawVehicleChargeBar(C);
+	else
+		Super.DrawVehicleChargeBar(C);
+}
+
+simulated function DrawWeaponBar(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		WideDrawWeaponBar(C);
+	else
+		Super.DrawWeaponBar(C);
+}
+
+simulated function UpdateRankAndSpread(Canvas C)
+{
+	if (HUDSettings.bEnableWidescreenFix)
+		LastManStandingWideUpdateRankAndSpread(C);
+	else
+		Super.UpdateRankAndSpread(C);
 }
 
 DefaultProperties
