@@ -175,8 +175,21 @@ simulated function WideDrawWeaponBar(Canvas C)
 				}
 			}
 			DrawSpriteTileWidget( C, BarBorder[i] );
-			DrawSpriteTileWidget( C, BarBorderAmmoIndicator[i] );
+            // this has graphics artifacts if some weapons have too much ammo
+            // better not to draw it then
+            if(ShouldDrawAmmoIndicator(W))
+                DrawSpriteTileWidget( C, BarBorderAmmoIndicator[i] );
 			DrawSpriteTileWidget( C, BarWeaponIcon[i] );
 	   }
 	}
+}
+
+function bool ShouldDrawAmmoIndicator(Weapon W)
+{
+    if(W != None && W.AmmoAmount(0) > W.MaxAmmo(0))
+        return false;
+    if(W != None && W.AmmoAmount(1) > W.MaxAmmo(1))
+        return false;
+
+    return true;
 }
