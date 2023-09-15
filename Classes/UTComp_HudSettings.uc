@@ -15,6 +15,7 @@ var config array<SpecialCrosshair> UTCompCrosshairs;
 var config bool bEnableUTCompCrosshairs;
 var config bool bEnableCrosshairSizing;
 var config bool bEnableWidescreenFix;
+var config int DamageIndicatorType; // 1 = Disabled, 2 = Centered, 3 = Floating
 
 var config bool bMatchHudColor;
 
@@ -23,5 +24,6 @@ var SpecialCrosshair TempxHair;
 defaultproperties
 {
     bEnableCrosshairSizing=True
-    bEnableWidescreenFix=True
+    bEnableWidescreenFix=False
+    DamageIndicatorType=1
 }

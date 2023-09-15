@@ -16,6 +16,7 @@ var UTComp_HUDSettings HUDSettings;
 #include Classes\Include\_Internal\DrawWeaponBar.uci
 #include Classes\Include\Team\CaptureTheFlag\_Internal\ShowTeamScorePassA.uci
 #include Classes\Include\Team\_Internal\ShowVersusIcon.uci
+#include Classes\Include\_DrawDamageIndicators.uci
 
 #include Classes\Include\_HudCommon.p.uci
 

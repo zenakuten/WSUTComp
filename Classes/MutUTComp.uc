@@ -89,6 +89,7 @@ var config bool bEnableWhitelist;
 var config bool bUseWhitelist;
 var config string WhitelistBanMessage;
 var config bool bAllowColorWeapons;
+var config bool bDamageIndicator;
 
 struct MapVotePair
 {
@@ -865,6 +866,7 @@ function SpawnReplicationClass()
     RepInfo.bUseDefaultScoreboardColor = bUseDefaultScoreboardColor;
     RepInfo.bDebugLogging = bDebugLogging;
     RepInfo.bAllowColorWeapons = bAllowColorWeapons;
+    RepInfo.bDamageIndicator = bDamageIndicator;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1821,4 +1823,5 @@ defaultproperties
      IgnoredHitSounds(0)="FireKill"
 
      bAllowColorWeapons=true
+     bDamageIndicator=true
 }

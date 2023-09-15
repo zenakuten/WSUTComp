@@ -17,7 +17,7 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
     {
         if(UTCompMutator.EnableHitSoundsMode>0)
         {
-            BS_xPlayer(InstigatedBy.Controller).ReceiveHit(DamageType, Damage, Injured);
+            BS_xPlayer(InstigatedBy.Controller).ReceiveHit(DamageType, Damage, Injured, instigatedBy);
 
             if(InstigatedBy==Injured)
                 HitSoundType=0;
@@ -38,7 +38,7 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
             BS_xPlayer(InstigatedBy.Controller).ReceiveStats(DamageType, Damage, Injured);
         }
 
-        BS_xPlayer(InstigatedBy.Controller).ServerReceiveHit(DamageType, Damage, Injured);
+        BS_xPlayer(InstigatedBy.Controller).ServerReceiveHit(DamageType, Damage, Injured, instigatedBy);
     }
     if(Injured!=None && Injured.Controller!=None && BS_xPlayer(Injured.Controller)!=None)
     {

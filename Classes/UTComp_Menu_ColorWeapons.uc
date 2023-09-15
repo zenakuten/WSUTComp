@@ -109,6 +109,18 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
         BRSlide.DisableMe();
         BGSlide.DisableMe();
         BBSlide.DisableMe();
+
+        ch_TeamColorRockets.SetHint("Server disabled");
+        ch_TeamColorBio.SetHint("Server disabled");
+        ch_TeamColorFlak.SetHint("Server disabled");
+        ch_TeamColorShock.SetHint("Server disabled");
+        ch_TeamColorEnemyAlly.SetHint("Server disabled");
+        RRSlide.SetHint("Server disabled");
+        RBSlide.SetHint("Server disabled");
+        RGSlide.SetHint("Server disabled");
+        BRSlide.SetHint("Server disabled");
+        BGSlide.SetHint("Server disabled");
+        BBSlide.SetHint("Server disabled");
     }
 
     UpdateColorTextTeam();    

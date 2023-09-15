@@ -63,6 +63,7 @@ var bool bUseDefaultScoreboardColor;
 var bool bDebugLogging;
 
 var bool bAllowColorWeapons;
+var bool bDamageIndicator;
 
 replication
 {
@@ -79,7 +80,7 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons;
+        bAllowColorWeapons, bDamageIndicator;
 }
 
 defaultproperties
@@ -123,5 +124,6 @@ defaultproperties
      bDebugLogging = false
 
      bAllowColorWeapons=true
+     bDamageIndicator=true
 }
 

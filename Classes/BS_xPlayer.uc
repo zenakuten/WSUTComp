@@ -125,6 +125,14 @@ var int PreferredExitPoint;
 var bool bTempSpec;
 var bool bDidWhitelistCheck;
 
+//damage indicator stuff
+var int LastDamage;
+var int SumDamage;
+var float SumDamageTime;
+var int HitDamage;
+var bool bHitContact;
+var Pawn HitPawn;
+
 
 
 replication
@@ -433,6 +441,8 @@ simulated function ChangeDeathMessageOrder()
 
 event PlayerTick(float deltatime)
 {
+    local int Damage;
+
     if (RepInfo==None)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
             break;
@@ -490,6 +500,27 @@ event PlayerTick(float deltatime)
     {
         log("UTComp: WARN net is saturated");
         LastSaturatedTime = Level.TimeSeconds + 3.0;
+    }
+    
+    if(HitDamage != LastDamage)
+    {
+        Damage = HitDamage - LastDamage;
+            
+        if(HitPawn != None && RepInfo.bDamageIndicator)
+        {
+            if (HUDSettings.DamageIndicatorType == 2)
+            {
+                if ( (Level.TimeSeconds - SumDamageTime > 1) || (SumDamage > 0 ^^ Damage > 0) )
+                    SumDamage = 0;
+                SumDamage += Damage;
+                SumDamageTime = Level.TimeSeconds;
+            }
+            
+            if(HUDSettings.DamageIndicatorType == 3)
+                class'Emitter_Damage'.static.ShowDamage(HitPawn, HitPawn.Location, Damage);        
+        }        
+
+        LastDamage = HitDamage;
     }
 
     Super.PlayerTick(deltatime);
@@ -733,8 +764,18 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 // Stats / Hitsounds
 //====================================
 
+simulated function DamageIndicatorHit(int Damage, pawn injured, pawn instigatedBy)
+{
+    local vector EyeHeight;
+
+    HitDamage += Damage;
+    EyeHeight.z = instigatedBy.EyeHeight;
+    bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
+    HitPawn = injured;
+}
+
 // both stat/hitsound
-simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Injured)
+simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Injured, pawn instigatedBy)
 {
     if(Level.NetMode==NM_DedicatedServer)
         return;
@@ -744,6 +785,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     else if(Injured.GetTeamNum()==255 || (Injured.GetTeamNum() != GetTeamNum()))
     {
         RegisterEnemyHit(DamageType, Damage);
+        DamageIndicatorHit(Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
             if(Settings.bCPMAStyleHitsounds && (DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell') && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
@@ -757,6 +799,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     else
     {
         RegisterTeammateHit(DamageType, Damage);
+        DamageIndicatorHit(-Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
             if(Settings.bCPMAStyleHitsounds && (DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell') && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
@@ -769,7 +812,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     }
 }
 
-simulated function ServerReceiveHit(class<DamageType> DamageType, int Damage, pawn Injured)
+simulated function ServerReceiveHit(class<DamageType> DamageType, int Damage, pawn Injured, pawn instigatedBy)
 {
     if(Injured!=None && Injured.Controller!=None && Injured.Controller==Self)
         ServerRegisterSelfHit(DamageType, Damage);
