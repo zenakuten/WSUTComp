@@ -171,8 +171,8 @@ defaultproperties
     bTeamColorFlak=true
     bTeamColorShock=true
     bTeamColorSniper=true
-    TeamColorRed=(R=255,G=80,B=80,A=255)
-    TeamColorBlue=(R=80,G=80,B=255,A=255)
+    TeamColorRed=(R=255,G=91,B=46,A=255)
+    TeamColorBlue=(R=46,G=137,B=255,A=255)
     bTeamColorUseTeam=true
 
     instance=none

@@ -82,14 +82,14 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
            VZ.Z = class'BioGlob'.default.TossZ;
            NewDir =  rotator(vector(OutDir)*class'BioGlob'.default.speed - VZ);
            if(Other == none)
-               glob = Weapon.Spawn(class'BioGlob',,, End, NewDir);
+               glob = Weapon.Spawn(class'NewNet_BioGlob',,, End, NewDir);
            else
            {
-               glob = Weapon.Spawn(class'BioGlob',,, HitLocation - Vector(Newdir)*16.0, NewDir);
+               glob = Weapon.Spawn(class'NewNet_BioGlob',,, HitLocation - Vector(Newdir)*16.0, NewDir);
            }
         }
         else
-            glob = Weapon.Spawn(class'BioGlob',,, Start, Dir);
+            glob = Weapon.Spawn(class'NewNet_BioGlob',,, Start, Dir);
     }
 
     if ( Glob != None )
