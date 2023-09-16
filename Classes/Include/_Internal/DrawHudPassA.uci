@@ -122,13 +122,12 @@ simulated function WideDrawHudPassA(Canvas C)
 				if (CurVehicleHealth < LastVehicleHealth )
 					LastDamagedVehicleHealth = Level.TimeSeconds;
 
-				DrawHUDAnimDigit(DigitsVehicleHealth, default.DigitsVehicleHealth.TextureScale, LastDamagedVehicleHealth, 0.8, default.DigitsVehicleHealth.Tints[TeamIndex], HudColorHighLight);
-				DrawNumericTileWidget(C, DigitsVehicleHealth, DigitsBig);
-
 				if (CurVehicleHealth > 999)
 				{
-					//DigitsVehicleHealth.OffsetX = 220; //Replaced w/ below line ~fox
-					DigitsVehicleHealth.OffsetX = 445; //Courtesy of HUD Scaling Fix by Azarael ~fox
+					DigitsVehicleHealth.OffsetX = 220; //Replaced w/ below line ~fox
+                    //this new offset only works with _hudcommon.p.uci
+                    //but breaks non-widescreen hud
+					//DigitsVehicleHealth.OffsetX = 445; //Courtesy of HUD Scaling Fix by Azarael ~fox
 					DigitsVehicleHealth.OffsetY = -35;
 					DigitsVehicleHealth.TextureScale = 0.39;
 				}
@@ -138,6 +137,10 @@ simulated function WideDrawHudPassA(Canvas C)
 					DigitsVehicleHealth.OffsetY = default.DigitsVehicleHealth.OffsetY;
 					DigitsVehicleHealth.TextureScale = default.DigitsVehicleHealth.TextureScale;
 				}
+
+				DrawHUDAnimDigit(DigitsVehicleHealth, default.DigitsVehicleHealth.TextureScale, LastDamagedVehicleHealth, 0.8, default.DigitsVehicleHealth.Tints[TeamIndex], HudColorHighLight);
+				DrawNumericTileWidget(C, DigitsVehicleHealth, DigitsBig);
+
 			}
 
 			DrawAdrenaline(C);

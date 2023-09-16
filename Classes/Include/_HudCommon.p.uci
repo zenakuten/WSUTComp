@@ -2,6 +2,11 @@
 //Note: Parser can't process includes inside a defaultproperties block
 //However, you can apparently define multiple blocks anywhere you want
 //So you should be able to have your own custom block alongside this
+
+/*
+this messes up some hud properties like DigitsVehicleHealth
+removing doesn't seem to hurt anything, will probably delete this file later
+-snarf
 defaultproperties
 {
 	XShifts(1)=0.500000
@@ -16,10 +21,10 @@ defaultproperties
 	YShifts(6)=1.000000
 	YShifts(7)=0.500000
 	YShifts(8)=0.500000
-	DigitsVehicleHealth=(PosX=0.000000,OffsetX=357)
-	HudVehicleHealthALERT=(PosX=0.000000,OffsetX=168)
-	HudBorderVehicleHealth=(PosX=0.000000,OffsetX=168)
-	HudBorderVehicleHealthIcon=(PosX=0.000000,OffsetX=173)
+	//DigitsVehicleHealth=(PosX=0.000000,OffsetX=357)
+	//HudVehicleHealthALERT=(PosX=0.000000,OffsetX=168)
+	//HudBorderVehicleHealth=(PosX=0.000000,OffsetX=168)
+	//HudBorderVehicleHealthIcon=(PosX=0.000000,OffsetX=173)
 	BarWeaponIcon(0)=(DrawPivot=DP_MiddleMiddle,OffsetY=-30)
 	BarWeaponIcon(1)=(DrawPivot=DP_MiddleMiddle,OffsetY=-30)
 	BarWeaponIcon(2)=(DrawPivot=DP_MiddleMiddle,OffsetY=-25)
@@ -30,3 +35,4 @@ defaultproperties
 	BarWeaponIcon(7)=(DrawPivot=DP_MiddleMiddle,OffsetY=-30)
 	BarWeaponIcon(8)=(DrawPivot=DP_MiddleMiddle,OffsetY=-30)
 }
+*/
