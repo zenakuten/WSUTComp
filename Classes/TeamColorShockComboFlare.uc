@@ -93,7 +93,7 @@ simulated function Destroyed()
 
 defaultproperties
 {
-    TeamColorMaterial=Texture'UTCompOmni.Shock_flare_a_white'
+    TeamColorMaterial=Texture'Shock_flare_a_white'
     TeamNum=255
     bColorSet=false
 }

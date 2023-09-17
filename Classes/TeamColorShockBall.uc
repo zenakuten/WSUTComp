@@ -201,7 +201,7 @@ defaultproperties
         ParticlesPerSecond=50.000000
         RespawnDeadParticles=False
         AutomaticInitialSpawning=False
-        //Texture=Texture'UTCompOmni.shock_core_low_white'
+        //Texture=Texture'shock_core_low_white'
         Texture=Texture'XEffectMat.Shock.shock_core_low'
         LifetimeRange=(Min=0.250000,Max=0.500000)
 		SecondsBeforeInactive=0

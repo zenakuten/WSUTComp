@@ -122,5 +122,5 @@ defaultproperties
 {
     TeamNum=255
     bColorSet=false
-    TeamColorMaterial=FinalBlend'UTCompOmni.GoopFB'
+    TeamColorMaterial=FinalBlend'GoopFB'
 }

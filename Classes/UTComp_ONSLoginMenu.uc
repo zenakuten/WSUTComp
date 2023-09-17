@@ -4,7 +4,7 @@ function InitComponent(GUIController MyController, GUIComponent MyComponent)
 {
     log("UTComp_OnsLoginMenu - init component");
 	// Moved from defaultproperties so I can easily recompile the package with a different packagename
-	OnslaughtMapPanel.ClassName = string(Class'UTCompOmni.UTComp_TabOnslaughtMap');
+	OnslaughtMapPanel.ClassName = string(Class'UTComp_TabOnslaughtMap');
 
 	Super.InitComponent(MyController, MyComponent);
 }

@@ -1614,7 +1614,7 @@ defaultproperties
 
      bShowTeamScoresInServerBrowser=True
      ServerMaxPlayers=12
-     AlwaysUseThisMutator(0)="UTCompOmni.MutUTComp"
+     AlwaysUseThisMutator(0)="MutUTComp"
      AutoDemoRecMask="%d-(%t)-%m-%p"
      EnableWarmupWeaponsMode=1
      WarmupHealth=199
@@ -1647,9 +1647,9 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="UTComp Version 1.59 (Omni)"
+     FriendlyName="UTComp Version 1.60 (Omni)"
      FriendlyVersionPrefix="UTComp Version"
-     FriendlyVersionNumber=")o(mni 1.59"
+     FriendlyVersionNumber=")o(mni 1.60"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
@@ -1733,19 +1733,19 @@ defaultproperties
      WeaponPickupClasses(10)=Class'NewNet_ONSMineLayerPickup'
      WeaponPickupClasses(11)=Class'NewNet_ONSGrenadePickup'
      WeaponPickupClasses(12)=Class'NewNet_SuperShockRiflePickup'
-     WeaponPickupClassNames(0)="UTCompOmni.NewNet_ShockRiflePickup"
-     WeaponPickupClassNames(1)="UTCompOmni.NewNet_LinkGunPickup"
-     WeaponPickupClassNames(2)="UTCompOmni.NewNet_MiniGunPickup"
-     WeaponPickupClassNames(3)="UTCompOmni.NewNet_FlakCannonPickup"
-     WeaponPickupClassNames(4)="UTCompOmni.NewNet_RocketLauncherPickup"
-     WeaponPickupClassNames(5)="UTCompOmni.NewNet_SniperRiflePickup"
-     WeaponPickupClassNames(6)="UTCompOmni.NewNet_BioRiflePickup"
-     WeaponPickupClassNames(7)="UTCompOmni.NewNet_AssaultRiflePickup"
-     WeaponPickupClassNames(8)="UTCompOmni.NewNet_ClassicSniperRiflePickup"
-     WeaponPickupClassNames(9)="UTCompOmni.NewNet_ONSAVRiLPickup"
-     WeaponPickupClassNames(10)="UTCompOmni.NewNet_ONSMineLayerPickup"
-     WeaponPickupClassNames(11)="UTCompOmni.NewNet_ONSGrenadePickup"
-     WeaponPickupClassNames(12)="UTCompOmni.NewNet_SuperShockRiflePickup"
+     WeaponPickupClassNames(0)="NewNet_ShockRiflePickup"
+     WeaponPickupClassNames(1)="NewNet_LinkGunPickup"
+     WeaponPickupClassNames(2)="NewNet_MiniGunPickup"
+     WeaponPickupClassNames(3)="NewNet_FlakCannonPickup"
+     WeaponPickupClassNames(4)="NewNet_RocketLauncherPickup"
+     WeaponPickupClassNames(5)="NewNet_SniperRiflePickup"
+     WeaponPickupClassNames(6)="NewNet_BioRiflePickup"
+     WeaponPickupClassNames(7)="NewNet_AssaultRiflePickup"
+     WeaponPickupClassNames(8)="NewNet_ClassicSniperRiflePickup"
+     WeaponPickupClassNames(9)="NewNet_ONSAVRiLPickup"
+     WeaponPickupClassNames(10)="NewNet_ONSMineLayerPickup"
+     WeaponPickupClassNames(11)="NewNet_ONSGrenadePickup"
+     WeaponPickupClassNames(12)="NewNet_SuperShockRiflePickup"
 
     // replaced UTComp classes
      WeaponClassesUTComp(0)=Class'UTComp_ShockRifle'
@@ -1774,19 +1774,19 @@ defaultproperties
      WeaponPickupClassesUTComp(10)=Class'UTComp_ONSMineLayerPickup'
      WeaponPickupClassesUTComp(11)=Class'UTComp_ONSGrenadePickup'
      WeaponPickupClassesUTComp(12)=Class'UTComp_SuperShockRiflePickup'
-     WeaponPickupClassNamesUTComp(0)="UTCompOmni.UTComp_ShockRiflePickup"
-     WeaponPickupClassNamesUTComp(1)="UTCompOmni.UTComp_LinkGunPickup"
-     WeaponPickupClassNamesUTComp(2)="UTCompOmni.UTComp_MiniGunPickup"
-     WeaponPickupClassNamesUTComp(3)="UTCompOmni.UTComp_FlakCannonPickup"
-     WeaponPickupClassNamesUTComp(4)="UTCompOmni.UTComp_RocketLauncherPickup"
-     WeaponPickupClassNamesUTComp(5)="UTCompOmni.UTComp_SniperRiflePickup"
-     WeaponPickupClassNamesUTComp(6)="UTCompOmni.UTComp_BioRiflePickup"
-     WeaponPickupClassNamesUTComp(7)="UTCompOmni.UTComp_AssaultRiflePickup"
-     WeaponPickupClassNamesUTComp(8)="UTCompOmni.UTComp_ClassicSniperRiflePickup"
-     WeaponPickupClassNamesUTComp(9)="UTCompOmni.UTComp_ONSAVRiLPickup"
-     WeaponPickupClassNamesUTComp(10)="UTCompOmni.UTComp_ONSMineLayerPickup"
-     WeaponPickupClassNamesUTComp(11)="UTCompOmni.UTComp_ONSGrenadePickup"
-     WeaponPickupClassNamesUTComp(12)="UTCompOmni.UTComp_SuperShockRiflePickup"
+     WeaponPickupClassNamesUTComp(0)="UTComp_ShockRiflePickup"
+     WeaponPickupClassNamesUTComp(1)="UTComp_LinkGunPickup"
+     WeaponPickupClassNamesUTComp(2)="UTComp_MiniGunPickup"
+     WeaponPickupClassNamesUTComp(3)="UTComp_FlakCannonPickup"
+     WeaponPickupClassNamesUTComp(4)="UTComp_RocketLauncherPickup"
+     WeaponPickupClassNamesUTComp(5)="UTComp_SniperRiflePickup"
+     WeaponPickupClassNamesUTComp(6)="UTComp_BioRiflePickup"
+     WeaponPickupClassNamesUTComp(7)="UTComp_AssaultRiflePickup"
+     WeaponPickupClassNamesUTComp(8)="UTComp_ClassicSniperRiflePickup"
+     WeaponPickupClassNamesUTComp(9)="UTComp_ONSAVRiLPickup"
+     WeaponPickupClassNamesUTComp(10)="UTComp_ONSMineLayerPickup"
+     WeaponPickupClassNamesUTComp(11)="UTComp_ONSGrenadePickup"
+     WeaponPickupClassNamesUTComp(12)="UTComp_SuperShockRiflePickup"
 
      bShieldFix=true
 

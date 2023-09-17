@@ -71,7 +71,7 @@ simulated function Tick(float DT)
 }
 defaultproperties
 {
-    WhiteSparks=Texture'UTCompOmni.link_spark_white'
+    WhiteSparks=Texture'link_spark_white'
 
     Style=STY_Additive
     Skins(0)=Texture'XEffectMat.Link.link_spark_green'

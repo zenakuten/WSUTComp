@@ -140,5 +140,5 @@ defaultproperties
 
     TeamNum=255
 
-    TeamColorMaterial=Texture'UTCompOmni.ShockBeamTex_white'
+    TeamColorMaterial=Texture'ShockBeamTex_white'
 }

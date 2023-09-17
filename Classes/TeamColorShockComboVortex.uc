@@ -92,7 +92,7 @@ simulated function Destroyed()
 
 defaultproperties
 {
-    TeamColorMaterial=FinalBlend'UTCompOmni.ElecRingFB_white'
+    TeamColorMaterial=FinalBlend'ElecRingFB_white'
 
     TeamNum=255
     bColorSet=false
