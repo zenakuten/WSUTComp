@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-class BS_xPlayer extends xPlayer;
+class BS_xPlayer extends ModernPlayer;
 
 var float LastHitSoundTime;
 
@@ -535,6 +535,11 @@ function SetBStats(bool b)
         UTCompPRI.bSendWepStats=b;
 }
 
+function SetMaxSavedMoves()
+{
+    if(RepInfo != None)
+        MaxSavedMoves = RepInfo.MaxSavedMoves;
+}
 
 simulated function InitializeStuff()
 {
@@ -562,6 +567,7 @@ simulated function InitializeStuff()
     SetBStats(class'UTComp_Scoreboard'.default.bDrawStats || class'UTComp_ScoreBoard'.default.bOverrideDisplayStats);
     SetEyeHeightAlgorithm(Settings.bUseNewEyeHeightAlgorithm);
     ServerSetNetUpdateRate(Settings.DesiredNetUpdateRate, Player.CurrentNetSpeed);
+    SetMaxSavedMoves();
     if(Settings.bFirstRun)
     {
         Settings.bFirstRun=False;
@@ -4406,8 +4412,8 @@ simulated function SetMenuColor(int playerID)
 defaultproperties
 {
 
-     UTCompMenuClass="UTComp_Menu_OpenedMenu"
-     UTCompVotingMenuClass="UTComp_Menu_VoteInProgress"
+     UTCompMenuClass="UTCompOmni.UTComp_Menu_OpenedMenu"
+     UTCompVotingMenuClass="UTCompOmni.UTComp_Menu_VoteInProgress"
      redmessagecolor=(B=64,G=64,R=255,A=255)
      greenmessagecolor=(B=128,G=255,R=128,A=255)
      bluemessagecolor=(B=255,G=192,R=64,A=255)

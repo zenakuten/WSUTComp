@@ -867,7 +867,7 @@ DefaultProperties
     GoalScore=8
     GameName="UTComp Clan Arena 1.8c"
     bAllowWeaponThrowing=false
-    SecondaryMutatorClass="MutUTComp"
+    SecondaryMutatorClass="UTCompOmni.MutUTComp"
     Description = "No Powerups, No Distractions, Full Weapon and armor Load! Kill the enemy team before they kill yours. Dead players are out until the round is over."
     FriendlyFireScale = 0.0
     BroadcastHandlerClass="BonusPack.LMSBroadcastHandler"

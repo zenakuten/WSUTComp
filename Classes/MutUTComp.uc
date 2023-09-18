@@ -90,6 +90,7 @@ var config bool bUseWhitelist;
 var config string WhitelistBanMessage;
 var config bool bAllowColorWeapons;
 var config bool bDamageIndicator;
+var config int MaxSavedMoves;
 
 struct MapVotePair
 {
@@ -867,6 +868,7 @@ function SpawnReplicationClass()
     RepInfo.bDebugLogging = bDebugLogging;
     RepInfo.bAllowColorWeapons = bAllowColorWeapons;
     RepInfo.bDamageIndicator = bDamageIndicator;
+    RepInfo.MaxSavedMoves = MaxSavedMoves;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1647,9 +1649,9 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="UTComp Version 1.60 (Omni)"
+     FriendlyName="UTComp Version 1.62 (Omni)"
      FriendlyVersionPrefix="UTComp Version"
-     FriendlyVersionNumber=")o(mni 1.60"
+     FriendlyVersionNumber=")o(mni 1.62"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
@@ -1824,4 +1826,5 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
+     MaxSavedMoves=350
 }

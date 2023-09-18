@@ -64,6 +64,7 @@ var bool bDebugLogging;
 
 var bool bAllowColorWeapons;
 var bool bDamageIndicator;
+var int MaxSavedMoves;
 
 replication
 {
@@ -80,7 +81,7 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator;
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves;
 }
 
 defaultproperties
@@ -125,5 +126,6 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
+     MaxSavedMoves=350
 }
 
