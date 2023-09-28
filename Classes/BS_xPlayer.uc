@@ -3497,7 +3497,7 @@ function UTComp_ReplicateMove(
     }
 
     // Get a SavedMove actor to store the movement in.
-    NewMove = GetFreeMove();
+    NewMove = GetFreeMoveEx();
     if ( NewMove == None )
         return;
     NewMove.SetMoveFor(self, DeltaTime, NewAccel, DoubleClickMove);

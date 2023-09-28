@@ -1,5 +1,5 @@
 
-class UTComp_xPawn extends xPawn;
+class UTComp_xPawn extends ModernPawn;
 
 #exec texture import File=textures\purpmark.dds Name=PurpleMarker
 
@@ -394,6 +394,7 @@ simulated function Tick(float DeltaTime)
     if(RepInfo==None)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
             break;
+
     super.Tick(DeltaTime);
 
     if(Level.NetMode==NM_DedicatedServer)
