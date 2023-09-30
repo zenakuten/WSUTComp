@@ -4409,6 +4409,41 @@ simulated function SetMenuColor(int playerID)
     }
 }
 
+// snarf attempt to fix netcode breaking after round ends
+function RoundHasEnded()
+{
+    local MutUTComp MutatorOwner;
+
+    foreach DynamicActors(Class'MutUTComp', MutatorOwner)
+        break;
+
+    if(Role == ROLE_Authority && MutatorOwner != None && MutatorOwner.bEndOfRoundNetcodeFix)
+    {
+        if(MutatorOwner.PCC != none && Pawn != None)
+        {
+            MutatorOwner.PCC = MutatorOwner.PCC.RemovePawnFromList(Pawn, MutatorOwner.PCC);
+        }
+
+        MutatorOwner.TriggerNetcodeReset();
+    }
+
+    // don't state transition if we are getting deleted
+    if(bPendingDestroy)
+        return;
+
+    super.RoundHasEnded();
+}
+
+// snarf attempt to fix netcode breaking after round ends
+function ClientRoundEnded()
+{
+    // don't state transition if we are getting deleted
+    if(bPendingDestroy)
+        return;
+
+    super.ClientRoundEnded();
+}
+
 defaultproperties
 {
 
