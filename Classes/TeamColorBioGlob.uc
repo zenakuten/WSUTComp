@@ -92,21 +92,24 @@ simulated function Destroyed()
 simulated function SetColors()
 {
     local Color color;
-    if(Settings.bTeamColorBio && !bColorSet && Level.NetMode != NM_DedicatedServer)
+    if(Level.NetMode != NM_DedicatedServer)
     {
-        if(CanUseColors())
+        if(Settings.bTeamColorBio && !bColorSet)
         {
-            if(TeamNum == 0 || TeamNum == 1)
+            if(CanUseColors())
             {
+                if(TeamNum == 0 || TeamNum == 1)
+                {
 
-                LightBrightness=210;
-                color = class'TeamColorManager'.static.GetColor(TeamNum, Level.GetLocalPlayerController());
-                LightHue = class'TeamColorManager'.static.GetHue(color);
+                    LightBrightness=210;
+                    color = class'TeamColorManager'.static.GetColor(TeamNum, Level.GetLocalPlayerController());
+                    LightHue = class'TeamColorManager'.static.GetHue(color);
 
-                Alpha.Color.R = color.R;
-                Alpha.Color.G = color.G;
-                Alpha.Color.B = color.B;
-                bColorSet=true;
+                    Alpha.Color.R = color.R;
+                    Alpha.Color.G = color.G;
+                    Alpha.Color.B = color.B;
+                    bColorSet=true;
+                }
             }
         }
     }

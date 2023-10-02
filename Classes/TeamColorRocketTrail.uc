@@ -32,6 +32,9 @@ function SetColors()
 {
     local Color color;
     local UTComp_Settings Settings;
+    if(Level.NetMode == NM_DedicatedServer)
+        return;
+
     if(!bColorSet)
     {
         Settings = BS_xPlayer(Level.GetLocalPlayerController()).Settings;

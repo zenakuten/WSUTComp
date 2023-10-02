@@ -1684,9 +1684,9 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="UTComp Version 1.64 (Omni)"
+     FriendlyName="UTComp Version 1.65 (Omni)"
      FriendlyVersionPrefix="UTComp Version"
-     FriendlyVersionNumber=")o(mni 1.64"
+     FriendlyVersionNumber=")o(mni 1.65"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
