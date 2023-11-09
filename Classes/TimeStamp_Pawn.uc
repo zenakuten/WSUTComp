@@ -7,6 +7,12 @@ var int timestamp;
 var int NewTimeStamp;
 var float dt;
 
+replication
+{
+    reliable if(Role == ROLE_Authority)
+        ClientReset;
+}
+
 function prebeginplay()
 {
     super.prebeginplay();
@@ -33,6 +39,23 @@ simulated event tick(float deltatime)
        TimeStamp=NewTimeStamp;
        DT=0.00;
    }
+}
+
+function Reset()
+{
+    super.Reset();
+
+    TimeStamp = 0;
+    NewTimeStamp = 0;
+    DT=0.0;
+    ClientReset();
+}
+
+simulated function ClientReset()
+{
+    TimeStamp = 0;
+    NewTimeStamp = 0;
+    DT=0.0;
 }
 
 DefaultProperties
