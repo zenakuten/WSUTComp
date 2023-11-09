@@ -564,7 +564,7 @@ simulated function InitializeStuff()
     InitializeScoreboard();
     SetInitialColoredName();
     SetShowSelf(Settings.bShowSelfInTeamOverlay);
-    SetBStats(class'UTComp_Scoreboard'.default.bDrawStats || class'UTComp_ScoreBoard'.default.bOverrideDisplayStats);
+    SetBStats(class'UTComp_Scoreboard'.default.bDrawStats || class'UTComp_Scoreboard'.default.bOverrideDisplayStats);
     SetEyeHeightAlgorithm(Settings.bUseNewEyeHeightAlgorithm);
     ServerSetNetUpdateRate(Settings.DesiredNetUpdateRate, Player.CurrentNetSpeed);
     SetMaxSavedMoves();
@@ -594,9 +594,24 @@ simulated function InitializeStuff()
 
 simulated function InitializeScoreboard()
 {
-    local class<scoreboard> NewScoreboardclass;
+	// Updated pooty 10/2023
+	
+	
+   local class<scoreboard> NewScoreboardclass;
+		
 
-    if(myHud!=None && myHUD.ScoreBoard.IsA('UTComp_ScoreBoard') && GameReplicationInfo!=None)
+    log("InitializeScoreboard  myHUD.ScoreBoard="$ myHUD.ScoreBoard,'MutUTComp BS_xPlayer');
+    
+    if(myHud!=None 
+       && (myHUD.ScoreBoard.IsA('UTComp_Scoreboard') 
+           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardONS') 
+           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardCTF')
+           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardAS') 
+           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardMutant')
+           // the above are all "enhanced" scoreboards.
+           ) 
+       // above are enhanced, but may or may not be subclassed of UTComp_Scoreboard 
+       && GameReplicationInfo!=None)
     {
         if(Settings.bUseDefaultScoreboard)
         {
@@ -609,15 +624,24 @@ simulated function InitializeScoreboard()
     }
     else if(ClientChangedScoreBoard && !Settings.bUseDefaultScoreboard)
     {
-        //TODO: SCOREBOARD
-        //if (Level.Game.IsA('xCTFGame'))
-        //    NewScoreboardClass = class'UTComp_ScoreBoardCTF';
-        //else
-            NewScoreboardClass = class'UTComp_ScoreBoard';
+        
+       	if (Level.Game.IsA('ONSOnslaughtGame')) NewScoreboardClass = class'UTComp_ScoreBoardONS';
+	     	//else if (Level.Game.IsA('xCTFGame')) NewScoreboardClass = class'UTComp_ScoreBoardCTF';  // this one is quite different...based on Enhanced.
+	     	// Commented out in previous version so keeping it commented out pooty 10/23
+	      else if (Level.Game.IsA('xMutantGame')) NewScoreboardClass = class'UTComp_ScoreBoardMutant';
+	      else if (Level.Game.IsA('ASGameInfo')) NewScoreboardClass = class'UTComp_ScoreBoardAS';
+	      else // default to base UTComp Enhanced scoreboard
+            NewScoreboardClass = class'UTComp_Scoreboard';
     }
-    if(myHUD!=None && NewScoreBoardClass!=None)
+    
+        
+    if(myHUD!=None && NewScoreBoardClass!=None) {
+    	log("InitializeScoreboard  SET NEW ScoreBoard="$NewScoreboardClass,'MutUTComp BS_xPlayer');
         myHUD.SetScoreBoardClass( NewScoreboardClass);
+    }    
 }
+
+
 
 simulated function SetInitialColoredName()
 {

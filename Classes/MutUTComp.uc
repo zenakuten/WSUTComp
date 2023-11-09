@@ -24,8 +24,17 @@ var config bool bEnableClanSkins;
 var config bool bEnableTeamOverlay;
 var config bool bEnablePowerupsOverlay;
 var config byte EnableHitSoundsMode;
-//var config bool bEnableScoreboard;
-var bool bEnableScoreboard;
+//var config bool bEnableScoreboard;  // Not used really
+var bool bEnableScoreboard;  // always true.
+// UTComp ALWAYS changes the scoreboard to either 1. Slightly tweaked Scoreboard with Colornames or 
+// 2.  Fancy Enhanced Graphic Scoreboard based n UTComp_Scoreboard (which is always instantiated to at least hold colored names)
+// WHAT IS CONFUSING is UTComp_Scoreboard is the fancy enhanced graphics version, but the only
+// one special Gametype  that's fancy is CTF that's based on UTComp_Scoreboard, the rest are all based on xInterface (eg. stock scoreboards)
+// added UTComp_Scoreboard_ONS 10/2023
+
+
+// pooty 10/2023
+
 var config bool bEnableWarmup;
 var config float WarmupReadyPercentRequired;
 var config bool bShowSpawnsDuringWarmup;
@@ -1118,10 +1127,14 @@ function ModifyLogin(out string Portal, out string Options)
 		Level.Game.PlayerControllerClass = none;
 	}
 
+  if (bDebugLogging)  log("Initial ScoreboardType="$Level.Game.ScoreBoardType$" MAXPLAYERS="$Level.Game.MaxPlayers,'MutUTComp');
+// Restructing IF pooty 10/2023
+
+/* old code
     if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardDeathMatch")
-    {
+    {  
         if(bEnableScoreBoard)
-            Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard');
+            Level.Game.ScoreBoardType=string(class'UTComp_Scoreboard');
         else
             Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardDM');
     }
@@ -1133,7 +1146,7 @@ function ModifyLogin(out string Portal, out string Options)
             //if (Level.Game.IsA('xCTFGame'))
             //    Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardCTF');
             //else
-                Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard');
+                Level.Game.ScoreBoardType=string(class'UTComp_Scoreboard');
         }
         else if(ONSOnslaughtGame(Level.Game) == none) // no custom scoreboard at all for Onslaught 
         {
@@ -1150,7 +1163,41 @@ function ModifyLogin(out string Portal, out string Options)
     {
         Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard_Mutant');
     }
-
+*/
+  
+	  
+	 	  	//  the UTComp_ScoreBoard  It  has special graphics/display
+	  	// it CAN handle both DM And TDM games.
+	  	// Can be overridden by UserSettings
+	  	// If you don't use UTComp_Scoreboard then the other scoreboards
+	  	// UTComp_ScoreboardDM, UTComp_ScoreboardTDM - Same as the default scoreboard but with Colored Names
+	  	// No "real" option to just use default scoreboards -- that's ok colored names are cool.
+	  	
+	    if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardDeathMatch")
+	    {  // Regular DM Game
+	        if(bEnableScoreboard) 
+	           Level.Game.ScoreBoardType=string(class'UTComp_Scoreboard'); // special UTComp Scoreboard has different graphics.
+	        else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardDM');  // "Normal" scoreboard with some minor tweaks
+	    } // end DM if
+	    else if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardTeamDeathMatch")
+	    {  // WE have a TeamDM Game. (eg. ONS, CTF, AS etc.)
+	    	// Careful here as all these GameTypes are subclasses of TDM
+	        if(bEnableScoreboard)
+	        {
+	        	if (Level.Game.IsA('ONSOnslaughtGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardONS');
+	        //	else if (Level.Game.IsA('xCTFGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardCTF');  // this one is quite different...based on Enhanced.
+	        // Commented out in previous version so keeping it commented out pooty 10/23
+	        	else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard');  // Enhanced for any TDM game that isn't specific above
+	        }
+	        else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardTDM');  //default GT for any TDM game that isn't specific above
+	       
+	     }  //else TDM if end
+	     else if (bEnableScoreboard && Level.Game.IsA('xMutantGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardMutant');
+	     else if (bEnableScoreboard && Level.Game.IsA('ASGameInfo')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardAS');
+	     // should never get here either DM game or TDM game..but just to be safe
+	    // so we will just leave it alone, as it could be some other custom scoreboard.
+	  
+	  
 	if (bDebugLogging) log("ModifyLogin ScoreboardType="$Level.Game.ScoreBoardType,'MutUTComp');
 	
     Super.ModifyLogin(Portal, Options);
@@ -1643,7 +1690,8 @@ defaultproperties
      bEnableClanSkins=True
      bEnablePowerupsOverlay=True
      EnableHitSoundsMode=1
-     bEnableScoreboard=True
+     bEnableScoreboard=True  // really isn't configurable now, UTComp always tweaks scoreboards.
+     
      bEnableWarmup=True
      WarmupReadyPercentRequired=100.000000
      bEnableWeaponStats=True
@@ -1684,9 +1732,10 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="UTComp Version 1.65 (Omni)"
+     FriendlyName="UTComp Version 1.66 (Omni)"
      FriendlyVersionPrefix="UTComp Version"
-     FriendlyVersionNumber=")o(mni 1.65"
+     FriendlyVersionNumber=")o(mni 1.66"
+     // updated pooty 10/2023
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True

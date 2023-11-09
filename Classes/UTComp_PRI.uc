@@ -66,7 +66,12 @@ var int DefKills;
 
 
 
-const iMAXPLAYERS = 8;
+//const iMAXPLAYERS = 8;
+const iMAXPLAYERS = 16;
+// Updated pooty 10/2023
+// UTComp_PRI is used in a bunch of places and while this applies to overlay in TDM
+// It should have enough slots for full 32p.
+// hoping to avoid any side effects from too small array
 
 struct TeamOverlayInfo
 {

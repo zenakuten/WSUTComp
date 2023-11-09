@@ -1,6 +1,6 @@
 
 
-class UTComp_ScoreBoard extends UTComp_ScoreBoardDM;
+class UTComp_ScoreBoardONS extends UTComp_ScoreBoardDM;
 #exec texture Import File=textures\UTCompLogo.TGA Name=UTCompLogo Mips=Off Alpha=1
 #exec texture Import File=textures\ScoreboardText.TGA Name=ScoreboardText Mips=Off Alpha=1
 
@@ -538,8 +538,6 @@ defaultproperties
      //tmp1=0.156000
      //tmp2=0.172000
      //tmp3=0.189000
-     // put the offsets in each one based off StartY.
-     
      bEnableColoredNamesOnScoreboard=True
      bDrawStats=False
      bDrawPickups=False

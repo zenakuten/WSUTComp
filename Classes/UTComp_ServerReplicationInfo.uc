@@ -33,7 +33,9 @@ var string VotingNames[15];
 var string VotingOptions[15];
 var bool bEnableTimedOvertime;
 
-var PlayerReplicationInfo LinePRI[10];
+//var PlayerReplicationInfo LinePRI[10];
+// not used pooty 10/2023
+
 var bool bEnableEnhancedNetCode;
 var bool bEnableEnhancedNetCodeVoting;
 
@@ -75,7 +77,7 @@ replication
         bEnableHitsoundsVoting, bEnableTeamOverlayVoting, bEnablePowerupsOverlayVoting,
         bEnableMapVoting, bEnableGametypeVoting, VotingNames,
         benableDoubleDamage, ServerMaxPlayers, bEnableTimedOvertime,
-        MaxPlayersClone, bEnableAdvancedVotingOptions, VotingOptions, LinePRI, bEnableTimedOvertimeVoting,
+        MaxPlayersClone, bEnableAdvancedVotingOptions, VotingOptions,  bEnableTimedOvertimeVoting, // LinePRI,
         bEnableEnhancedNetCodeVoting,bEnableEnhancedNetCode, bEnableWarmupVoting,NewNetUpdateFrequency,PingTweenTime,
         bAllowRestartVoteEvenIfMapVotingIsTurnedOff, MaxMultiDodges, MinNetSpeed, MaxNetSpeed,
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
