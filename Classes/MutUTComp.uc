@@ -1639,37 +1639,44 @@ function string GetInventoryClassOverride(string InventoryClassName)
 	return InventoryClassName;
 }
 
-// attempt to fix unregs after first round in round based games
-// this is called by each controller going to RoundEnded state
-// but we only want it called once so use boolean flag and timer
-function TriggerNetcodeReset()
-{
-    if(!bNetcodeResetTriggered)
-    {
-        bNetcodeResetTriggered=true;
-        // 1 sec should be long enough for all controllers to have called this
-        SetTimer(1.0, false);
-    }
-}
+/*
+ fix for netcode not working in second round in assault and ons game modes
+ reset is called bewteen rounds, clean up timestamp pawn and controller and recreate 
+ ONS and AS round end code calls 
 
-// reset all netcode timing related stuff
-function ResetNetcode()
-{
-    AverDT=0;
-    LastReplicatedAverDT=0;
-    ClientTimeStamp=0;
-    counter=0;
-    SetPawnStamp();
-}
-
-// called by TriggerNetcodeReset
-function Timer()
-{
-    if(bNetcodeResetTriggered)
+    for(C = Level.ControllerList;C != None; C = C.NextController)
     {
-        ResetNetcode();
-        bNetcodeResetTriggered=false;
+        ...
+        C.RoundHasEnded();
     }
+
+   RoundHasEnded in Timestamp_Controller breaks the timestamp mechanism.  
+   
+   For whatever reason (engine bug?) we cannot override RoundHasEnded() function in 
+   Timestamp_Controller.  It never gets called, instead the base method gets called 
+   which unpossesses the pawn and destroys itself.  Not good.  Since we can't override 
+   RoundHasEnded, we fix what gets broken in the Reset() function that gets called for
+   all actors (including this mutator) during round changes. 
+*/
+
+function Reset()
+{
+    local Controller C;
+
+    // remove all Timestamp_pawn from clients
+    for(C = Level.ControllerList;C != None;C = C.NextController)
+    {
+        if(BS_xPlayer(C) != None)
+            BS_xPlayer(C).ClientResetNetcode();
+    }
+
+    // delete these server side, the get recreated in SetPawnStamp function
+    counterpawn.Unpossessed();
+    counterpawn.Destroy();
+    counterpawn = none;
+    countercontroller.Pawn = None;
+    countercontroller.Destroy();
+    countercontroller = None;
 }
 
 defaultproperties

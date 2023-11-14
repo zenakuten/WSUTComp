@@ -164,6 +164,9 @@ replication
         ReceiveWeaponEffect;
     reliable if (bDemoRecording)
         DemoReceiveWeaponEffect;
+
+    reliable if(Role == ROLE_Authority)
+        ClientResetNetcode;
 }
 
 simulated function SaveSettings()
@@ -4433,40 +4436,17 @@ simulated function SetMenuColor(int playerID)
     }
 }
 
-// snarf attempt to fix netcode breaking after round ends
-function RoundHasEnded()
+simulated function ClientResetNetcode()
 {
-    local MutUTComp MutatorOwner;
+    local Timestamp_Pawn P;
 
-    foreach DynamicActors(Class'MutUTComp', MutatorOwner)
-        break;
-
-    if(Role == ROLE_Authority && MutatorOwner != None && MutatorOwner.bEndOfRoundNetcodeFix)
+    foreach DynamicActors(class'Timestamp_Pawn', P)
     {
-        if(MutatorOwner.PCC != none && Pawn != None)
-        {
-            MutatorOwner.PCC = MutatorOwner.PCC.RemovePawnFromList(Pawn, MutatorOwner.PCC);
-        }
-
-        MutatorOwner.TriggerNetcodeReset();
+        if(P != None)
+            P.Destroy();
     }
-
-    // don't state transition if we are getting deleted
-    if(bPendingDestroy)
-        return;
-
-    super.RoundHasEnded();
 }
 
-// snarf attempt to fix netcode breaking after round ends
-function ClientRoundEnded()
-{
-    // don't state transition if we are getting deleted
-    if(bPendingDestroy)
-        return;
-
-    super.ClientRoundEnded();
-}
 
 defaultproperties
 {
