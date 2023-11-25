@@ -22,7 +22,7 @@ simulated function bool CanUseColors()
 {
    local UTComp_ServerReplicationInfo RepInfo;
 
-    RepInfo = class'UTComp_Util'.static.GetServerReplicationInfo(Instigator);
+    RepInfo = class'UTComp_Util'.static.GetServerReplicationInfo(Level.GetLocalPlayerController());
     if(RepInfo != None)
         return RepInfo.bAllowColorWeapons;
 

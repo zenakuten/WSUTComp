@@ -30,6 +30,9 @@ simulated static function UTComp_PRI GetUTCompPRI(PlayerReplicationInfo PRI)
 
 simulated static function UTComp_ServerReplicationInfo GetServerReplicationInfo(Actor A)
 {
+    if(A == None)
+        return None;
+        
     if (default.RepInfo==None)
         foreach A.DynamicActors(Class'UTComp_ServerReplicationInfo', default.RepInfo)
             break;
