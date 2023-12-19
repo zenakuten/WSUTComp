@@ -59,6 +59,9 @@ function bool InternalOnClick(GUIComponent C)
     else if(C==UTCompMenuButtons[9])
         PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Extra'));
 
+    else if(C==UTCompMenuButtons[10])
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Emoticons'));
+
     return false;
 }
 
@@ -198,6 +201,17 @@ defaultproperties
      End Object
      UTCompMenuButtons(9)=GUIButton'ExtraButton'
 
+     Begin Object class=GUIButton name=EmoteButton
+         Caption="Emotes"
+         WinTop=0.220000
+         WinLeft=0.7525
+         //WinWidth=0.180000
+         WinWidth=0.144
+         WinHeight=0.060000
+         OnClick=InternalOnClick
+     End Object
+     UTCompMenuButtons(10)=GUIButton'EmoteButton'
+
      Begin Object class=GUIButton name=AdminButton
          Caption="Admin"
          WinTop=0.720000
@@ -208,7 +222,7 @@ defaultproperties
          OnClick=InternalOnClick
          bVisible=false
      End Object
-     UTCompMenuButtons(10)=GUIButton'AdminButton'
+     UTCompMenuButtons(11)=GUIButton'AdminButton'
 
      Begin Object Class=GUITabControl Name=LoginMenuTC
          bFillSpace=True

@@ -4,7 +4,7 @@ class MutUTComp extends Mutator;
 #exec OBJ LOAD FILE="Textures\minimegatex.utx"
 #exec OBJ LOAD FILE="Textures\TeamColorTex.utx" PACKAGE=UTCompOmni
 
-var bool bEnableVoting;
+var config bool bEnableVoting;
 var config bool bEnableBrightskinsVoting;
 var config bool bEnableHitsoundsVoting;
 var config bool bEnableWarmupVoting;
@@ -100,6 +100,8 @@ var config string WhitelistBanMessage;
 var config bool bAllowColorWeapons;
 var config bool bDamageIndicator;
 var config int MaxSavedMoves;
+var config bool bEnableEmoticons;
+var Emoticons EmoteActor;
 
 struct MapVotePair
 {
@@ -213,9 +215,6 @@ var string WeaponPickupClassNamesUTComp[13];
 
 var bool bDefaultWeaponsChanged;
 
-var config bool bEndOfRoundNetcodeFix;
-var bool bNetcodeResetTriggered;
-
 //==========================
 //  End Enhanced Netcode stuff
 //==========================
@@ -241,9 +240,19 @@ function PreBeginPlay()
     SetupFlags();
     SetupPowerupInfo();
     SetupWhitelist();
+    SetupEmoticons();
 
     super.PreBeginPlay();
     if (bDebugLogging) log("Finished PreBeginPlay...",'MutUTComp');
+}
+
+function SetupEmoticons()
+{
+    if(bEnableEmoticons)
+    {
+        log("spawning emote actor");
+        EmoteActor = spawn(class'Emoticons', self);
+    }
 }
 
 function SetupPowerupInfo()
@@ -880,6 +889,7 @@ function SpawnReplicationClass()
     RepInfo.bAllowColorWeapons = bAllowColorWeapons;
     RepInfo.bDamageIndicator = bDamageIndicator;
     RepInfo.MaxSavedMoves = MaxSavedMoves;
+    Repinfo.bEnableEmoticons = bEnableEmoticons;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -956,6 +966,7 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
     local LinkedReplicationInfo lPRI;
     local int x, i;
 	local WeaponLocker L;
+    local EmoticonsReplicationInfo EmoteInfo;
 
     bSuperRelevant = 0;
    if(Other.IsA('pickup') && Level.Game!=None && Level.Game.IsA('utcomp_clanarena'))
@@ -1056,6 +1067,13 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
             if(bEnhancedNetCodeEnabledAtStartOfMap)
                 PlayerReplicationInfo(Other).CustomReplicationInfo.NextReplicationInfo = Spawn(class'NewNet_PRI', Other.Owner);
         }
+    }
+
+    if(BS_xPlayer(Other) != None && BS_xPlayer(Other).EmoteInfo == None && bEnableEmoticons)
+    {
+        EmoteInfo = spawn(class'EmoticonsReplicationInfo', Other);
+        EmoteInfo.EmoteActor = EmoteActor;
+        BS_xPlayer(Other).EmoteInfo = EmoteInfo;
     }
 
     if (Other.IsA('UDamagePack') && !GetDoubleDamage())
@@ -1541,6 +1559,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "MinNetUpdateRate", "Minimum rate of client updates", 1, 1, "Text", "0;0:999",, True, True);
     PlayInfo.AddSetting("UTComp Settings", "MaxNetUpdateRate", "Maximum rate of client updates", 1, 1, "Text", "0;0:999",, True, True);
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", 1, 1,"Check");
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);
@@ -1576,6 +1595,7 @@ static event string GetDescriptionText(string PropName)
         case "MinNetUpdateRate": return "Minimum Rate at which clients are expected to send updates to the server";
         case "MaxNetUpdateRate": return "Maximum Rate at which clients can send updates to the server";
         case "bShowSpawnsDuringWarmup": return "Show spawn points during warmup by spawning dummies on every one of them";
+        case "bEnableEmoticons": return "Enable emoticons";
     }
 	return Super.GetDescriptionText(PropName);
 }
@@ -1739,9 +1759,9 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="UTComp Version 1.68 (Omni)"
+     FriendlyName="UTComp Version 1.69 (Omni)"
      FriendlyVersionPrefix="UTComp Version"
-     FriendlyVersionNumber=")o(mni 1.68"
+     FriendlyVersionNumber=")o(mni 1.69"
      // updated pooty 10/2023
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
@@ -1826,19 +1846,19 @@ defaultproperties
      WeaponPickupClasses(10)=Class'NewNet_ONSMineLayerPickup'
      WeaponPickupClasses(11)=Class'NewNet_ONSGrenadePickup'
      WeaponPickupClasses(12)=Class'NewNet_SuperShockRiflePickup'
-     WeaponPickupClassNames(0)="NewNet_ShockRiflePickup"
-     WeaponPickupClassNames(1)="NewNet_LinkGunPickup"
-     WeaponPickupClassNames(2)="NewNet_MiniGunPickup"
-     WeaponPickupClassNames(3)="NewNet_FlakCannonPickup"
-     WeaponPickupClassNames(4)="NewNet_RocketLauncherPickup"
-     WeaponPickupClassNames(5)="NewNet_SniperRiflePickup"
-     WeaponPickupClassNames(6)="NewNet_BioRiflePickup"
-     WeaponPickupClassNames(7)="NewNet_AssaultRiflePickup"
-     WeaponPickupClassNames(8)="NewNet_ClassicSniperRiflePickup"
-     WeaponPickupClassNames(9)="NewNet_ONSAVRiLPickup"
-     WeaponPickupClassNames(10)="NewNet_ONSMineLayerPickup"
-     WeaponPickupClassNames(11)="NewNet_ONSGrenadePickup"
-     WeaponPickupClassNames(12)="NewNet_SuperShockRiflePickup"
+     WeaponPickupClassNames(0)="UTCompOmni.NewNet_ShockRiflePickup"
+     WeaponPickupClassNames(1)="UTCompOmni.NewNet_LinkGunPickup"
+     WeaponPickupClassNames(2)="UTCompOmni.NewNet_MiniGunPickup"
+     WeaponPickupClassNames(3)="UTCompOmni.NewNet_FlakCannonPickup"
+     WeaponPickupClassNames(4)="UTCompOmni.NewNet_RocketLauncherPickup"
+     WeaponPickupClassNames(5)="UTCompOmni.NewNet_SniperRiflePickup"
+     WeaponPickupClassNames(6)="UTCompOmni.NewNet_BioRiflePickup"
+     WeaponPickupClassNames(7)="UTCompOmni.NewNet_AssaultRiflePickup"
+     WeaponPickupClassNames(8)="UTCompOmni.NewNet_ClassicSniperRiflePickup"
+     WeaponPickupClassNames(9)="UTCompOmni.NewNet_ONSAVRiLPickup"
+     WeaponPickupClassNames(10)="UTCompOmni.NewNet_ONSMineLayerPickup"
+     WeaponPickupClassNames(11)="UTCompOmni.NewNet_ONSGrenadePickup"
+     WeaponPickupClassNames(12)="UTCompOmni.NewNet_SuperShockRiflePickup"
 
     // replaced UTComp classes
      WeaponClassesUTComp(0)=Class'UTComp_ShockRifle'
@@ -1867,19 +1887,19 @@ defaultproperties
      WeaponPickupClassesUTComp(10)=Class'UTComp_ONSMineLayerPickup'
      WeaponPickupClassesUTComp(11)=Class'UTComp_ONSGrenadePickup'
      WeaponPickupClassesUTComp(12)=Class'UTComp_SuperShockRiflePickup'
-     WeaponPickupClassNamesUTComp(0)="UTComp_ShockRiflePickup"
-     WeaponPickupClassNamesUTComp(1)="UTComp_LinkGunPickup"
-     WeaponPickupClassNamesUTComp(2)="UTComp_MiniGunPickup"
-     WeaponPickupClassNamesUTComp(3)="UTComp_FlakCannonPickup"
-     WeaponPickupClassNamesUTComp(4)="UTComp_RocketLauncherPickup"
-     WeaponPickupClassNamesUTComp(5)="UTComp_SniperRiflePickup"
-     WeaponPickupClassNamesUTComp(6)="UTComp_BioRiflePickup"
-     WeaponPickupClassNamesUTComp(7)="UTComp_AssaultRiflePickup"
-     WeaponPickupClassNamesUTComp(8)="UTComp_ClassicSniperRiflePickup"
-     WeaponPickupClassNamesUTComp(9)="UTComp_ONSAVRiLPickup"
-     WeaponPickupClassNamesUTComp(10)="UTComp_ONSMineLayerPickup"
-     WeaponPickupClassNamesUTComp(11)="UTComp_ONSGrenadePickup"
-     WeaponPickupClassNamesUTComp(12)="UTComp_SuperShockRiflePickup"
+     WeaponPickupClassNamesUTComp(0)="UTCompOmni.UTComp_ShockRiflePickup"
+     WeaponPickupClassNamesUTComp(1)="UTCompOmni.UTComp_LinkGunPickup"
+     WeaponPickupClassNamesUTComp(2)="UTCompOmni.UTComp_MiniGunPickup"
+     WeaponPickupClassNamesUTComp(3)="UTCompOmni.UTComp_FlakCannonPickup"
+     WeaponPickupClassNamesUTComp(4)="UTCompOmni.UTComp_RocketLauncherPickup"
+     WeaponPickupClassNamesUTComp(5)="UTCompOmni.UTComp_SniperRiflePickup"
+     WeaponPickupClassNamesUTComp(6)="UTCompOmni.UTComp_BioRiflePickup"
+     WeaponPickupClassNamesUTComp(7)="UTCompOmni.UTComp_AssaultRiflePickup"
+     WeaponPickupClassNamesUTComp(8)="UTCompOmni.UTComp_ClassicSniperRiflePickup"
+     WeaponPickupClassNamesUTComp(9)="UTCompOmni.UTComp_ONSAVRiLPickup"
+     WeaponPickupClassNamesUTComp(10)="UTCompOmni.UTComp_ONSMineLayerPickup"
+     WeaponPickupClassNamesUTComp(11)="UTCompOmni.UTComp_ONSGrenadePickup"
+     WeaponPickupClassNamesUTComp(12)="UTCompOmni.UTComp_SuperShockRiflePickup"
 
      bShieldFix=true
 
@@ -1919,5 +1939,5 @@ defaultproperties
      bDamageIndicator=true
      MaxSavedMoves=350
 
-     bEndOfRoundNetcodeFix=true
+     bEnableEmoticons=true
 }

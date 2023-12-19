@@ -3,6 +3,7 @@
 	Below code is copyright Azarael - used with permission:
 	https://steamcommunity.com/app/13230/discussions/0/611702631218438023/#c611702631227999537
 */
+#include Classes\Include\EmoticonsHud.uci
 
 //Common rendering code used in all widescreen HUDs
 //Courtesy of HUD Scaling Fix by Azarael, modified a bit for portability

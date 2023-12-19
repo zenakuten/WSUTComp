@@ -133,7 +133,8 @@ var int HitDamage;
 var bool bHitContact;
 var Pawn HitPawn;
 
-
+//used by hud menu
+var EmoticonsReplicationInfo EmoteInfo;
 
 replication
 {
@@ -141,7 +142,7 @@ replication
         ReceiveHit, ReceiveStats, ReceiveHitSound;
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
-        TimeBetweenUpdates, SetMenuColor, DenyPlayer, WhitelistCheck;
+        TimeBetweenUpdates, SetMenuColor, DenyPlayer, WhitelistCheck, EmoteInfo;
     reliable if(Role<Role_Authority)
         SetbStats, TurnOffNetCode, ServerSetEyeHeightAlgorithm, ServerSetNetUpdateRate, ServerViewPlayer;
     unreliable if(Role<Role_Authority)

@@ -68,6 +68,8 @@ var bool bAllowColorWeapons;
 var bool bDamageIndicator;
 var int MaxSavedMoves;
 
+var bool bEnableEmoticons;
+
 replication
 {
     reliable if(Role==Role_Authority)
@@ -83,7 +85,7 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves;
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons;
 }
 
 defaultproperties
@@ -129,5 +131,7 @@ defaultproperties
      bAllowColorWeapons=true
      bDamageIndicator=true
      MaxSavedMoves=350
+
+     bEnableEmoticons=true
 }
 
