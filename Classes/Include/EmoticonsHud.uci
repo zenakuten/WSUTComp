@@ -8,6 +8,11 @@ function EmoticonsReplicationInfo GetReplication()
     //         break;
     // }
 
+    if(BS_xPlayer(PlayerOwner) != None)
+    {
+        return BS_xPlayer(PlayerOwner).EmoteInfo;
+    }
+
     return Class'Emoticons'.default.EmoticonsState;
 }
 
