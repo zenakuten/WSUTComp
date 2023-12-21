@@ -9,7 +9,6 @@ struct sSmileyMessageType
 };
 
 var() config array<sSmileyMessageType> Smileys;
-var transient EmoticonsReplicationInfo EmoticonsState;
 
 defaultproperties
 {

@@ -3,17 +3,12 @@
 
 function EmoticonsReplicationInfo GetReplication()
 {
-    // if (Class'MutEmoticons'.default.EmoticonsState == none) {
-    //     foreach DynamicActors(Class'EmoticonsReplicationInfo', Class'MutEmoticons'.default.EmoticonsState) 
-    //         break;
-    // }
-
     if(BS_xPlayer(PlayerOwner) != None)
     {
         return BS_xPlayer(PlayerOwner).EmoteInfo;
     }
 
-    return Class'Emoticons'.default.EmoticonsState;
+    return None;
 }
 
 // Modified copy from Engine/Classes/HUD.uc

@@ -14,13 +14,6 @@ replication
 		ClientAddEmoticon;
 }
 
-simulated event PreBeginPlay()
-{
-    if (Level.NetMode != NM_DedicatedServer) {
-        Class'Emoticons'.default.EmoticonsState = self;
-    }
-}
-
 // Send Smileys to client.
 event Tick(float deltaTime)
 {
