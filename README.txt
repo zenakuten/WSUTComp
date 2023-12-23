@@ -30,6 +30,9 @@ This would ignore the fire burning of firetank and beam weapon of the hell bende
 
 Release Info
 
+1.70
+- add client side config for emoticons
+
 1.69
 - add emoticons
 - fix SSR not spawning
