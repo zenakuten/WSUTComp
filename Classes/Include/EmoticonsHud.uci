@@ -31,6 +31,11 @@ function DisplayMessages(Canvas C)
         return;
     }
 
+    if (!HUDSettings.bEnableEmoticons) {
+        super.DisplayMessages(C);
+		return;
+	}
+
     for( i = 0; i < ConsoleMessageCount; i++ )
     {
         if ( TextMessages[i].Text == "" )
@@ -81,6 +86,20 @@ simulated function DrawTypingPrompt(Canvas C, String Text, optional int Pos)
 {
     local float XPos, YPos;
     local float XL, YL;
+
+    if(PlayerOwner != None 
+        && BS_xPlayer(PlayerOwner) != None
+        && BS_xPlayer(PlayerOwner).RepInfo != None 
+        && !BS_xPlayer(PlayerOwner).RepInfo.bEnableEmoticons)
+    {
+        super.DrawTypingPrompt(C, Text, Pos);
+        return;
+    }
+
+    if (!HUDSettings.bEnableEmoticons) {
+        super.DrawTypingPrompt(C, Text, Pos);
+		return;
+	}    
 
     C.Font = GetConsoleFont(C);
     C.Style = ERenderStyle.STY_Alpha;

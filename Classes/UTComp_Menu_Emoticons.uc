@@ -5,6 +5,7 @@ var automated AltSectionBackground BackG;
 var automated GUIVertScrollBar ScrollBar;
 var EmoticonsReplicationInfo ERI;
 var int Offset;
+var automated moCheckBox ch_EnableEmoticons;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -15,7 +16,11 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
         ERI = BS_xPlayer(PlayerOwner()).EmoteInfo;
         ScrollBar.ItemCount=ERI.Smileys.length;
     }
-	
+
+    if(HUDSettings != None)
+    {
+        ch_EnableEmoticons.Checked(HUDSettings.bEnableEmoticons);
+    }
 }
 
 delegate PositionChanged(int NewPos)
@@ -29,7 +34,6 @@ delegate OnRender(Canvas C)
 	local float x, y, w, h;
 	local float iconY;
 	
-	//x = PageOwner.ActualLeft() * 1.75;
 	x = PageOwner.ActualWidth() * 0.1;
 	y = PageOwner.ActualTop() * 1.75;
 	w = PageOwner.ActualWidth() * 1.00;
@@ -68,38 +72,38 @@ delegate OnRender(Canvas C)
 	}
 }
 
+function InternalOnChange( GUIComponent C )
+{
+    Switch(C)
+    {
+        case ch_EnableEmoticons: HUDSettings.bEnableEmoticons=ch_EnableEmoticons.IsChecked();  break;
+    }
+
+    SaveHUDSettings();
+}
+
 defaultproperties
 {
-    /*
-     Begin Object Class=AltSectionBackground Name=BackGObj
-         bFillClient=True
-         Caption="Emoticons"
-         LeftPadding=0.000000
-         RightPadding=0.000000
-         WinHeight=1.000000
-         OnPreDraw=BackGObj.InternalPreDraw
-         OnRendered=UTComp_Menu_Emoticons.OnRender
-     End Object
-     BackG=AltSectionBackground'UTCompOmni.UTComp_Menu_Emoticons.BackGObj'
-     */
-
      Begin Object Class=GUIVertScrollBar Name=ScrollBarObj
          ItemsPerPage=5
          PositionChanged=UTComp_Menu_Emoticons.PositionChanged
-         
-         //WinTop=0.050000
-         //WinLeft=0.955000
-         //WinWidth=0.035000
-         //WinHeight=0.900000
-
          WinTop=0.300000
          WinLeft=0.885000
          WinWidth=0.035000
          WinHeight=0.520000
-
-
          OnPreDraw=ScrollBarObj.GripPreDraw
          OnRendered=UTComp_Menu_Emoticons.OnRender
      End Object
      ScrollBar=GUIVertScrollBar'UTCompOmni.UTComp_Menu_Emoticons.ScrollBarObj'
+
+    Begin Object class=moCheckBox name=EnableEmoticonsCheck
+		WinWidth=0.150000
+		WinHeight=0.030000
+		WinLeft=0.70000
+		WinTop=0.300000
+        Caption="Enable Emoticons"
+        OnChange=InternalOnChange
+        OnCreateComponent=SpeedCheck.InternalOnCreateComponent
+    End Object
+    ch_EnableEmoticons=moCheckBox'UTComp_Menu_Emoticons.EnableEmoticonsCheck'
 }

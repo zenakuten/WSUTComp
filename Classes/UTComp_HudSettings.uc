@@ -21,9 +21,12 @@ var config bool bMatchHudColor;
 
 var SpecialCrosshair TempxHair;
 
+var config bool bEnableEmoticons;
+
 defaultproperties
 {
     bEnableCrosshairSizing=True
     bEnableWidescreenFix=False
     DamageIndicatorType=1
+    bEnableEmoticons=True
 }
