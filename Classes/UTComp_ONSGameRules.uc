@@ -40,7 +40,7 @@ function OPInitialise()
 
 	if (MutatorOwner == none)
 	{
-		Log("ERROR: UTComp_ONSGameRules.MutatorOwner IS NONE IN OPInitialise", 'UTCompOmni_Error');
+		Log("ERROR: UTComp_ONSGameRules.MutatorOwner IS NONE IN OPInitialise", 'WSUTComp_Error');
 		return;
 	}
 	
@@ -151,7 +151,7 @@ function OPInitialise()
 			VehicleSpawnMonitors[VehicleSpawnMonitors.Length-1].Tag = VF.Event;
 		}
 	}
-	if (bDebugRules) log("Finished OPInitialise",'UTCompOmni_ONSGameRules_OPInitialise');
+	if (bDebugRules) log("Finished OPInitialise",'WSUTComp_ONSGameRules_OPInitialise');
 }
 
 // snarf attempt to fix the after round shenanigans
@@ -197,7 +197,7 @@ function bool CheckScore(PlayerReplicationInfo Scorer)
 
 	            if(C != None) C = C.NextController;
 	        } // while
-	        if (bDebugRules) log("Finished Resetting ClientViews",'UTCompOmni_ONSGameRules_CheckScore');
+	        if (bDebugRules) log("Finished Resetting ClientViews",'WSUTComp_ONSGameRules_CheckScore');
 	    } // dead core
 	  }  // end bEnableEndRoundCheckScore
 

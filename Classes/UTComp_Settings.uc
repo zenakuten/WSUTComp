@@ -2,7 +2,7 @@
 //
 //-----------------------------------------------------------
 class UTComp_Settings extends Object
-    Config(UTCompOmni)
+    Config(WSUTComp)
     PerObjectConfig;
 
 #exec AUDIO IMPORT FILE=Sounds\HitSound.wav     GROUP=Sounds

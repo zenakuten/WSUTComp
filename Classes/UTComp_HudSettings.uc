@@ -1,5 +1,5 @@
 class UTComp_HUDSettings extends Object
-    Config(UTCompOmni)
+    Config(WSUTComp)
     PerObjectConfig;
 
 struct SpecialCrosshair

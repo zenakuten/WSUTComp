@@ -4452,8 +4452,8 @@ simulated function ClientResetNetcode()
 defaultproperties
 {
 
-     UTCompMenuClass="UTCompOmni.UTComp_Menu_OpenedMenu"
-     UTCompVotingMenuClass="UTCompOmni.UTComp_Menu_VoteInProgress"
+     UTCompMenuClass="WSUTComp.UTComp_Menu_OpenedMenu"
+     UTCompVotingMenuClass="WSUTComp.UTComp_Menu_VoteInProgress"
      redmessagecolor=(B=64,G=64,R=255,A=255)
      greenmessagecolor=(B=128,G=255,R=128,A=255)
      bluemessagecolor=(B=255,G=192,R=64,A=255)

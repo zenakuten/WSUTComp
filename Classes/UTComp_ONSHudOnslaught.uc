@@ -1,6 +1,6 @@
 
 
-class UTComp_ONSHudOnslaught extends ONSHudOnslaught config (UTCompOmni);
+class UTComp_ONSHudOnslaught extends ONSHudOnslaught config (WSUTComp);
 
 var UTComp_HUDSettings HUDSettings;
 

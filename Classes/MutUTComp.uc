@@ -1,8 +1,8 @@
 class MutUTComp extends Mutator;
 
-// #exec OBJ LOAD FILE="Textures\minimegatex.utx" PACKAGE=UTCompOmni
+// #exec OBJ LOAD FILE="Textures\minimegatex.utx" PACKAGE=WSUTComp
 #exec OBJ LOAD FILE="Textures\minimegatex.utx"
-#exec OBJ LOAD FILE="Textures\TeamColorTex.utx" PACKAGE=UTCompOmni
+#exec OBJ LOAD FILE="Textures\TeamColorTex.utx" PACKAGE=WSUTComp
 
 var config bool bEnableVoting;
 var config bool bEnableBrightskinsVoting;
@@ -1736,7 +1736,7 @@ defaultproperties
      VotingGametype(2)=(GametypeOptions="?game=XGame.xTeamGame?timelimit=20?goalscore=0?minplayers=0?Mutator=XWeapons.MutNoSuperWeapon?FriendlyfireScale=1.00?weaponstay=False?DoubleDamage=True?GrenadesOnSpawn=1?TimedOverTimeLength=5",GametypeName="Team Deathmatch")
      VotingGametype(3)=(GametypeOptions="?game=XGame.xCTFGame?timelimit=20?goalscore=0?minplayers=0?mutator=XGame.MutNoAdrenaline,XWeapons.MutNoSuperWeapon?friendlyfirescale=0?weaponstay=true?DoubleDamage=True?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Capture the Flag")
      VotingGametype(4)=(GametypeOptions="?game=Onslaught.ONSOnslaughtGame?timelimit=20?goalscore=1?mutator=XWeapons.MutNoSuperWeapon?minplayers=0?friendlyfirescale=0?weaponstay=True?DoubleDamage=True?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Onslaught")
-     VotingGametype(5)=(GametypeOptions="?game=UTCompOmni.UTComp_ClanArena?goalscore=7?TimeLimit=2?FriendlyFireScale=0?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Clan Arena")     
+     VotingGametype(5)=(GametypeOptions="?game=WSUTComp.UTComp_ClanArena?goalscore=7?TimeLimit=2?FriendlyFireScale=0?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Clan Arena")     
      VotingGametype(6)=(GametypeOptions="?game=UT2k4Assault.ASGameInfo?timelimit=20?goalscore=1?FriendlyFireScale=0,WeaponStay=True?mutator=XWeapons.MutNoSuperWeapon?DoubleDamage=True?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Assault")
      VotingGametype(7)=(GametypeOptions="?game=XGame.xDoubleDom?timelimit=20?goalscore=0?FriendlyFireScale=0,WeaponStay=true?mutator=XWeapons.MutNoSuperWeapon?DoubleDamage=true?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Double Domination")
      VotingGametype(8)=(GametypeOptions="?game=XGame.xBombingRun?timelimit=20?goalscore=0?FriendlyFireScale=0,WeaponStay=True?mutator=XWeapons.MutNoSuperWeapon?DoubleDamage=True?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Bombing Run")
@@ -1846,19 +1846,19 @@ defaultproperties
      WeaponPickupClasses(10)=Class'NewNet_ONSMineLayerPickup'
      WeaponPickupClasses(11)=Class'NewNet_ONSGrenadePickup'
      WeaponPickupClasses(12)=Class'NewNet_SuperShockRiflePickup'
-     WeaponPickupClassNames(0)="UTCompOmni.NewNet_ShockRiflePickup"
-     WeaponPickupClassNames(1)="UTCompOmni.NewNet_LinkGunPickup"
-     WeaponPickupClassNames(2)="UTCompOmni.NewNet_MiniGunPickup"
-     WeaponPickupClassNames(3)="UTCompOmni.NewNet_FlakCannonPickup"
-     WeaponPickupClassNames(4)="UTCompOmni.NewNet_RocketLauncherPickup"
-     WeaponPickupClassNames(5)="UTCompOmni.NewNet_SniperRiflePickup"
-     WeaponPickupClassNames(6)="UTCompOmni.NewNet_BioRiflePickup"
-     WeaponPickupClassNames(7)="UTCompOmni.NewNet_AssaultRiflePickup"
-     WeaponPickupClassNames(8)="UTCompOmni.NewNet_ClassicSniperRiflePickup"
-     WeaponPickupClassNames(9)="UTCompOmni.NewNet_ONSAVRiLPickup"
-     WeaponPickupClassNames(10)="UTCompOmni.NewNet_ONSMineLayerPickup"
-     WeaponPickupClassNames(11)="UTCompOmni.NewNet_ONSGrenadePickup"
-     WeaponPickupClassNames(12)="UTCompOmni.NewNet_SuperShockRiflePickup"
+     WeaponPickupClassNames(0)="WSUTComp.NewNet_ShockRiflePickup"
+     WeaponPickupClassNames(1)="WSUTComp.NewNet_LinkGunPickup"
+     WeaponPickupClassNames(2)="WSUTComp.NewNet_MiniGunPickup"
+     WeaponPickupClassNames(3)="WSUTComp.NewNet_FlakCannonPickup"
+     WeaponPickupClassNames(4)="WSUTComp.NewNet_RocketLauncherPickup"
+     WeaponPickupClassNames(5)="WSUTComp.NewNet_SniperRiflePickup"
+     WeaponPickupClassNames(6)="WSUTComp.NewNet_BioRiflePickup"
+     WeaponPickupClassNames(7)="WSUTComp.NewNet_AssaultRiflePickup"
+     WeaponPickupClassNames(8)="WSUTComp.NewNet_ClassicSniperRiflePickup"
+     WeaponPickupClassNames(9)="WSUTComp.NewNet_ONSAVRiLPickup"
+     WeaponPickupClassNames(10)="WSUTComp.NewNet_ONSMineLayerPickup"
+     WeaponPickupClassNames(11)="WSUTComp.NewNet_ONSGrenadePickup"
+     WeaponPickupClassNames(12)="WSUTComp.NewNet_SuperShockRiflePickup"
 
     // replaced UTComp classes
      WeaponClassesUTComp(0)=Class'UTComp_ShockRifle'
@@ -1887,19 +1887,19 @@ defaultproperties
      WeaponPickupClassesUTComp(10)=Class'UTComp_ONSMineLayerPickup'
      WeaponPickupClassesUTComp(11)=Class'UTComp_ONSGrenadePickup'
      WeaponPickupClassesUTComp(12)=Class'UTComp_SuperShockRiflePickup'
-     WeaponPickupClassNamesUTComp(0)="UTCompOmni.UTComp_ShockRiflePickup"
-     WeaponPickupClassNamesUTComp(1)="UTCompOmni.UTComp_LinkGunPickup"
-     WeaponPickupClassNamesUTComp(2)="UTCompOmni.UTComp_MiniGunPickup"
-     WeaponPickupClassNamesUTComp(3)="UTCompOmni.UTComp_FlakCannonPickup"
-     WeaponPickupClassNamesUTComp(4)="UTCompOmni.UTComp_RocketLauncherPickup"
-     WeaponPickupClassNamesUTComp(5)="UTCompOmni.UTComp_SniperRiflePickup"
-     WeaponPickupClassNamesUTComp(6)="UTCompOmni.UTComp_BioRiflePickup"
-     WeaponPickupClassNamesUTComp(7)="UTCompOmni.UTComp_AssaultRiflePickup"
-     WeaponPickupClassNamesUTComp(8)="UTCompOmni.UTComp_ClassicSniperRiflePickup"
-     WeaponPickupClassNamesUTComp(9)="UTCompOmni.UTComp_ONSAVRiLPickup"
-     WeaponPickupClassNamesUTComp(10)="UTCompOmni.UTComp_ONSMineLayerPickup"
-     WeaponPickupClassNamesUTComp(11)="UTCompOmni.UTComp_ONSGrenadePickup"
-     WeaponPickupClassNamesUTComp(12)="UTCompOmni.UTComp_SuperShockRiflePickup"
+     WeaponPickupClassNamesUTComp(0)="WSUTComp.UTComp_ShockRiflePickup"
+     WeaponPickupClassNamesUTComp(1)="WSUTComp.UTComp_LinkGunPickup"
+     WeaponPickupClassNamesUTComp(2)="WSUTComp.UTComp_MiniGunPickup"
+     WeaponPickupClassNamesUTComp(3)="WSUTComp.UTComp_FlakCannonPickup"
+     WeaponPickupClassNamesUTComp(4)="WSUTComp.UTComp_RocketLauncherPickup"
+     WeaponPickupClassNamesUTComp(5)="WSUTComp.UTComp_SniperRiflePickup"
+     WeaponPickupClassNamesUTComp(6)="WSUTComp.UTComp_BioRiflePickup"
+     WeaponPickupClassNamesUTComp(7)="WSUTComp.UTComp_AssaultRiflePickup"
+     WeaponPickupClassNamesUTComp(8)="WSUTComp.UTComp_ClassicSniperRiflePickup"
+     WeaponPickupClassNamesUTComp(9)="WSUTComp.UTComp_ONSAVRiLPickup"
+     WeaponPickupClassNamesUTComp(10)="WSUTComp.UTComp_ONSMineLayerPickup"
+     WeaponPickupClassNamesUTComp(11)="WSUTComp.UTComp_ONSGrenadePickup"
+     WeaponPickupClassNamesUTComp(12)="WSUTComp.UTComp_SuperShockRiflePickup"
 
      bShieldFix=true
 
