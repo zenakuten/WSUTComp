@@ -1741,8 +1741,8 @@ defaultproperties
      VotingGametype(7)=(GametypeOptions="?game=XGame.xDoubleDom?timelimit=20?goalscore=0?FriendlyFireScale=0,WeaponStay=true?mutator=XWeapons.MutNoSuperWeapon?DoubleDamage=true?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Double Domination")
      VotingGametype(8)=(GametypeOptions="?game=XGame.xBombingRun?timelimit=20?goalscore=0?FriendlyFireScale=0,WeaponStay=True?mutator=XWeapons.MutNoSuperWeapon?DoubleDamage=True?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Bombing Run")
 
-     MinNetSpeed=15000
-     MaxNetSpeed=25000
+     MinNetSpeed=10000
+     MaxNetSpeed=100000
 
      //ONS
      NodeIsolateBonusPct=20
@@ -1759,10 +1759,9 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="UTComp Version 1.71 (Omni)"
-     FriendlyVersionPrefix="UTComp Version"
-     FriendlyVersionNumber=")o(mni 1.71"
-     // updated pooty 10/2023
+     FriendlyName="WSUTComp Version 1"
+     FriendlyVersionPrefix="WSUTComp Version"
+     FriendlyVersionNumber="1"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
@@ -1774,7 +1773,7 @@ defaultproperties
      NumGrenadesOnSpawn=4
      bEnableEnhancedNetCode=true
      bEnableEnhancedNetCodeVoting=false
-     MinNetUpdateRate=60
+     MinNetUpdateRate=90
      MaxNetUpdateRate=250
      PawnCollisionHistoryLength=0.35
 
@@ -1937,7 +1936,7 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
-     MaxSavedMoves=350
+     MaxSavedMoves=200
 
      bEnableEmoticons=true
 }

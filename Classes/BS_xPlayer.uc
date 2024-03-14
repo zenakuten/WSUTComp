@@ -547,24 +547,6 @@ function SetMaxSavedMoves()
 
 simulated function InitializeStuff()
 {
-    //change some defaults with this release
-    if(Settings.Version <= 2) // 1.30 -> 1.31
-    {
-        Settings.Version=3;
-        Settings.bEnableEnhancedNetCode=false;
-    }
-    if(Settings.Version <= 3) // 1.31 -> 1.32
-    {
-        Settings.Version=4;
-        Settings.bUseDefaultScoreboard=True;
-
-        Settings.Save();
-
-        class'UTComp_Scoreboard'.default.bDrawPickups=false;
-        class'UTComp_Scoreboard'.default.bDrawStats=false;
-        class'UTComp_Scoreboard'.static.StaticSaveConfig();
-    }
-
     InitializeScoreboard();
     SetInitialColoredName();
     SetShowSelf(Settings.bShowSelfInTeamOverlay);

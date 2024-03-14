@@ -238,7 +238,7 @@ function DrawWelcomeBanner(Canvas canvas)
   Canvas.DrawText("This server is running");
   Canvas.StrLen("W", StrLenX3, StrLenY3);
   Canvas.SetPos(currentX, currentY+1*(StrLenY3+2.0));
-  Canvas.DrawText("UTComp "$MakeColorCode(class'Hud'.Default.GoldColor)$class'MutUTComp'.default.FriendlyVersionNumber$MakeColorCode(InfoTextColor)$".");
+  Canvas.DrawText("WSUTComp "$MakeColorCode(class'Hud'.Default.GoldColor)$class'MutUTComp'.default.FriendlyVersionNumber$MakeColorCode(InfoTextColor)$".");
   Canvas.SetPos(currentX, currentY+3*(StrLenY3+2.0));
   Canvas.DrawText("Press "$MakeColorCode(class'Hud'.Default.GoldColor)$class'GameInfo'.Static.GetKeyBindName("mymenu", PC)$MakeColorCode(InfoTextColor)$" to change");
   Canvas.SetPos(currentX, currentY+4*(StrLenY3+2.0));

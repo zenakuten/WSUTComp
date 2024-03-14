@@ -163,6 +163,7 @@ defaultproperties
     bEnemyBasedSkins=False
     bEnemyBasedModels=False
     bUseDefaultScoreboard=True
+    bUseNewEyeHeightAlgorithm=True
 
     bTeamColorRockets=true
     bTeamColorBio=true
