@@ -1691,12 +1691,18 @@ function Reset()
     }
 
     // delete these server side, the get recreated in SetPawnStamp function
-    counterpawn.Unpossessed();
-    counterpawn.Destroy();
-    counterpawn = none;
-    countercontroller.Pawn = None;
-    countercontroller.Destroy();
-    countercontroller = None;
+    if(counterpawn != None)
+    {
+        counterpawn.Unpossessed();
+        counterpawn.Destroy();
+        counterpawn = none;
+    }
+    if(countercontroller != None)
+    {
+        countercontroller.Pawn = None;
+        countercontroller.Destroy();
+        countercontroller = None;
+    }
 }
 
 defaultproperties
