@@ -118,6 +118,7 @@ event Opened(GUIComponent Sender)
 defaultproperties
 {
      Begin Object Class=GUIEditBox Name=MapInputEditBox
+        StyleName="WSEditBox"
 		WinWidth=0.250000
 		WinHeight=0.030000
 		WinLeft=0.550312
@@ -131,6 +132,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=quickrestartButton
         Caption="Restart Current Map"
+        StyleName="WSButton"
 		WinWidth=0.255000
 		WinHeight=0.047500
 		WinLeft=0.545314
@@ -141,19 +143,20 @@ defaultproperties
      bu_QuickRestart=GUIButton'UTComp_Menu_Voting_Map.quickrestartButton'
 
      Begin Object Class=GUIButton Name=ChangeMapButton
-         Caption="Change Map"
+        Caption="Change Map"
+        StyleName="WSButton"
 		WinWidth=0.256563
 		WinHeight=0.047500
 		WinLeft=0.546874
 		WinTop=0.542915
-         OnClick=UTComp_Menu_Voting_Map.InternalOnClick
-         OnKeyEvent=ChangeMapButton.InternalOnKeyEvent
+        OnClick=UTComp_Menu_Voting_Map.InternalOnClick
+        OnKeyEvent=ChangeMapButton.InternalOnKeyEvent
      End Object
      bu_ChangeMap=GUIButton'UTComp_Menu_Voting_Map.ChangeMapButton'
 
      Begin Object Class=GUILabel Name=MapNameLabel
-         Caption="Map Name"
-         TextColor=(B=255,G=255,R=255)
+        Caption="Map Name"
+        TextColor=(B=255,G=255,R=255)
 		WinWidth=1.000000
 		WinHeight=0.060000
 		WinLeft=0.380438
@@ -161,7 +164,11 @@ defaultproperties
      End Object
      l_MapName=GUILabel'UTComp_Menu_Voting_Map.MapNameLabel'
 
-     Begin Object class=GUIListBox name=MapListBox
+     Begin Object class=wsGUIListBox name=MapListBox
+        StyleName="WSButton"
+        SelectedStyleName="WSListBox"
+        SectionStyleName="WSButton"
+        OutlineStyleName="WSListBox"   
 		WinWidth=0.214061
 		WinHeight=0.385937
 		WinLeft=0.118750
@@ -169,10 +176,11 @@ defaultproperties
         bVisibleWhenEmpty=True
         OnChange=InternalOnChange
      End Object
-     lb_MapList=GUIListBox'MapListBox'
+     lb_MapList=wsGUIListBox'MapListBox'
 
      Begin Object Class=GUIButton Name=RefreshButton
         Caption="Refresh Maps"
+        StyleName="WSButton"
 		WinWidth=0.217500
 		WinHeight=0.047500
 		WinLeft=0.110936

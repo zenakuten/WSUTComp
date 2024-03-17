@@ -3,7 +3,7 @@
 
 class UTComp_Menu_Admin extends UTComp_Menu_MainMenu;
 
-var automated moCheckBox ch_UseWhitelist;
+var automated wsCheckBox ch_UseWhitelist;
 var UTComp_ServerReplicationInfo RepInfo;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
@@ -68,7 +68,7 @@ defaultproperties
 {
 
 
-    Begin Object Class=moCheckBox Name=WhitelistCheck
+    Begin Object Class=wsCheckBox Name=WhitelistCheck
         Caption="Use UTComp player whitelist."
         OnCreateComponent=WhitelistCheck.InternalOnCreateComponent
         WinWidth=0.500000
@@ -77,5 +77,5 @@ defaultproperties
         WinTop=0.330000
         OnChange=UTComp_Menu_Admin.InternalOnChange
     End Object
-    ch_UseWhitelist=moCheckBox'UTComp_Menu_Admin.WhitelistCheck'
+    ch_UseWhitelist=wsCheckBox'UTComp_Menu_Admin.WhitelistCheck'
 }

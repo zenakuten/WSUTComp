@@ -40,11 +40,11 @@ class UTComp_Menu_Crosshairs extends UTComp_Menu_MainMenu;
 
 var automated GUIListBox lb_CrossHairs;
 
-var automated GUIComboBox co_UTCompCrosshairs;
+var automated wsGUIComboBox co_UTCompCrosshairs;
 
 var automated GUIButton bu_MoveUp, bu_MoveDown, bu_AddHair, bu_DeleteHair;
 
-var automated moCheckBox ch_UseFactory, ch_SizeIncrease;
+var automated wsCheckBox ch_UseFactory, ch_SizeIncrease;
 
 var automated GUISlider sl_SizeHair, sl_OpacityHair, sl_HorizHair, sl_VertHair;
 var automated GUISlider sl_RedHair, sl_GreenHair, sl_BlueHair;
@@ -333,16 +333,20 @@ function bool InternalOnClick( GUIComponent Sender )
 
 defaultproperties
 {
-    Begin Object class=GUIComboBox name=CrosshairCombo
+    Begin Object class=wsGUIComboBox name=CrosshairCombo
     	WinWidth=0.248444
 		WinHeight=0.035000
 		WinLeft=0.350001
 		WinTop=0.366666
 		OnChange=InternalOnChange
     End Object
-    co_UTCompCrosshairs=GUIComboBox'CrosshairCombo'
+    co_UTCompCrosshairs=wsGUIComboBox'CrosshairCombo'
 
-    Begin Object class=GUIListBox name=CrosshairListBox
+    Begin Object class=wsGUIListBox name=CrosshairListBox
+         StyleName="WSButton"
+         SelectedStyleName="WSListBox"
+         SectionStyleName="WSButton"
+         OutlineStyleName="WSListBox"    
 		WinWidth=0.160000
 		WinHeight=0.264375
 		WinLeft=0.140000
@@ -350,7 +354,7 @@ defaultproperties
         bVisibleWhenEmpty=True
         OnChange=InternalOnChange
     End Object
-    lb_Crosshairs=GUIListBox'CrosshairListBox'
+    lb_Crosshairs=wsGUIListBox'CrosshairListBox'
 
     Begin Object class=GUIImage name=ListBoxBackgroundImage
         Image=Texture'2K4Menus.Controls.thinpipe_b'
@@ -363,7 +367,7 @@ defaultproperties
 	End Object
     i_ListBoxBG=GUIImage'ListBoxBackgroundImage'
 
-    Begin Object class=GUISlider name=RedCrossSlider
+    Begin Object class=wsGUISlider name=RedCrossSlider
          WinTop=0.415
          WinLeft=0.41
          WinWidth=0.25
@@ -373,7 +377,7 @@ defaultproperties
          Value=255
          OnChange=InternalOnChange
     End Object
-    sl_RedHair=GUISlider'RedCrossSlider'
+    sl_RedHair=wsGUISlider'RedCrossSlider'
 
     Begin Object class=GUILabel name=RedCrossLabel
          WinTop=0.40
@@ -431,7 +435,7 @@ defaultproperties
     End Object
     l_Vert=GUILabel'VertCrossLabel'
 
-    Begin Object class=GUISlider name=GreenCrossSlider
+    Begin Object class=wsGUISlider name=GreenCrossSlider
          WinTop=0.455
          WinLeft=0.41
          WinWidth=0.25
@@ -441,9 +445,9 @@ defaultproperties
          bIntSlider=True
          OnChange=InternalOnChange
     End Object
-    sl_GreenHair=GUISlider'GreenCrossSlider'
+    sl_GreenHair=wsGUISlider'GreenCrossSlider'
 
-    Begin Object class=GUISlider name=BlueCrossSlider
+    Begin Object class=wsGUISlider name=BlueCrossSlider
          WinTop=0.495
          WinLeft=0.41
          WinWidth=0.25
@@ -453,9 +457,9 @@ defaultproperties
          bIntSlider=True
          OnChange=InternalOnChange
     End Object
-    sl_BlueHair=GUISlider'BlueCrossSlider'
+    sl_BlueHair=wsGUISlider'BlueCrossSlider'
 
-    Begin Object class=GUISlider name=OpacityCrossSlider
+    Begin Object class=wsGUISlider name=OpacityCrossSlider
          WinTop=0.535
          WinLeft=0.41
          WinWidth=0.25
@@ -465,9 +469,9 @@ defaultproperties
          bIntSlider=True
          OnChange=InternalOnChange
     End Object
-    sl_OpacityHair=GUISlider'OpacityCrossSlider'
+    sl_OpacityHair=wsGUISlider'OpacityCrossSlider'
 
-    Begin Object class=GUISlider name=SizeCrossSlider
+    Begin Object class=wsGUISlider name=SizeCrossSlider
          WinTop=0.575
          WinLeft=0.41
          WinWidth=0.25
@@ -476,9 +480,9 @@ defaultproperties
          Value=1.00
          OnChange=InternalOnChange
     End Object
-    sl_SizeHair=GUISlider'SizeCrossSlider'
+    sl_SizeHair=wsGUISlider'SizeCrossSlider'
 
-    Begin Object class=GUISlider name=HorizCrossSlider
+    Begin Object class=wsGUISlider name=HorizCrossSlider
          WinTop=0.615
          WinLeft=0.41
          WinWidth=0.25
@@ -487,9 +491,9 @@ defaultproperties
          Value=0.50
          OnChange=InternalOnChange
     End Object
-    sl_HorizHair=GUISlider'HorizCrossSlider'
+    sl_HorizHair=wsGUISlider'HorizCrossSlider'
 
-    Begin Object class=GUISlider name=VertCrossSlider
+    Begin Object class=wsGUISlider name=VertCrossSlider
          WinTop=0.655
          WinLeft=0.41
          WinWidth=0.25
@@ -498,9 +502,9 @@ defaultproperties
          Value=0.50
          OnChange=InternalOnChange
     End Object
-    sl_VertHair=GUISlider'VertCrossSlider'
+    sl_VertHair=wsGUISlider'VertCrossSlider'
 
-    Begin Object class=moCheckBox name=UseFactoryCheck
+    Begin Object class=wsCheckBox name=UseFactoryCheck
 		WinWidth=0.350000
 		WinHeight=0.030000
 		WinLeft=0.126562
@@ -508,9 +512,9 @@ defaultproperties
         Caption="Use Crosshair Factory"
         OnChange=InternalOnChange
     End Object
-    ch_UseFactory=moCheckBox'UseFactoryCheck'
+    ch_UseFactory=wsCheckBox'UseFactoryCheck'
 
-   Begin Object class=moCheckBox name=SizeIncreaseCheck
+   Begin Object class=wsCheckBox name=SizeIncreaseCheck
 		WinWidth=0.350000
 		WinHeight=0.030000
 		WinLeft=0.548751
@@ -518,7 +522,7 @@ defaultproperties
         Caption="Crosshair Size Increase"
         OnChange=InternalOnChange
     End Object
-    ch_SizeIncrease=moCheckBox'SizeIncreaseCheck'
+    ch_SizeIncrease=wsCheckBox'SizeIncreaseCheck'
 
     Begin Object class=GUIButton name=AddHairButton
 		WinWidth=0.080000
@@ -526,6 +530,7 @@ defaultproperties
 		WinLeft=0.126562
 		WinTop=0.688559
         Caption="Add"
+        StyleName="WSButton"
         OnClick=InternalOnClick
     End Object
     bu_AddHair=GUIButton'AddHairButton'
@@ -536,6 +541,7 @@ defaultproperties
 		WinLeft=0.206562
 		WinTop=0.688559
         Caption="Delete"
+        StyleName="WSButton"
         OnClick=InternalOnClick
     End Object
     bu_DeleteHair=GUIButton'DeleteHairButton'
@@ -546,6 +552,7 @@ defaultproperties
 		WinLeft=0.126562
 		WinTop=0.734384
         Caption="Up"
+        StyleName="WSButton"
         OnClick=InternalOnClick
     End Object
     bu_MoveUp=GUIButton'MoveUpHairButton'
@@ -556,6 +563,7 @@ defaultproperties
 		WinLeft=0.206562
 		WinTop=0.734384
         Caption="Down"
+        StyleName="WSButton"
         OnClick=InternalOnClick
     End Object
     bu_MoveDown=GUIButton'MoveDownHairButton'

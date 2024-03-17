@@ -1,6 +1,9 @@
 
 class UTComp_Menu_MainMenu extends PopupPageBase;
 
+#exec TEXTURE IMPORT NAME=Display95 GROUP=GUI FILE=Textures\Display95.dds MIPS=off ALPHA=1 DXT=5
+#exec TEXTURE IMPORT NAME=Display99 GROUP=GUI FILE=Textures\Display99.dds MIPS=off ALPHA=1 DXT=5
+
 var automated array<GUIButton> UTCompMenuButtons;
 var automated GUITabControl c_Main;
 var automated FloatingImage i_FrameBG2;
@@ -22,7 +25,20 @@ simulated function SaveHUDSettings()
 
 function InitComponent(GUIController MyController, GUIComponent MyComponent)
 {
+    MyController.RegisterStyle(class'STY_WSButton', true);
+    MyController.RegisterStyle(class'STY_WSComboButton', true);
+    MyController.RegisterStyle(class'STY_WSLabel', true);
+    MyController.RegisterStyle(class'STY_WSListBox', true);
+    MyController.RegisterStyle(class'STY_WSSliderBar', true);
+    MyController.RegisterStyle(class'STY_WSSliderCaption', true);
+    MyController.RegisterStyle(class'STY_WSSliderKnob', true);
+    MyController.RegisterStyle(class'STY_WSEditBox', true);
+    MyController.RegisterStyle(class'STY_WSSpinner', true);
+    MyController.RegisterStyle(class'STY_WSVertDownButton', true);
+    MyController.RegisterStyle(class'STY_WSVertUpButton', true);
+
 	super.InitComponent(MyController, MyComponent);
+
     Settings = BS_xPlayer(PlayerOwner()).Settings;
     HUDSettings = BS_xPlayer(PlayerOwner()).HUDSettings;
 }
@@ -85,7 +101,8 @@ defaultproperties
 {
      Begin Object class=GUIButton name=SkinModelButton
          Caption="Skins/Models"
-         WinTop=0.150000
+         StyleName="WSButton"
+         WinTop=0.130000
          WinLeft=0.11250000
          //WinWidth=0.180000
          WinWidth=0.144
@@ -96,7 +113,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=ColoredNameButton
          Caption="Colored Names"
-         WinTop=0.150000
+         StyleName="WSButton"
+         WinTop=0.130000
          //WinLeft=0.31250000
          //0.16
          WinLeft=0.2725
@@ -109,7 +127,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=OverlayButton
          Caption="Team Overlay"
-         WinTop=0.150000
+         StyleName="WSButton"
+         WinTop=0.130000
          //WinLeft=0.51250000
          WinLeft=0.43250000
          //WinWidth=0.180000
@@ -121,7 +140,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=CrosshairButton
          Caption="Crosshairs"
-         WinTop=0.150000
+         StyleName="WSButton"
+         WinTop=0.130000
          //WinLeft=0.71250000
          WinLeft=0.5925
          //WinWidth=0.180000
@@ -133,8 +153,9 @@ defaultproperties
 
      Begin Object class=GUIButton name=HitsoundButton
          Caption="Hitsounds"
+         StyleName="WSButton"
          //WinTop=0.220000
-         WinTop=0.150000
+         WinTop=0.130000
          //WinLeft=0.11250000
          WinLeft=0.7525
          //WinWidth=0.180000
@@ -148,7 +169,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=VotingButton
          Caption="Voting"
-         WinTop=0.220000
+         StyleName="WSButton"
+         WinTop=0.200000
          WinLeft=0.11250000
          //WinWidth=0.180000
          WinWidth=0.12
@@ -159,7 +181,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=AutoDemoButton
          Caption="Auto Demo/SS"
-         WinTop=0.220000
+         StyleName="WSButton"
+         WinTop=0.200000
          WinLeft=0.2458
          //WinWidth=0.180000
          WinWidth=0.12
@@ -170,7 +193,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=MiscButton
          Caption="Misc"
-         WinTop=0.220000
+         StyleName="WSButton"
+         WinTop=0.200000
          WinLeft=0.3791
          //WinWidth=0.180000
          WinWidth=0.12
@@ -181,7 +205,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=WeaponConfigButton
          Caption="Weapon Config"
-         WinTop=0.220000
+         StyleName="WSButton"
+         WinTop=0.200000
          WinLeft=0.5124
          //WinWidth=0.180000
          WinWidth=0.12
@@ -192,7 +217,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=ExtraButton
          Caption="Extra"
-         WinTop=0.220000
+         StyleName="WSButton"
+         WinTop=0.200000
          WinLeft=0.6458
          //WinWidth=0.180000
          WinWidth=0.12
@@ -203,7 +229,8 @@ defaultproperties
 
      Begin Object class=GUIButton name=EmoteButton
          Caption="Emotes"
-         WinTop=0.220000
+         StyleName="WSButton"
+         WinTop=0.200000
          WinLeft=0.7791
          //WinWidth=0.180000
          WinWidth=0.12
@@ -214,6 +241,7 @@ defaultproperties
 
      Begin Object class=GUIButton name=AdminButton
          Caption="Admin"
+         StyleName="WSButton"
          WinTop=0.720000
          WinLeft=0.71250000
          //WinWidth=0.180000
@@ -241,7 +269,8 @@ defaultproperties
 
 
      Begin Object Class=FloatingImage Name=FloatingFrameBackground
-         Image=Texture'2K4Menus.NewControls.Display99'
+         Image=Texture'WSUTComp.GUI.Display99'
+         ImageColor=(R=64,G=64,B=64,A=200)
          ImageStyle=ISTY_Stretched
          ImageRenderStyle=MSTY_Normal
          WinTop=0.100000
@@ -257,7 +286,8 @@ defaultproperties
      i_FrameBG=FloatingImage'UTComp_Menu_MainMenu.FloatingFrameBackground'
 
      Begin Object Class=FloatingImage Name=FloatingFrameBackground2
-         Image=Texture'2K4Menus.NewControls.Display95'
+         Image=Texture'WSUTComp.GUI.Display95'
+         ImageColor=(R=64,G=64,B=64,A=200)
          ImageStyle=ISTY_Stretched
          ImageRenderStyle=MSTY_Normal
          WinTop=0.270000

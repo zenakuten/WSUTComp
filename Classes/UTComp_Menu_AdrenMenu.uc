@@ -3,10 +3,10 @@
 //-----------------------------------------------------------
 class UTComp_menu_AdrenMenu extends UTComp_Menu_MainMenu;
 
-var automated moCheckBox ch_booster;
-var automated moCheckBox ch_invis;
-var automated moCheckBox ch_speed;
-var automated moCheckBox ch_berserk;
+var automated wsCheckBox ch_booster;
+var automated wsCheckBox ch_invis;
+var automated wsCheckBox ch_speed;
+var automated wsCheckBox ch_berserk;
 
 var automated GUILAbel l_adren;
 
@@ -37,7 +37,7 @@ DefaultProperties
 {
     Begin Object Class=GUILabel Name=AdrenLabel
         Caption="----Adrenaline Combo Settings----"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
 		WinLeft=0.250000
@@ -46,7 +46,7 @@ DefaultProperties
      l_Adren=GUILabel'UTComp_Menu_AdrenMenu.AdrenLabel'
 
 
-     Begin Object Class=moCheckBox Name=BoosterCheck
+     Begin Object Class=wsCheckBox Name=BoosterCheck
         Caption="Enable Booster Combo"
         OnCreateComponent=BoosterCheck.InternalOnCreateComponent
 		WinWidth=0.500000
@@ -55,9 +55,9 @@ DefaultProperties
 		WinTop=0.430000
          OnChange=UTComp_Menu_AdrenMenu.InternalOnChange
      End Object
-     ch_Booster=moCheckBox'UTComp_Menu_AdrenMenu.BoosterCheck'
+     ch_Booster=wsCheckBox'UTComp_Menu_AdrenMenu.BoosterCheck'
 
-      Begin Object Class=moCheckBox Name=InvisCheck
+      Begin Object Class=wsCheckBox Name=InvisCheck
         Caption="Enable Invisibility Combo"
         OnCreateComponent=InvisCheck.InternalOnCreateComponent
 		WinWidth=0.500000
@@ -66,9 +66,9 @@ DefaultProperties
 		WinTop=0.480000
          OnChange=UTComp_Menu_AdrenMenu.InternalOnChange
      End Object
-     ch_Invis=moCheckBox'UTComp_Menu_AdrenMenu.InvisCheck'
+     ch_Invis=wsCheckBox'UTComp_Menu_AdrenMenu.InvisCheck'
 
-          Begin Object Class=moCheckBox Name=SpeedCheck
+          Begin Object Class=wsCheckBox Name=SpeedCheck
         Caption="Enable Speed Combo"
         OnCreateComponent=SpeedCheck.InternalOnCreateComponent
 		WinWidth=0.500000
@@ -77,9 +77,9 @@ DefaultProperties
 		WinTop=0.530000
          OnChange=UTComp_Menu_AdrenMenu.InternalOnChange
      End Object
-     ch_Speed=moCheckBox'UTComp_Menu_AdrenMenu.SpeedCheck'
+     ch_Speed=wsCheckBox'UTComp_Menu_AdrenMenu.SpeedCheck'
 
-     Begin Object Class=moCheckBox Name=BerserkCheck
+     Begin Object Class=wsCheckBox Name=BerserkCheck
         Caption="Enable Berserk Combo"
         OnCreateComponent=BerserkCheck.InternalOnCreateComponent
 		WinWidth=0.500000
@@ -88,5 +88,5 @@ DefaultProperties
 		WinTop=0.580000
          OnChange=UTComp_Menu_AdrenMenu.InternalOnChange
      End Object
-     ch_Berserk=moCheckBox'UTComp_Menu_AdrenMenu.BerserkCheck'
+     ch_Berserk=wsCheckBox'UTComp_Menu_AdrenMenu.BerserkCheck'
 }

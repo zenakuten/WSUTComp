@@ -1,8 +1,9 @@
 
 class UTComp_Menu_Extra extends UTComp_Menu_MainMenu;
 
-var automated moCheckBox ch_EnableWidescreenFix;
-var automated moComboBox co_DamageSelect;
+var automated wsCheckBox ch_EnableWidescreenFix;
+var automated wsComboBox co_DamageSelect;
+var automated GUILabel lb_DamageSelect;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -24,7 +25,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
         co_DamageSelect.DisableMe();
         co_DamageSelect.SetHint("Server disabled");
     }
-
+    
 }
 
 function InternalOnChange( GUIComponent C )
@@ -43,7 +44,7 @@ function InternalOnChange( GUIComponent C )
 
 defaultproperties
 {
-    Begin Object Class=moCheckBox Name=EnableWidescreenCheck
+    Begin Object Class=wsCheckBox Name=EnableWidescreenCheck
         Caption="Enable widescreen fixes"
         OnCreateComponent=EnableWidescreenCheck.InternalOnCreateComponent
         WinWidth=0.500000
@@ -52,9 +53,9 @@ defaultproperties
         WinTop=0.330000
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
-    ch_EnableWidescreenFix=moCheckBox'UTComp_Menu_Extra.EnableWidescreenCheck'
+    ch_EnableWidescreenFix=wsCheckBox'UTComp_Menu_Extra.EnableWidescreenCheck'
 
-    Begin Object Class=moComboBox Name=ComboDamageIndicatorType
+    Begin Object Class=wsComboBox Name=ComboDamageIndicatorType
          Caption="Damage Indicators:"
          OnCreateComponent=ComboDamageIndicatorType.InternalOnCreateComponent
          WinTop=0.380000
@@ -62,5 +63,5 @@ defaultproperties
          WinWidth=0.500000
          OnChange=UTComp_Menu_Extra.InternalOnChange
      End Object
-     co_DamageSelect=moComboBox'UTComp_Menu_Extra.ComboDamageIndicatorType'
+     co_DamageSelect=wsComboBox'UTComp_Menu_Extra.ComboDamageIndicatorType'
 }

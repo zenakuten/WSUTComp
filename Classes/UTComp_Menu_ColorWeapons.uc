@@ -1,12 +1,12 @@
 class UTComp_Menu_ColorWeapons extends UTComp_Menu_MainMenu;
-var automated moCheckBox ch_TeamColorRockets;
-var automated moCheckBox ch_TeamColorBio;
-var automated moCheckBox ch_TeamColorFlak;
-var automated moCheckBox ch_TeamColorShock;
+var automated wsCheckBox ch_TeamColorRockets;
+var automated wsCheckBox ch_TeamColorBio;
+var automated wsCheckBox ch_TeamColorFlak;
+var automated wsCheckBox ch_TeamColorShock;
 var automated GUIImage weaponCheckBox, redBox, blueBox;
 var automated GUILabel RRL, RBL, RGL, BRL, BGL, BBL, redBoxLabel, blueBoxLabel;
 var automated GUISlider RRSlide, RBSlide, RGSlide, BRSlide, BGSlide, BBSlide;
-var automated moCheckBox ch_TeamColorEnemyAlly;
+var automated wsCheckBox ch_TeamColorEnemyAlly;
 var TeamColorSpinnyRocket redRox,blueRox;
 var vector      RedRoxOffset;
 var vector      BlueRoxOffset;
@@ -336,60 +336,60 @@ defaultproperties
     End Object
     weaponCheckBox=GUIImage'UTComp_Menu_ColorWeapons.TabWeaponBackground'
 
-    Begin Object Class=moCheckBox Name=CheckTeamColorRockets
+    Begin Object Class=wsCheckBox Name=CheckTeamColorRockets
          Caption="Team colored rockets"
-         OnCreateComponent=SpeedCheck.InternalOnCreateComponent
+         OnCreateComponent=CheckTeamColorRockets.InternalOnCreateComponent
          Hint="Add team coloring to rockets"
          WinTop=0.310000
          WinLeft=0.100000
          WinWidth=0.800000
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
      End Object
-     ch_TeamColorRockets=moCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorRockets'
+     ch_TeamColorRockets=wsCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorRockets'
 
-    Begin Object Class=moCheckBox Name=CheckTeamColorBio
+    Begin Object Class=wsCheckBox Name=CheckTeamColorBio
          Caption="Team colored bio"
-         OnCreateComponent=SpeedCheck.InternalOnCreateComponent
+         OnCreateComponent=CheckTeamColorBio.InternalOnCreateComponent
          Hint="Add team coloring to bio globs"
          WinTop=0.360000
          WinLeft=0.100000
          WinWidth=0.800000
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
      End Object
-     ch_TeamColorBio=moCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorBio'
+     ch_TeamColorBio=wsCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorBio'
 
-    Begin Object Class=moCheckBox Name=CheckTeamColorFlak
+    Begin Object Class=wsCheckBox Name=CheckTeamColorFlak
          Caption="Team colored flak"
-         OnCreateComponent=SpeedCheck.InternalOnCreateComponent
+         OnCreateComponent=CheckTeamColorFlak.InternalOnCreateComponent
          Hint="Add team coloring to flak"
          WinTop=0.410000
          WinLeft=0.100000
          WinWidth=0.800000
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
      End Object
-     ch_TeamColorFlak=moCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorFlak'
+     ch_TeamColorFlak=wsCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorFlak'
 
-    Begin Object Class=moCheckBox Name=CheckTeamColorShock
+    Begin Object Class=wsCheckBox Name=CheckTeamColorShock
          Caption="Team colored shock"
-         OnCreateComponent=SpeedCheck.InternalOnCreateComponent
+         OnCreateComponent=CheckTeamColorShock.InternalOnCreateComponent
          Hint="Add team coloring to shock"
          WinTop=0.460000
          WinLeft=0.100000
          WinWidth=0.800000
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
      End Object
-     ch_TeamColorShock=moCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorShock'
+     ch_TeamColorShock=wsCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorShock'
 
-    Begin Object Class=moCheckBox Name=CheckTeamColorEnemyAlly
+    Begin Object Class=wsCheckBox Name=CheckTeamColorEnemyAlly
          Caption="Use enemy/ally colors"
-         OnCreateComponent=SpeedCheck.InternalOnCreateComponent
+         OnCreateComponent=CheckTeamColorEnemyAlly.InternalOnCreateComponent
          Hint="Use enemy/ally logic instead of red/blue"
          WinTop=0.76
          WinLeft=0.100000
          WinWidth=0.350000
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
     End Object
-    ch_TeamColorEnemyAlly=moCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorEnemyAlly'
+    ch_TeamColorEnemyAlly=wsCheckBox'UTComp_Menu_ColorWeapons.CheckTeamColorEnemyAlly'
 
     Begin Object Class=GUIImage Name=TabRedColorBackground
          Image=Texture'InterfaceContent.Menu.ScoreBoxA'
@@ -438,7 +438,7 @@ defaultproperties
 
     // ------------------
 
-     Begin Object Class=GUISlider Name=RedRSlider
+     Begin Object Class=wsGUISlider Name=RedRSlider
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.120000
@@ -451,9 +451,9 @@ defaultproperties
          OnCapturedMouseMove=RedRSlider.InternalCapturedMouseMove
          MaxValue=255
      End Object
-     RRSlide=GUISlider'UTComp_Menu_ColorWeapons.RedRSlider'
+     RRSlide=wsGUISlider'UTComp_Menu_ColorWeapons.RedRSlider'
 
-     Begin Object Class=GUISlider Name=RedGSlider
+     Begin Object Class=wsGUISlider Name=RedGSlider
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.120000
@@ -466,9 +466,9 @@ defaultproperties
          OnCapturedMouseMove=RedGSlider.InternalCapturedMouseMove
          MaxValue=255
      End Object
-     RGSlide=GUISlider'UTComp_Menu_ColorWeapons.RedGSlider'
+     RGSlide=wsGUISlider'UTComp_Menu_ColorWeapons.RedGSlider'
 
-     Begin Object Class=GUISlider Name=RedBSlider
+     Begin Object Class=wsGUISlider Name=RedBSlider
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.120000
@@ -481,9 +481,9 @@ defaultproperties
          OnCapturedMouseMove=RedBSlider.InternalCapturedMouseMove
          MaxValue=255
      End Object
-     RBSlide=GUISlider'UTComp_Menu_ColorWeapons.RedBSlider'
+     RBSlide=wsGUISlider'UTComp_Menu_ColorWeapons.RedBSlider'
 
-     Begin Object Class=GUISlider Name=BlueRSlider
+     Begin Object Class=wsGUISlider Name=BlueRSlider
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.5500000
@@ -496,9 +496,9 @@ defaultproperties
          OnCapturedMouseMove=BlueRSlider.InternalCapturedMouseMove
          MaxValue=255
      End Object
-     BRSlide=GUISlider'UTComp_Menu_ColorWeapons.BlueRSlider'
+     BRSlide=wsGUISlider'UTComp_Menu_ColorWeapons.BlueRSlider'
 
-     Begin Object Class=GUISlider Name=BlueGSlider
+     Begin Object Class=wsGUISlider Name=BlueGSlider
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.5500000
@@ -511,9 +511,9 @@ defaultproperties
          OnCapturedMouseMove=BlueGSlider.InternalCapturedMouseMove
          MaxValue=255
      End Object
-     BGSlide=GUISlider'UTComp_Menu_ColorWeapons.BlueGSlider'
+     BGSlide=wsGUISlider'UTComp_Menu_ColorWeapons.BlueGSlider'
 
-     Begin Object Class=GUISlider Name=BlueBSlider
+     Begin Object Class=wsGUISlider Name=BlueBSlider
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.550000
@@ -526,11 +526,11 @@ defaultproperties
          OnCapturedMouseMove=BlueBSlider.InternalCapturedMouseMove
          MaxValue=255
      End Object
-     BBSlide=GUISlider'UTComp_Menu_ColorWeapons.BlueBSlider'
+     BBSlide=wsGUISlider'UTComp_Menu_ColorWeapons.BlueBSlider'
 
      Begin Object Class=GUILabel Name=RedRLabel
-         Caption="R:"
-         TextColor=(B=255,G=255,R=255)
+         Caption="R"
+         TextColor=(R=255)
          WinTop=0.6250000
          WinLeft=0.100000
          WinHeight=20.000000
@@ -538,8 +538,8 @@ defaultproperties
      RRL=GUILabel'UTComp_Menu_ColorWeapons.RedRLabel'
 
      Begin Object Class=GUILabel Name=RedGLabel
-         Caption="G:"
-         TextColor=(B=255,G=255,R=255)
+         Caption="G"
+         TextColor=(G=255)
          WinTop=0.6750000
          WinLeft=0.100000
          WinHeight=20.000000
@@ -547,8 +547,8 @@ defaultproperties
      RGL=GUILabel'UTComp_Menu_ColorWeapons.RedGLabel'
 
      Begin Object Class=GUILabel Name=RedBLabel
-         Caption="B:"
-         TextColor=(B=255,G=255,R=255)
+         Caption="B"
+         TextColor=(B=255)
          WinTop=0.725000
          WinLeft=0.100000
          WinHeight=20.000000
@@ -556,8 +556,8 @@ defaultproperties
      RBL=GUILabel'UTComp_Menu_ColorWeapons.RedBLabel'
 
      Begin Object Class=GUILabel Name=BlueRLabel
-         Caption="R:"
-         TextColor=(B=255,G=255,R=255)
+         Caption="R"
+         TextColor=(R=255)
          WinTop=0.6250000
          WinLeft=0.53000
          WinHeight=20.000000
@@ -565,8 +565,8 @@ defaultproperties
      BRL=GUILabel'UTComp_Menu_ColorWeapons.BlueRLabel'
 
      Begin Object Class=GUILabel Name=BlueGLabel
-         Caption="G:"
-         TextColor=(B=255,G=255,R=255)
+         Caption="G"
+         TextColor=(G=255)
          WinTop=0.6750000
          WinLeft=0.53000
          WinHeight=20.000000
@@ -574,8 +574,8 @@ defaultproperties
      BGL=GUILabel'UTComp_Menu_ColorWeapons.BlueGLabel'
 
      Begin Object Class=GUILabel Name=BlueBLabel
-         Caption="B:"
-         TextColor=(B=255,G=255,R=255)
+         Caption="B"
+         TextColor=(B=255)
          WinTop=0.725000
          WinLeft=0.53000
          WinHeight=20.000000

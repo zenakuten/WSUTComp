@@ -49,6 +49,7 @@ defaultproperties
 {
      Begin Object Class=GUIButton Name=GameTypeButton
          Caption="Gametype"
+         StyleName="WSButton"
 		WinWidth=0.180000
 		WinHeight=0.123437
 		WinLeft=0.312500
@@ -60,6 +61,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=MapChangeButton
          Caption="Change Map"
+         StyleName="WSButton"
 		WinWidth=0.373751
 		WinHeight=0.123437
 		WinLeft=0.315625
@@ -71,6 +73,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=UTComp_SettingsButton
          Caption="Settings"
+         StyleName="WSButton"
 		WinWidth=0.180000
 		WinHeight=0.123437
 		WinLeft=0.512501
@@ -82,7 +85,7 @@ defaultproperties
 
      Begin Object class=GUILabel Name=DemnoHeadingLabel
         Caption="------- Select your voting type -------"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
 		WinLeft=0.281250

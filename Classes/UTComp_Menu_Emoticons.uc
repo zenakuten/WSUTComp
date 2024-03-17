@@ -5,7 +5,7 @@ var automated AltSectionBackground BackG;
 var automated GUIVertScrollBar ScrollBar;
 var EmoticonsReplicationInfo ERI;
 var int Offset;
-var automated moCheckBox ch_EnableEmoticons;
+var automated wsCheckBox ch_EnableEmoticons;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -84,7 +84,7 @@ function InternalOnChange( GUIComponent C )
 
 defaultproperties
 {
-     Begin Object Class=GUIVertScrollBar Name=ScrollBarObj
+     Begin Object Class=wsGUIVertScrollBar Name=ScrollBarObj
          ItemsPerPage=5
          PositionChanged=UTComp_Menu_Emoticons.PositionChanged
          WinTop=0.300000
@@ -94,16 +94,16 @@ defaultproperties
          OnPreDraw=ScrollBarObj.GripPreDraw
          OnRendered=UTComp_Menu_Emoticons.OnRender
      End Object
-     ScrollBar=GUIVertScrollBar'WSUTComp.UTComp_Menu_Emoticons.ScrollBarObj'
+     ScrollBar=wsGUIVertScrollBar'WSUTComp.UTComp_Menu_Emoticons.ScrollBarObj'
 
-    Begin Object class=moCheckBox name=EnableEmoticonsCheck
+    Begin Object class=wsCheckBox name=EnableEmoticonsCheck
 		WinWidth=0.150000
 		WinHeight=0.030000
 		WinLeft=0.70000
 		WinTop=0.300000
         Caption="Enable Emoticons"
         OnChange=InternalOnChange
-        OnCreateComponent=SpeedCheck.InternalOnCreateComponent
+        OnCreateComponent=EnableEmoticonsCheck.InternalOnCreateComponent
     End Object
-    ch_EnableEmoticons=moCheckBox'UTComp_Menu_Emoticons.EnableEmoticonsCheck'
+    ch_EnableEmoticons=wsCheckBox'UTComp_Menu_Emoticons.EnableEmoticonsCheck'
 }

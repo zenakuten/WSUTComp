@@ -9,13 +9,13 @@ var automated GUILabel l_CrossScale;
 var automated GUILabel l_NewNet;
 
 
-var automated moCheckBox ch_UseScoreBoard;
-var automated moCheckBox ch_WepStats;
-var automated moCheckBox ch_PickupStats;
-var automated moCheckBox ch_FootSteps;
-var automated moCheckBox ch_MatchHudColor;
-var automated moCheckBox ch_UseEyeHeightAlgo;
-var automated moCheckBox ch_UseNewNet;
+var automated wsCheckBox ch_UseScoreBoard;
+var automated wsCheckBox ch_WepStats;
+var automated wsCheckBox ch_PickupStats;
+var automated wsCheckBox ch_FootSteps;
+var automated wsCheckBox ch_MatchHudColor;
+var automated wsCheckBox ch_UseEyeHeightAlgo;
+var automated wsCheckBox ch_UseNewNet;
 var automated moNumericEdit ne_NetUpdateRate;
 
 var automated GUIButton bu_adren;
@@ -105,7 +105,7 @@ defaultproperties
 
     Begin Object Class=GUILabel Name=ScoreboardLabel
         Caption="----------Scoreboard----------"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
         WinWidth=1.000000
         WinHeight=0.060000
         WinLeft=0.250000
@@ -113,7 +113,7 @@ defaultproperties
     End Object
     l_ScoreboardTitle=GUILabel'ScoreboardLabel'
 
-    Begin Object Class=moCheckBox Name=ScoreboardCheck
+    Begin Object Class=wsCheckBox Name=ScoreboardCheck
         Caption="Use UTComp enhanced scoreboard."
         OnCreateComponent=ScoreboardCheck.InternalOnCreateComponent
         WinWidth=0.500000
@@ -122,29 +122,29 @@ defaultproperties
         WinTop=0.330000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    ch_UseScoreBoard=moCheckBox'UTComp_Menu_Miscellaneous.ScoreboardCheck'
+    ch_UseScoreBoard=wsCheckBox'UTComp_Menu_Miscellaneous.ScoreboardCheck'
 
-    Begin Object Class=moCheckBox Name=StatsCheck
+    Begin Object Class=wsCheckBox Name=StatsCheck
         Caption="Show weapon stats on scoreboard."
         OnCreateComponent=StatsCheck.InternalOnCreateComponent
         WinLeft=0.250000
         WinTop=0.370000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    ch_WepStats=moCheckBox'UTComp_Menu_Miscellaneous.StatsCheck'
+    ch_WepStats=wsCheckBox'UTComp_Menu_Miscellaneous.StatsCheck'
 
-    Begin Object Class=moCheckBox Name=PickupCheck
+    Begin Object Class=wsCheckBox Name=PickupCheck
         Caption="Show pickup stats on scoreboard."
         OnCreateComponent=PickupCheck.InternalOnCreateComponent
         WinLeft=0.250000
         WinTop=0.410000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    ch_PickupStats=moCheckBox'UTComp_Menu_Miscellaneous.PickupCheck'
+    ch_PickupStats=wsCheckBox'UTComp_Menu_Miscellaneous.PickupCheck'
 
     Begin Object Class=GUILabel Name=InfoLabel
         Caption="--------Adrenaline Combos--------"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
         WinWidth=1.000000
         WinHeight=0.060000
         WinLeft=0.250000
@@ -154,6 +154,7 @@ defaultproperties
 
     Begin Object Class=GUIButton Name=AdrenButton
         Caption="Disable Adrenaline Combos"
+        StyleName="WSButton"
         WinWidth=0.400000
         WinHeight=0.050000
         WinLeft=0.2500000
@@ -165,7 +166,7 @@ defaultproperties
 
     Begin Object Class=GUILabel Name=GenericLabel
         Caption="----Generic UT2004 Settings----"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
         WinWidth=1.000000
         WinHeight=0.060000
         WinLeft=0.250000
@@ -173,7 +174,7 @@ defaultproperties
     End Object
     l_GenericTitle=GUILabel'UTComp_Menu_Miscellaneous.GenericLabel'
 
-    Begin Object Class=moCheckBox Name=FootCheck
+    Begin Object Class=wsCheckBox Name=FootCheck
         Caption="Play own footstep sounds."
         OnCreateComponent=FootCheck.InternalOnCreateComponent
         WinWidth=0.500000
@@ -182,9 +183,9 @@ defaultproperties
         WinTop=0.570000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    ch_FootSteps=moCheckBox'UTComp_Menu_Miscellaneous.FootCheck'
+    ch_FootSteps=wsCheckBox'UTComp_Menu_Miscellaneous.FootCheck'
 
-    Begin Object Class=moCheckBox Name=HudColorCheck
+    Begin Object Class=wsCheckBox Name=HudColorCheck
         Caption="Match Hud Color To Skins"
         OnCreateComponent=HudColorCheck.InternalOnCreateComponent
         WinWidth=0.500000
@@ -193,9 +194,9 @@ defaultproperties
         WinTop=0.610000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    ch_MatchHudColor=moCheckBox'UTComp_Menu_Miscellaneous.HudColorCheck'
+    ch_MatchHudColor=wsCheckBox'UTComp_Menu_Miscellaneous.HudColorCheck'
 
-    Begin Object Class=moCheckBox Name=UseEyeHeightAlgoCheck
+    Begin Object Class=wsCheckBox Name=UseEyeHeightAlgoCheck
         Caption="Use New EyeHeight Algorithm"
         OnCreateComponent=HudColorCheck.InternalOnCreateComponent
         WinWidth=0.500000
@@ -204,11 +205,11 @@ defaultproperties
         WinTop=0.650000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    ch_UseEyeHeightAlgo=moCheckBox'UTComp_Menu_Miscellaneous.UseEyeHeightAlgoCheck'
+    ch_UseEyeHeightAlgo=wsCheckBox'UTComp_Menu_Miscellaneous.UseEyeHeightAlgoCheck'
 
     Begin Object Class=GUILabel Name=NewNetLabel
         Caption="-----------Net Code-----------"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
         WinWidth=1.000000
         WinHeight=0.060000
         WinLeft=0.250000
@@ -216,7 +217,7 @@ defaultproperties
     End Object
     l_NewNet=GUILabel'NewNetLabel'
 
-    Begin Object Class=moCheckBox Name=NewNetCheck
+    Begin Object Class=wsCheckBox Name=NewNetCheck
         Caption="Enable Enhanced Netcode"
         OnCreateComponent=NewNetCheck.InternalOnCreateComponent
         WinWidth=0.500000
@@ -225,11 +226,12 @@ defaultproperties
         WinTop=0.730000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    ch_UseNewNet=moCheckBox'UTComp_Menu_Miscellaneous.NewNetCheck'
+    ch_UseNewNet=wsCheckBox'UTComp_Menu_Miscellaneous.NewNetCheck'
 
     Begin Object Class=moNumericEdit Name=NetUpdateRate
-        MinValue=30
-        MaxValue=1000
+        LabelStyleName="WSButton"
+        MinValue=90
+        MaxValue=250
         Step=5
         CaptionWidth=0.9
         Caption="Desired Network Update Rate"
@@ -239,6 +241,7 @@ defaultproperties
         WinLeft=0.250000
         WinTop=0.770000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
+        ComponentClassName="WSUTComp.wsGUINumericEdit"        
     End Object
     ne_NetUpdateRate=moNumericEdit'UTComp_Menu_Miscellaneous.NetUpdateRate'
 }

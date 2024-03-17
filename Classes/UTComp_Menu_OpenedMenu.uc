@@ -5,15 +5,15 @@ var automated array<GUILabel> l_Mode;
 var automated GUIImage i_UTCompLogo;
 var automated GUIButton bu_Ready, bu_NotReady, bu_Admin;
 
-var color GoldColor;
+var color BlueColor;
 
 var UTComp_ServerReplicationInfo RepInfo;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
-   // local mutator mut;
+    MyController.RegisterStyle(class'STY_WSButton', true);
 
-    l_Mode[2].Caption=class'MutUTComp'.default.FriendlyVersionPrefix $ class'Gameinfo'.Static.MakeColorCode(GoldColor) @ class'MutUTComp'.default.FriendlyVersionNumber;
+    l_Mode[2].Caption=class'MutUTComp'.default.FriendlyVersionPrefix $ class'Gameinfo'.Static.MakeColorCode(BlueColor) @ class'MutUTComp'.default.FriendlyVersionNumber;
 	Super.InitComponent(myController,MyOwner);
 }
 
@@ -24,25 +24,25 @@ function RandomCrap()
           break;
 
     if (RepInfo.EnableBrightSkinsMode == 1)
-        l_Mode[0].Caption = class'Gameinfo'.Static.MakeColorCode(GoldColor)$"Brightskins Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Brightskins Disabled";
+        l_Mode[0].Caption = class'Gameinfo'.Static.MakeColorCode(BlueColor)$"Brightskins Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Brightskins Disabled";
     else if (RepInfo.EnableBrightSkinsMode == 2)
-        l_Mode[0].Caption = class'Gameinfo'.Static.MakeColorCode(GoldColor)$"Brightskins Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Bright Epic Style Skins";
+        l_Mode[0].Caption = class'Gameinfo'.Static.MakeColorCode(BlueColor)$"Brightskins Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Bright Epic Style Skins";
     else if (RepInfo.EnableBrightSkinsMode == 3)
-        l_Mode[0].Caption = class'gameinfo'.Static.MakeColorCode(GoldColor)$"Brightskins Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  UTComp Style Skins";
+        l_Mode[0].Caption = class'gameinfo'.Static.MakeColorCode(BlueColor)$"Brightskins Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  UTComp Style Skins";
     if (RepInfo.EnableHitSoundsMode == 0)
-       l_Mode[1].Caption = class'gameinfo'.Static.MakeColorCode(GoldColor)$"Hitsounds Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Disabled";
+       l_Mode[1].Caption = class'gameinfo'.Static.MakeColorCode(BlueColor)$"Hitsounds Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Disabled";
     else if (RepInfo.EnableHitSoundsMode == 1)
-       l_Mode[1].Caption = class'gameinfo'.Static.MakeColorCode(GoldColor)$"Hitsounds Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Line Of Sight";
+       l_Mode[1].Caption = class'gameinfo'.Static.MakeColorCode(BlueColor)$"Hitsounds Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Line Of Sight";
     else if (RepInfo.EnableHitSoundsMode == 2)
-       l_Mode[1].Caption = class'gameinfo'.Static.MakeColorCode(GoldColor)$"Hitsounds Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Everywhere";
+       l_Mode[1].Caption = class'gameinfo'.Static.MakeColorCode(BlueColor)$"Hitsounds Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$"  Everywhere";
     if(RepInfo.benableDoubleDamage)
-       l_Mode[3].Caption =class'gameinfo'.Static.MakeColorCode(GoldColor)$"Double Damage Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$" Enabled";
+       l_Mode[3].Caption =class'gameinfo'.Static.MakeColorCode(BlueColor)$"Double Damage Mode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$" Enabled";
     else
-       l_Mode[3].Caption =class'GameInfo'.Static.MakeColorCode(GoldColor)$"Double Damage Mode:"$class'GameInfo'.Static.MakeColorCode(WhiteColor)$" Disabled";
+       l_Mode[3].Caption =class'GameInfo'.Static.MakeColorCode(BlueColor)$"Double Damage Mode:"$class'GameInfo'.Static.MakeColorCode(WhiteColor)$" Disabled";
     if(RepInfo.bEnableEnhancedNetCode)
-       l_Mode[5].Caption =class'gameinfo'.Static.MakeColorCode(GoldColor)$"Enhanced Netcode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$" Enabled";
+       l_Mode[5].Caption =class'gameinfo'.Static.MakeColorCode(BlueColor)$"Enhanced Netcode:"$class'gameinfo'.Static.MakeColorCode(WhiteColor)$" Enabled";
     else
-       l_Mode[5].Caption =class'GameInfo'.Static.MakeColorCode(GoldColor)$"Enhanced Netcode:"$class'GameInfo'.Static.MakeColorCode(WhiteColor)$" Disabled";
+       l_Mode[5].Caption =class'GameInfo'.Static.MakeColorCode(BlueColor)$"Enhanced Netcode:"$class'GameInfo'.Static.MakeColorCode(WhiteColor)$" Disabled";
 
    if(!PlayerOwner().PlayerReplicationInfo.bOnlySpectator)
    {
@@ -136,6 +136,7 @@ DefaultProperties
      l_Mode(2)=GUILabel'VersionLabel'
 
      Begin Object class=GUIButton name=ReadyButton
+         StyleName="WSButton"
          WinTop=.65
          WinLeft=.25
          WinWidth=.20
@@ -145,6 +146,7 @@ DefaultProperties
      bu_Ready=GUIButton'readybutton'
 
      Begin Object class=GUIButton name=NotReadyButton
+         StyleName="WSButton"
          WinTop=.65
          WinLeft=.55
          WinWidth=.20
@@ -177,7 +179,7 @@ DefaultProperties
 		WinHeight=0.049485
 		WinLeft=0.000000
 		WinTop=0.454433
-		TextColor=(B=0,G=200,R=230)
+		TextColor=(B=255,G=255,R=0)
         Caption = "------Server Settings------"
          TextAlign=TXTA_Center
      End Object
@@ -212,9 +214,9 @@ DefaultProperties
 		 WinLeft=0.000000
 		 WinTop=0.727502
          TextAlign=TXTA_Center
-         Caption="Visit https://GitHub.com/Deaod/UTComp for new versions."
+         Caption="Visit https://github.com/zenakuten/WSUTComp for new versions."
      End Object
      l_Mode(4)=GUILabel'NewVersions'
 
-     GoldColor=(B=0,G=200,R=230)
+     BlueColor=(B=255,G=255,R=0)
 }

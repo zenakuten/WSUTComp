@@ -5,11 +5,11 @@ class UTComp_Menu_HitSounds extends UTComp_Menu_MainMenu;
 var automated GUISlider sl_Volume;
 var automated GUISlider sl_Pitch;
 
-var automated moCheckBox ch_CPMAStyle;
-var automated moCheckBox ch_EnableHitSounds;
+var automated wsCheckBox ch_CPMAStyle;
+var automated wsCheckBox ch_EnableHitSounds;
 
-var automated GUIComboBox co_EnemySound;
-var automated GUIComboBox co_FriendlySound;
+var automated wsGUIComboBox co_EnemySound;
+var automated wsGUIComboBox co_FriendlySound;
 
 var automated GUILabel l_Volume;
 var automated GUILabel l_Pitch;
@@ -97,7 +97,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 
 defaultproperties
 {
-     Begin Object Class=GUISlider Name=HitSoundVolume
+     Begin Object Class=wsGUISlider Name=HitSoundVolume
          MaxValue=4.000000
          WinTop=0.440000
          WinLeft=0.250000
@@ -109,9 +109,9 @@ defaultproperties
          OnKeyEvent=HitSoundVolume.InternalOnKeyEvent
          OnCapturedMouseMove=HitSoundVolume.InternalCapturedMouseMove
      End Object
-     sl_Volume=GUISlider'UTComp_Menu_HitSounds.HitSoundVolume'
+     sl_Volume=wsGUISlider'UTComp_Menu_HitSounds.HitSoundVolume'
 
-     Begin Object Class=GUISlider Name=PitchMod
+     Begin Object Class=wsGUISlider Name=PitchMod
          MinValue=1.000000
          MaxValue=3.000000
          Value=1.000000
@@ -125,27 +125,27 @@ defaultproperties
          OnKeyEvent=PitchMod.InternalOnKeyEvent
          OnCapturedMouseMove=PitchMod.InternalCapturedMouseMove
      End Object
-     sl_Pitch=GUISlider'UTComp_Menu_HitSounds.PitchMod'
+     sl_Pitch=wsGUISlider'UTComp_Menu_HitSounds.PitchMod'
 
-     Begin Object Class=moCheckBox Name=CPMAstyle
+     Begin Object Class=wsCheckBox Name=CPMAstyle
          Caption="CPMA Style Hitsounds"
          OnCreateComponent=CPMAstyle.InternalOnCreateComponent
          WinTop=0.490000
          WinLeft=0.250000
          OnChange=UTComp_Menu_HitSounds.InternalOnChange
      End Object
-     ch_CPMAStyle=moCheckBox'UTComp_Menu_HitSounds.CPMAstyle'
+     ch_CPMAStyle=wsCheckBox'UTComp_Menu_HitSounds.CPMAstyle'
 
-     Begin Object Class=moCheckBox Name=EnableHit
+     Begin Object Class=wsCheckBox Name=EnableHit
          Caption="Enable Hitsounds"
          OnCreateComponent=CPMAstyle.InternalOnCreateComponent
          WinTop=0.360000
          WinLeft=0.250000
          OnChange=UTComp_Menu_HitSounds.InternalOnChange
      End Object
-     ch_EnableHitSounds=moCheckBox'UTComp_Menu_HitSounds.EnableHit'
+     ch_EnableHitSounds=wsCheckBox'UTComp_Menu_HitSounds.EnableHit'
 
-     Begin Object Class=GUIComboBox Name=EnemySound
+     Begin Object Class=wsGUIComboBox Name=EnemySound
          WinTop=0.654000
          WinLeft=0.412500
          WinWidth=0.340000
@@ -153,9 +153,9 @@ defaultproperties
          OnChange=UTComp_Menu_HitSounds.InternalOnChange
          OnKeyEvent=UTComp_Menu_HitSounds.InternalOnKeyEvent
      End Object
-     co_EnemySound=GUIComboBox'UTComp_Menu_HitSounds.EnemySound'
+     co_EnemySound=wsGUIComboBox'UTComp_Menu_HitSounds.EnemySound'
 
-     Begin Object Class=GUIComboBox Name=TeammateSound
+     Begin Object Class=wsGUIComboBox Name=TeammateSound
          WinTop=0.704000
          WinLeft=0.412500
          WinWidth=0.340000
@@ -163,11 +163,11 @@ defaultproperties
          OnChange=UTComp_Menu_HitSounds.InternalOnChange
          OnKeyEvent=UTComp_Menu_HitSounds.InternalOnKeyEvent
      End Object
-     co_FriendlySound=GUIComboBox'UTComp_Menu_HitSounds.TeammateSound'
+     co_FriendlySound=wsGUIComboBox'UTComp_Menu_HitSounds.TeammateSound'
 
      Begin Object Class=GUILabel Name=VolumeLabel
          Caption="Hitsound Volume"
-         TextColor=(B=0,G=200,R=230)
+         TextColor=(B=255,G=255,R=0)
          WinTop=0.390000
          WinLeft=0.250000
      End Object
@@ -175,7 +175,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=PitchLabel
          Caption="CPMA Pitch Modifier"
-         TextColor=(B=0,G=200,R=230)
+         TextColor=(B=255,G=255,R=0)
          WinTop=0.540000
          WinLeft=0.250000
      End Object

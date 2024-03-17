@@ -6,14 +6,14 @@ var automated GUIListBox lb_MapList;
 
 var automated GUIEditBox eb_MapInput;
 var automated GUINumericEdit ne_NumPlayers;
-var automated GUIComboBox co_GameTypeList;
+var automated wsGUIComboBox co_GameTypeList;
 
 var automated GUIButton bu_QuickRestart, bu_ChangeMap;
 
 var automated GUILabel l_MapName, l_GameType, l_MaxPlayers;
 
-var automated moCheckBox cb_UseAdvancedOptions;
-var automated moCheckBox cb_Adren, cb_DD, cb_SuperWeapons, cb_WeaponStay;
+var automated wsCheckBox cb_UseAdvancedOptions;
+var automated wsCheckBox cb_Adren, cb_DD, cb_SuperWeapons, cb_WeaponStay;
 
 var automated GUINumericEdit ne_GoalScore, ne_TimeLimit, ne_Grenades, ne_OverTime;
 var automated GUILabel l_GoalScore, l_TimeLimit, l_grenades, l_OverTime;
@@ -302,6 +302,7 @@ event Opened(GUIComponent Sender)
 defaultproperties
 {
      Begin Object Class=GUIEditBox Name=MapInputEditBox
+        StyleName="WSEditBox"
 		WinWidth=0.250000
 		WinHeight=0.030000
 		WinLeft=0.559687
@@ -313,7 +314,7 @@ defaultproperties
      End Object
      eb_MapInput=GUIEditBox'UTComp_Menu_Voting_GameType.MapInputEditBox'
 
-     Begin Object Class=GUINumericEdit Name=MaxPlayersNE
+     Begin Object Class=wsGUINumericEdit Name=MaxPlayersNE
          MinValue=2
 		WinWidth=0.206250
 		WinHeight=0.030000
@@ -321,9 +322,9 @@ defaultproperties
 		WinTop=0.414046
          OnDeActivate=MaxPlayersNE.ValidateValue
      End Object
-     ne_NumPlayers=GUINumericEdit'UTComp_Menu_Voting_GameType.MaxPlayersNE'
+     ne_NumPlayers=wsGUINumericEdit'UTComp_Menu_Voting_GameType.MaxPlayersNE'
 
-     Begin Object Class=GUIComboBox Name=MapInputComboBox
+     Begin Object Class=wsGUIComboBox Name=MapInputComboBox
 		WinWidth=0.250000
 		WinHeight=0.035000
 		WinLeft=0.560311
@@ -331,11 +332,12 @@ defaultproperties
 		OnChange=InternalOnChange
          OnKeyEvent=MapInputComboBox.InternalOnKeyEvent
      End Object
-     co_GameTypeList=GUIComboBox'UTComp_Menu_Voting_GameType.MapInputComboBox'
+     co_GameTypeList=wsGUIComboBox'UTComp_Menu_Voting_GameType.MapInputComboBox'
 
      Begin Object Class=GUIButton Name=quickrestartButton
         bVisible=false
         Caption="Just Restart Map"
+        StyleName="WSButton"
 		WinWidth=0.217500
 		WinHeight=0.047500
 		WinLeft=0.379687
@@ -347,6 +349,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=ChangeMapButton
          Caption="Call Vote"
+         StyleName="WSButton"
 		WinWidth=0.262813
 		WinHeight=0.047500
 		WinLeft=0.456252
@@ -386,7 +389,11 @@ defaultproperties
      End Object
      l_MaxPlayers=GUILabel'UTComp_Menu_Voting_GameType.MaxPlayersLabe'
 
-     Begin Object class=GUIListBox name=MapListBox
+     Begin Object class=wsGUIListBox name=MapListBox
+        StyleName="WSButton"
+        SelectedStyleName="WSListBox"
+        SectionStyleName="WSButton"
+        OutlineStyleName="WSListBox"       
 		WinWidth=0.214061
 		WinHeight=0.385937
 		WinLeft=0.118750
@@ -394,51 +401,51 @@ defaultproperties
         bVisibleWhenEmpty=True
         OnChange=InternalOnChange
      End Object
-     lb_MapList=GUIListBox'MapListBox'
+     lb_MapList=wsGUIListBox'MapListBox'
 
-     Begin Object class=moCheckBox name=AdrenCheck
+     Begin Object class=wsCheckBox name=AdrenCheck
 		WinWidth=0.239062
 		WinHeight=0.030000
 		WinLeft=0.598437
 		WinTop=0.549998
         Caption="Adren"
      End Object
-     cb_Adren=moCheckBox'AdrenCheck'
+     cb_Adren=wsCheckBox'AdrenCheck'
 
-     Begin Object class=moCheckBox name=WeaponStayCheck
+     Begin Object class=wsCheckBox name=WeaponStayCheck
         WinTop=0.65
         WinLeft=0.35
         WinWidth=0.24
         Caption="WeaponStay"
      End Object
-     cb_WeaponStay=moCheckBox'WeaponStayCheck'
+     cb_WeaponStay=wsCheckBox'WeaponStayCheck'
 
-     Begin Object class=moCheckBox name=DDCheck
+     Begin Object class=wsCheckBox name=DDCheck
         WinTop=0.60
         WinLeft=0.35
         WinWidth=0.24
         Caption="DD"
      End Object
-     cb_DD=moCheckBox'DDCheck'
+     cb_DD=wsCheckBox'DDCheck'
 
-     Begin Object class=moCheckBox name=SuperWeaponsCheck
+     Begin Object class=wsCheckBox name=SuperWeaponsCheck
         WinTop=0.55
         WinLeft=0.35
         WinWidth=0.24
         Caption="SuperWeapons"
      End Object
-     cb_SuperWeapons=moCheckBox'SuperWeaponsCheck'
+     cb_SuperWeapons=wsCheckBox'SuperWeaponsCheck'
 
-     Begin Object class=moCheckBox name=AdvancedOptionsCheck
+     Begin Object class=wsCheckBox name=AdvancedOptionsCheck
         WinTop=0.50
         WinLeft=0.35
         WinWidth=0.24
         Caption="Advanced Options"
         OnChange=InternalOnChange
      End Object
-     cb_UseAdvancedOptions=moCheckBox'AdvancedOptionsCheck'
+     cb_UseAdvancedOptions=wsCheckBox'AdvancedOptionsCheck'
 
-     Begin Object Class=GUINumericEdit Name=GoalScoreNE
+     Begin Object Class=wsGUINumericEdit Name=GoalScoreNE
         MinValue=0
 		WinWidth=0.103125
 		WinHeight=0.030000
@@ -446,9 +453,9 @@ defaultproperties
 		WinTop=0.598331
          OnDeActivate=GoalScoreNE.ValidateValue
      End Object
-     ne_GoalScore=GUINumericEdit'UTComp_Menu_Voting_GameType.GoalScoreNE'
+     ne_GoalScore=wsGUINumericEdit'UTComp_Menu_Voting_GameType.GoalScoreNE'
 
-     Begin Object Class=GUINumericEdit Name=timelimitNE
+     Begin Object Class=wsGUINumericEdit Name=timelimitNE
         MinValue=1
 		WinWidth=0.103125
 		WinHeight=0.030000
@@ -456,10 +463,10 @@ defaultproperties
 		WinTop=0.648331
         OnDeActivate=timelimitNE.ValidateValue
      End Object
-     ne_timelimit=GUINumericEdit'UTComp_Menu_Voting_GameType.timelimitNE'
+     ne_timelimit=wsGUINumericEdit'UTComp_Menu_Voting_GameType.timelimitNE'
 
 
-    Begin Object Class=GUINumericEdit Name=GrenadeNE
+    Begin Object Class=wsGUINumericEdit Name=GrenadeNE
         MinValue=0
 		WinWidth=0.103125
 		WinHeight=0.030000
@@ -468,9 +475,9 @@ defaultproperties
 		MaxValue=8
         OnDeActivate=GrenadeNE.ValidateValue
      End Object
-     ne_grenades=GUINumericEdit'UTComp_Menu_Voting_GameType.grenadeNE'
+     ne_grenades=wsGUINumericEdit'UTComp_Menu_Voting_GameType.grenadeNE'
 
-     Begin Object Class=GUINumericEdit Name=OvertimeNE
+     Begin Object Class=wsGUINumericEdit Name=OvertimeNE
         MinValue=0
 		WinWidth=0.103125
 		WinHeight=0.030000
@@ -479,7 +486,7 @@ defaultproperties
 		MaxValue = 10
         OnDeActivate=OvertimeNE.ValidateValue
      End Object
-     ne_Overtime=GUINumericEdit'UTComp_Menu_Voting_GameType.OvertimeNE'
+     ne_Overtime=wsGUINumericEdit'UTComp_Menu_Voting_GameType.OvertimeNE'
 
 
 
@@ -527,6 +534,7 @@ defaultproperties
 
     Begin Object Class=GUIButton Name=RefreshButton
         Caption="Refresh Maps"
+        StyleName="WSButton"
 		WinWidth=0.217500
 		WinHeight=0.047500
 		WinLeft=0.110936

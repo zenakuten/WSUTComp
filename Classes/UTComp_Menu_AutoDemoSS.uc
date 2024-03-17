@@ -2,11 +2,11 @@
 
 class UTComp_Menu_AutoDemoSS extends UTComp_Menu_MainMenu;
 
-var automated moCheckBox ch_AutoDemo;
-var automated moCheckBox ch_AutoSS;
+var automated wsCheckBox ch_AutoDemo;
+var automated wsCheckBox ch_AutoSS;
 
-var automated GUIComboBox co_DemoMask;
-var automated GUIComboBox co_SSMask;
+var automated wsGUIComboBox co_DemoMask;
+var automated wsGUIComboBox co_SSMask;
 
 
 var automated GUILabel l_AutoDemoMask;
@@ -68,29 +68,29 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 
 defaultproperties
 {
-     Begin Object Class=moCheckBox Name=AutoDemoCheck
+     Begin Object Class=wsCheckBox Name=AutoDemoCheck
          Caption="Automatically record a demo of each match."
          OnCreateComponent=AutoDemoCheck.InternalOnCreateComponent
-		WinWidth=0.740000
+		WinWidth=0.530000
 		WinHeight=0.030000
-		WinLeft=0.140000
+		WinLeft=0.227000
 		WinTop=0.412083
          OnChange=UTComp_Menu_AutoDemoSS.InternalOnChange
      End Object
-     ch_AutoDemo=moCheckBox'UTComp_Menu_AutoDemoSS.AutoDemoCheck'
+     ch_AutoDemo=wsCheckBox'UTComp_Menu_AutoDemoSS.AutoDemoCheck'
 
-     Begin Object Class=moCheckBox Name=AutoSSCheck
+     Begin Object Class=wsCheckBox Name=AutoSSCheck
          Caption="Automatically take a screenshot at the end of each match."
          OnCreateComponent=AutoSSCheck.InternalOnCreateComponent
-		WinWidth=0.740000
+		WinWidth=0.530000
 		WinHeight=0.030000
-		WinLeft=0.140000
+		WinLeft=0.227000
 		WinTop=0.589168
          OnChange=UTComp_Menu_AutoDemoSS.InternalOnChange
      End Object
-     ch_AutoSS=moCheckBox'UTComp_Menu_AutoDemoSS.AutoSSCheck'
+     ch_AutoSS=wsCheckBox'UTComp_Menu_AutoDemoSS.AutoSSCheck'
 
-     Begin Object Class=GUIComboBox Name=AutoDemoInput
+     Begin Object Class=wsGUIComboBox Name=AutoDemoInput
 		WinWidth=0.320000
 		WinHeight=0.035000
 		WinLeft=0.437500
@@ -98,9 +98,9 @@ defaultproperties
          OnChange=UTComp_Menu_AutoDemoSS.InternalOnChange
          OnKeyEvent=UTComp_Menu_AutoDemoSS.InternalOnKeyEvent
      End Object
-     co_DemoMask=GUIComboBox'UTComp_Menu_AutoDemoSS.AutoDemoInput'
+     co_DemoMask=wsGUIComboBox'UTComp_Menu_AutoDemoSS.AutoDemoInput'
 
-     Begin Object Class=GUIComboBox Name=AutoSSInput
+     Begin Object Class=wsGUIComboBox Name=AutoSSInput
 		WinWidth=0.320000
 		WinHeight=0.035000
 		WinLeft=0.437500
@@ -108,7 +108,7 @@ defaultproperties
          OnChange=UTComp_Menu_AutoDemoSS.InternalOnChange
          OnKeyEvent=UTComp_Menu_AutoDemoSS.InternalOnKeyEvent
      End Object
-     co_SSMask=GUIComboBox'UTComp_Menu_AutoDemoSS.AutoSSInput'
+     co_SSMask=wsGUIComboBox'UTComp_Menu_AutoDemoSS.AutoSSInput'
 
      Begin Object Class=GUILabel Name=DemoMaskLabel
          Caption="Demo Mask:"
@@ -132,7 +132,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=SSHeadingLabel
         Caption="--- Auto Screenshot ---"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
 		WinLeft=0.342188
@@ -142,7 +142,7 @@ defaultproperties
 
      Begin Object class=GUILabel Name=DemnoHeadingLabel
         Caption="--- Auto Demo Recording---"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
 		WinLeft=0.326563

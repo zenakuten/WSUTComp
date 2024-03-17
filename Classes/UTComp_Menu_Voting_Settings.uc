@@ -2,8 +2,8 @@
 
 class UTComp_Menu_Voting_Settings extends UTComp_Menu_MainMenu;
 
-var automated GUIComboBox co_Skins, co_Hitsounds, co_TeamOverlay;
-var automated GUIComboBox co_Warmup,  co_NewNet;
+var automated wsGUIComboBox co_Skins, co_Hitsounds, co_TeamOverlay;
+var automated wsGUIComboBox co_Warmup,  co_NewNet;
 
 var automated GUIButton bu_Skins, bu_Hitsounds, bu_TeamOverlay;
 var automated GUIButton bu_Warmup,  bu_newNet;
@@ -107,53 +107,54 @@ event Opened(GUIComponent Sender)
 
 defaultproperties
 {
-     Begin Object Class=GUIComboBox Name=SkinsComboBox
+     Begin Object Class=wsGUIComboBox Name=SkinsComboBox
          WinTop=0.400000
          WinLeft=0.382187
          WinWidth=0.250000
          WinHeight=0.030000
          OnKeyEvent=SkinsComboBox.InternalOnKeyEvent
      End Object
-     co_Skins=GUIComboBox'UTComp_Menu_Voting_Settings.SkinsComboBox'
+     co_Skins=wsGUIComboBox'UTComp_Menu_Voting_Settings.SkinsComboBox'
 
-     Begin Object Class=GUIComboBox Name=HitsoundsComboBox
+     Begin Object Class=wsGUIComboBox Name=HitsoundsComboBox
          WinTop=0.450000
          WinLeft=0.382187
          WinWidth=0.250000
          WinHeight=0.030000
          OnKeyEvent=HitsoundsComboBox.InternalOnKeyEvent
      End Object
-     co_Hitsounds=GUIComboBox'UTComp_Menu_Voting_Settings.HitsoundsComboBox'
+     co_Hitsounds=wsGUIComboBox'UTComp_Menu_Voting_Settings.HitsoundsComboBox'
 
-     Begin Object Class=GUIComboBox Name=TeamOverlayComboBox
+     Begin Object Class=wsGUIComboBox Name=TeamOverlayComboBox
          WinTop=0.500000
          WinLeft=0.382187
          WinWidth=0.250000
          WinHeight=0.030000
          OnKeyEvent=TeamOverlayComboBox.InternalOnKeyEvent
      End Object
-     co_TeamOverlay=GUIComboBox'UTComp_Menu_Voting_Settings.TeamOverlayComboBox'
+     co_TeamOverlay=wsGUIComboBox'UTComp_Menu_Voting_Settings.TeamOverlayComboBox'
 
-     Begin Object Class=GUIComboBox Name=WarmupComboBox
+     Begin Object Class=wsGUIComboBox Name=WarmupComboBox
 		WinWidth=0.250000
 		WinHeight=0.035000
 		WinLeft=0.382187
 		WinTop=0.622918
          OnKeyEvent=WarmupComboBox.InternalOnKeyEvent
      End Object
-     co_Warmup=GUIComboBox'UTComp_Menu_Voting_Settings.WarmupComboBox'
+     co_Warmup=wsGUIComboBox'UTComp_Menu_Voting_Settings.WarmupComboBox'
 
-     Begin Object Class=GUIComboBox Name=NewNetComboBox
+     Begin Object Class=wsGUIComboBox Name=NewNetComboBox
 		WinWidth=0.250000
 		WinHeight=0.035000
 		WinLeft=0.382187
 		WinTop=0.672918
          OnKeyEvent=NewNetComboBox.InternalOnKeyEvent
      End Object
-     co_NewNet=GUIComboBox'UTComp_Menu_Voting_Settings.NewNetComboBox'
+     co_NewNet=wsGUIComboBox'UTComp_Menu_Voting_Settings.NewNetComboBox'
 
      Begin Object Class=GUIButton Name=SkinsButton
          Caption="Call Vote"
+         StyleName="WSButton"
          WinTop=0.395000
          WinLeft=0.665625
          WinWidth=0.117500
@@ -165,6 +166,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=HitsoundsButton
          Caption="Call Vote"
+         StyleName="WSButton"
          WinTop=0.445000
          WinLeft=0.665625
          WinWidth=0.117500
@@ -176,6 +178,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=TeamOverlayButton
          Caption="Call Vote"
+         StyleName="WSButton"
          WinTop=0.495000
          WinLeft=0.665625
          WinWidth=0.117500
@@ -187,6 +190,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=WarmupButton
          Caption="Call Vote"
+         StyleName="WSButton"
 		WinWidth=0.117500
 		WinHeight=0.047500
 		WinLeft=0.665625
@@ -198,6 +202,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=NewNetButton
          Caption="Call Vote"
+         StyleName="WSButton"
 		WinWidth=0.117500
 		WinHeight=0.047500
 		WinLeft=0.665625
@@ -255,7 +260,7 @@ defaultproperties
 
       Begin Object class=GUILabel Name=DemnoHeadingLabel
         Caption="--- These settings require a map reload to take effect ---"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
 		WinLeft=0.176562
@@ -265,7 +270,7 @@ defaultproperties
 
     Begin Object class=GUILabel Name=RestartLabel
         Caption="--- These settings are applied instantly after the vote passes ---"
-        TextColor=(B=0,G=200,R=230)
+        TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
 		WinLeft=0.118750

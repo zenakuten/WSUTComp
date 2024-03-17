@@ -1,18 +1,18 @@
 
 class UTComp_Menu_BrightSkins extends UTComp_Menu_MainMenu;
 
-var automated moCheckBox ch_EnemySkins;
+var automated wsCheckBox ch_EnemySkins;
 
-var automated GUIComboBox co_TeamSelect;
-var automated GUIComboBox co_TypeSkinSelect;
-var automated GUIComboBox co_ModelSelect;
-var automated GUIComboBox co_EpicSkinSelect;
+var automated wsGUIComboBox co_TeamSelect;
+var automated wsGUIComboBox co_TypeSkinSelect;
+var automated wsGUIComboBox co_ModelSelect;
+var automated wsGUIComboBox co_EpicSkinSelect;
 var automated GUIImage SpinnyDudeBounds;
 
 var automated GUIEditBox eb_ClanSkin;
 
 var automated GUISlider sl_RedSkin, sl_GreenSkin, sl_BlueSkin;
-var automated moCheckBox ch_ForceThisModel, ch_DarkSkins, ch_EnemyModels;
+var automated wsCheckBox ch_ForceThisModel, ch_DarkSkins, ch_EnemyModels;
 
 var automated GUIButton bu_DeleteClanSkin, bu_AddClanSkin;
 
@@ -560,7 +560,7 @@ function UpdateAllComponents()
 
 
 
-function AddComboBoxItems(GUIComboBox Combo)
+function AddComboBoxItems(wsGUIComboBox Combo)
 {
     Combo.AddItem("Abaddon");
     Combo.AddItem("Ambrosia");
@@ -914,7 +914,7 @@ simulated function material MakeBrightPurpleSkin(material SkinToChange)
 
 defaultproperties
 {
-     Begin Object Class=moCheckBox Name=EnemyBasedSkinCheck
+     Begin Object Class=wsCheckBox Name=EnemyBasedSkinCheck
          Caption="Enemy Based Skins"
          OnCreateComponent=EnemyBasedSkinCheck.InternalOnCreateComponent
 		WinWidth=0.257812
@@ -923,9 +923,9 @@ defaultproperties
 		WinTop=0.330583
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
      End Object
-     ch_EnemySkins=moCheckBox'UTComp_Menu_BrightSkins.EnemyBasedSkinCheck'
+     ch_EnemySkins=wsCheckBox'UTComp_Menu_BrightSkins.EnemyBasedSkinCheck'
 
-    Begin Object Class=moCheckBox Name=EnemyBasedModelCheck
+    Begin Object Class=wsCheckBox Name=EnemyBasedModelCheck
         Caption="Enemy Based models"
         OnCreateComponent=EnemyBasedSkinCheck.InternalOnCreateComponent
 		WinWidth=0.273437
@@ -934,9 +934,9 @@ defaultproperties
 		WinTop=0.330583
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
      End Object
-     ch_Enemymodels=moCheckBox'UTComp_Menu_BrightSkins.EnemyBasedModelCheck'
+     ch_Enemymodels=wsCheckBox'UTComp_Menu_BrightSkins.EnemyBasedModelCheck'
 
-     Begin Object Class=GUIComboBox Name=TeamSelectCombo
+     Begin Object Class=wsGUIComboBox Name=TeamSelectCombo
 		WinWidth=0.421875
 		WinHeight=0.035000
 		WinLeft=0.096249
@@ -944,9 +944,9 @@ defaultproperties
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
          OnKeyEvent=TeamSelectCombo.InternalOnKeyEvent
      End Object
-     co_TeamSelect=GUIComboBox'UTComp_Menu_BrightSkins.TeamSelectCombo'
+     co_TeamSelect=wsGUIComboBox'UTComp_Menu_BrightSkins.TeamSelectCombo'
 
-     Begin Object Class=GUIComboBox Name=TypeSkinSelectCombo
+     Begin Object Class=wsGUIComboBox Name=TypeSkinSelectCombo
 		WinWidth=0.423438
 		WinHeight=0.035000
 		WinLeft=0.096249
@@ -954,9 +954,9 @@ defaultproperties
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
          OnKeyEvent=TypeSkinSelectCombo.InternalOnKeyEvent
      End Object
-     co_TypeSkinSelect=GUIComboBox'UTComp_Menu_BrightSkins.TypeSkinSelectCombo'
+     co_TypeSkinSelect=wsGUIComboBox'UTComp_Menu_BrightSkins.TypeSkinSelectCombo'
 
-     Begin Object Class=GUIComboBox Name=ModelSelectCombo
+     Begin Object Class=wsGUIComboBox Name=ModelSelectCombo
 		 WinWidth=0.417188
 		 WinHeight=0.035000
 		 WinLeft=0.100625
@@ -964,9 +964,9 @@ defaultproperties
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
          OnKeyEvent=UTComp_Menu_BrightSkins.InternalOnKeyEvent
      End Object
-     co_ModelSelect=GUIComboBox'UTComp_Menu_BrightSkins.ModelSelectCombo'
+     co_ModelSelect=wsGUIComboBox'UTComp_Menu_BrightSkins.ModelSelectCombo'
 
-     Begin Object Class=GUIComboBox Name=EpicSkinSelectCombo
+     Begin Object Class=wsGUIComboBox Name=EpicSkinSelectCombo
 		WinWidth=0.420313
 		WinHeight=0.035000
 		WinLeft=0.097812
@@ -974,9 +974,10 @@ defaultproperties
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
          OnKeyEvent=EpicSkinSelectCombo.InternalOnKeyEvent
      End Object
-     co_EpicSkinSelect=GUIComboBox'UTComp_Menu_BrightSkins.EpicSkinSelectCombo'
+     co_EpicSkinSelect=wsGUIComboBox'UTComp_Menu_BrightSkins.EpicSkinSelectCombo'
 
      Begin Object Class=GUIEditBox Name=ClanSkinEditBox
+        StyleName="WSEditBox"
 		WinWidth=0.187500
 		WinHeight=0.035000
 		WinLeft=0.329062
@@ -988,7 +989,7 @@ defaultproperties
      End Object
      eb_ClanSkin=GUIEditBox'UTComp_Menu_BrightSkins.ClanSkinEditBox'
 
-     Begin Object Class=GUISlider Name=RedSkinSlider
+     Begin Object Class=wsGUISlider Name=RedSkinSlider
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.585000
@@ -1001,9 +1002,9 @@ defaultproperties
          OnKeyEvent=RedSkinSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedSkinSlider.InternalCapturedMouseMove
      End Object
-     sl_RedSkin=GUISlider'UTComp_Menu_BrightSkins.RedSkinSlider'
+     sl_RedSkin=wsGUISlider'UTComp_Menu_BrightSkins.RedSkinSlider'
 
-     Begin Object Class=GUISlider Name=GreenSkinSlider
+     Begin Object Class=wsGUISlider Name=GreenSkinSlider
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.625000
@@ -1016,9 +1017,9 @@ defaultproperties
          OnKeyEvent=GreenSkinSlider.InternalOnKeyEvent
          OnCapturedMouseMove=GreenSkinSlider.InternalCapturedMouseMove
      End Object
-     sl_GreenSkin=GUISlider'UTComp_Menu_BrightSkins.GreenSkinSlider'
+     sl_GreenSkin=wsGUISlider'UTComp_Menu_BrightSkins.GreenSkinSlider'
 
-     Begin Object Class=GUISlider Name=BlueSkinSlider
+     Begin Object Class=wsGUISlider Name=BlueSkinSlider
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.665000
@@ -1031,9 +1032,9 @@ defaultproperties
          OnKeyEvent=BlueSkinSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueSkinSlider.InternalCapturedMouseMove
      End Object
-     sl_BlueSkin=GUISlider'UTComp_Menu_BrightSkins.BlueSkinSlider'
+     sl_BlueSkin=wsGUISlider'UTComp_Menu_BrightSkins.BlueSkinSlider'
 
-     Begin Object Class=moCheckBox Name=ForceThisModelCheck
+     Begin Object Class=wsCheckBox Name=ForceThisModelCheck
          Caption="Force This Model"
          OnCreateComponent=ForceThisModelCheck.InternalOnCreateComponent
 		WinWidth=0.309375
@@ -1042,9 +1043,9 @@ defaultproperties
 		WinTop=0.702431
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
      End Object
-     ch_ForceThisModel=moCheckBox'UTComp_Menu_BrightSkins.ForceThisModelCheck'
+     ch_ForceThisModel=wsCheckBox'UTComp_Menu_BrightSkins.ForceThisModelCheck'
 
-     Begin Object Class=moCheckBox Name=DarkSkinCheck
+     Begin Object Class=wsCheckBox Name=DarkSkinCheck
          Caption="Darken Dead Bodies"
          OnCreateComponent=DarkSkinCheck.InternalOnCreateComponent
 		WinWidth=0.264062
@@ -1053,10 +1054,11 @@ defaultproperties
 		WinTop=0.330916
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
      End Object
-     ch_DarkSkins=moCheckBox'UTComp_Menu_BrightSkins.DarkSkinCheck'
+     ch_DarkSkins=wsCheckBox'UTComp_Menu_BrightSkins.DarkSkinCheck'
 
      Begin Object Class=GUIButton Name=DeleteClanSkinButton
          Caption="Delete ClanSkin"
+         StyleName="WSButton"
 		WinWidth=0.208125
 		WinHeight=0.040000
 		WinLeft=0.095938
@@ -1068,6 +1070,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=AddClanSkinButton
          Caption="Add Clanskin"
+         StyleName="WSButton"
 		WinWidth=0.208125
 		WinHeight=0.040000
 		WinLeft=0.095938

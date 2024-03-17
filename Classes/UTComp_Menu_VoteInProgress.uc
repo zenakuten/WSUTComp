@@ -121,6 +121,7 @@ defaultproperties
 {
      Begin Object Class=GUIButton Name=VoteYesButton
          Caption="Vote Yes"
+         StyleName="WSButton"
          WinTop=0.639583
          WinLeft=0.301562
          WinWidth=0.160938
@@ -132,6 +133,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=votenoButton
          Caption="Vote No"
+         StyleName="WSButton"
          WinTop=0.639583
          WinLeft=0.529689
          WinWidth=0.160938
@@ -143,7 +145,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=VoteLabel0
          TextAlign=TXTA_Center
-         TextColor=(B=0,G=200,R=230)
+         TextColor=(B=255,G=255,R=0)
          WinTop=0.350000
          Caption="--- Vote in progress ---"
      End Object

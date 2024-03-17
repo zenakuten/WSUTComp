@@ -4,13 +4,14 @@ class UTComp_Menu_ColorNames extends UTComp_Menu_MainMenu;
 
 var automated GUILabel l_ColorNameLetters[20];
 var automated GUILabel l_LetterSelection;
-var automated moCheckBox ch_ColorChat, ch_ColorScoreboard, ch_ColorQ3, ch_EnemyNames/*, ch_ColorRedBlue, ch_ColorDeath*/;
-var automated GUIComboBox co_SavedNames;
+var automated wsCheckBox ch_ColorChat, ch_ColorScoreboard, ch_ColorQ3, ch_EnemyNames/*, ch_ColorRedBlue, ch_ColorDeath*/;
+var automated wsGUIComboBox co_SavedNames;
 var automated GUIButton bu_SaveName, bu_DeleteName, bu_ResetWhite, bu_Apply;
 var automated GUISlider sl_RedColor, sl_BlueColor, sl_GreenColor;
 var automated GUILabel l_RedLabel, l_BlueLabel, l_GreenLabel;
 var automated GUISlider sl_LetterSelect;
-var automated moComboBox co_DeathSelect;
+var automated wsComboBox co_DeathSelect;
+var automated GUILabel l_DeathSelect;
 
 event Opened(GUIComponent Sender)
 {
@@ -269,7 +270,7 @@ defaultproperties
      End Object
      l_ColorNameLetters(19)=GUILabel'UTComp_Menu_ColorNames.Label19'
 
-     Begin Object Class=moCheckBox Name=ColorChatCheck
+     Begin Object Class=wsCheckBox Name=ColorChatCheck
          Caption="Show colored names in chat messages"
          OnCreateComponent=ColorChatCheck.InternalOnCreateComponent
          WinTop=0.330000
@@ -277,9 +278,9 @@ defaultproperties
          WinWidth=0.600000
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
-     ch_ColorChat=moCheckBox'UTComp_Menu_ColorNames.ColorChatCheck'
+     ch_ColorChat=wsCheckBox'UTComp_Menu_ColorNames.ColorChatCheck'
 
-     Begin Object Class=moCheckBox Name=ColorScoreboardCheck
+     Begin Object Class=wsCheckBox Name=ColorScoreboardCheck
          Caption="Show colored names on scoreboard"
          OnCreateComponent=ColorScoreboardCheck.InternalOnCreateComponent
          WinTop=0.365000
@@ -287,9 +288,9 @@ defaultproperties
          WinWidth=0.600000
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
-     ch_ColorScoreboard=moCheckBox'UTComp_Menu_ColorNames.ColorScoreboardCheck'
+     ch_ColorScoreboard=wsCheckBox'UTComp_Menu_ColorNames.ColorScoreboardCheck'
 
-     Begin Object Class=moCheckBox Name=Colorq3Check
+     Begin Object Class=wsCheckBox Name=Colorq3Check
         Caption="Show colored text in chat messages(Q3 Style)"
         OnCreateComponent=Colorq3Check.InternalOnCreateComponent
 		WinWidth=0.600000
@@ -298,9 +299,9 @@ defaultproperties
 		WinTop=0.433814
         OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
-     ch_ColorQ3=moCheckBox'UTComp_Menu_ColorNames.Colorq3Check'
+     ch_ColorQ3=wsCheckBox'UTComp_Menu_ColorNames.Colorq3Check'
 
-     Begin Object Class=moCheckBox Name=EnemyNamesCheck
+     Begin Object Class=wsCheckBox Name=EnemyNamesCheck
          Caption="Show colored enemy names on targeting"
          OnCreateComponent=EnemyNamesCheck.InternalOnCreateComponent
          WinTop=0.400000
@@ -308,9 +309,9 @@ defaultproperties
          WinWidth=0.600000
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
-     ch_EnemyNames=moCheckBox'UTComp_Menu_ColorNames.EnemyNamesCheck'
+     ch_EnemyNames=wsCheckBox'UTComp_Menu_ColorNames.EnemyNamesCheck'
 
-     Begin Object Class=GUIComboBox Name=ComboSaved
+     Begin Object Class=wsGUIComboBox Name=ComboSaved
          WinTop=0.612320
          WinLeft=0.140625
          WinWidth=0.300000
@@ -318,10 +319,11 @@ defaultproperties
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
          OnKeyEvent=ComboSaved.InternalOnKeyEvent
      End Object
-     co_SavedNames=GUIComboBox'UTComp_Menu_ColorNames.ComboSaved'
+     co_SavedNames=wsGUIComboBox'UTComp_Menu_ColorNames.ComboSaved'
 
      Begin Object Class=GUIButton Name=ButtonSave
          Caption="Save"
+         StyleName="WSButton"
 		WinWidth=0.133437
 		WinHeight=0.040000
 		WinLeft=0.142187
@@ -333,6 +335,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=ButtonDelete
          Caption="Delete"
+         StyleName="WSButton"
 		WinWidth=0.133125
 		WinHeight=0.040000
 		WinLeft=0.303125
@@ -344,6 +347,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=ButtonWhite
          Caption="Reset entire name to white"
+         StyleName="WSButton"
 		WinWidth=0.344063
 		WinHeight=0.040000
 		WinLeft=0.540625
@@ -355,6 +359,7 @@ defaultproperties
 
      Begin Object Class=GUIButton Name=ButtonApply
          Caption="Use This Name"
+         StyleName="WSButton"
 		WinWidth=0.297188
 		WinHeight=0.040000
 		WinLeft=0.140625
@@ -364,7 +369,7 @@ defaultproperties
      End Object
      bu_Apply=GUIButton'UTComp_Menu_ColorNames.ButtonApply'
 
-     Begin Object Class=GUISlider Name=RedSlider
+     Begin Object Class=wsGUISlider Name=RedSlider
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.600000
@@ -377,9 +382,9 @@ defaultproperties
          OnKeyEvent=RedSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedSlider.InternalCapturedMouseMove
      End Object
-     sl_RedColor=GUISlider'UTComp_Menu_ColorNames.RedSlider'
+     sl_RedColor=wsGUISlider'UTComp_Menu_ColorNames.RedSlider'
 
-     Begin Object Class=GUISlider Name=BlueSlider
+     Begin Object Class=wsGUISlider Name=BlueSlider
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.700000
@@ -392,9 +397,9 @@ defaultproperties
          OnKeyEvent=BlueSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueSlider.InternalCapturedMouseMove
      End Object
-     sl_BlueColor=GUISlider'UTComp_Menu_ColorNames.BlueSlider'
+     sl_BlueColor=wsGUISlider'UTComp_Menu_ColorNames.BlueSlider'
 
-     Begin Object Class=GUISlider Name=GreenSlider
+     Begin Object Class=wsGUISlider Name=GreenSlider
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.650000
@@ -407,7 +412,7 @@ defaultproperties
          OnKeyEvent=GreenSlider.InternalOnKeyEvent
          OnCapturedMouseMove=GreenSlider.InternalCapturedMouseMove
      End Object
-     sl_GreenColor=GUISlider'UTComp_Menu_ColorNames.GreenSlider'
+     sl_GreenColor=wsGUISlider'UTComp_Menu_ColorNames.GreenSlider'
 
      Begin Object Class=GUILabel Name=RedLabel
          Caption="Red"
@@ -433,7 +438,7 @@ defaultproperties
      End Object
      l_GreenLabel=GUILabel'UTComp_Menu_ColorNames.GreenLabel'
 
-     Begin Object Class=GUISlider Name=LetterSlider
+     Begin Object Class=wsGUISlider Name=LetterSlider
          Value=1.000000
          bIntSlider=True
          WinTop=0.535000
@@ -444,17 +449,26 @@ defaultproperties
          OnKeyEvent=LetterSlider.InternalOnKeyEvent
          OnCapturedMouseMove=LetterSlider.InternalCapturedMouseMove
      End Object
-     sl_LetterSelect=GUISlider'UTComp_Menu_ColorNames.LetterSlider'
+     sl_LetterSelect=wsGUISlider'UTComp_Menu_ColorNames.LetterSlider'
 
-     Begin Object Class=moComboBox Name=ColorDeathCombo
-         Caption="Death Message Color:"
-         OnCreateComponent=ColorDeathCombo.InternalOnCreateComponent
-		WinWidth=0.660936
+     Begin Object Class=wsComboBox Name=ColorDeathCombo
+        OnCreateComponent=ColorDeathCombo.InternalOnCreateComponent
+		WinWidth=0.40
 		WinHeight=0.030000
-		WinLeft=0.168749
+		WinLeft=0.398749
 		WinTop=0.467990
-         OnChange=UTComp_Menu_ColorNames.InternalOnChange
+        OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
-     co_DeathSelect=moComboBox'UTComp_Menu_ColorNames.ColorDeathCombo'
+     co_DeathSelect=wsComboBox'UTComp_Menu_ColorNames.ColorDeathCombo'
+
+     Begin Object Class=GUILabel Name=lblColorDeathCombo
+        Caption="Death Message Color:"
+        TextColor=(R=255,G=255,B=255)
+		WinWidth=0.33
+		WinHeight=0.030000
+		WinLeft=0.200
+		WinTop=0.467990
+     End Object
+     l_DeathSelect=GUILabel'UTComp_Menu_ColorNames.lblColorDeathCombo'
 
 }

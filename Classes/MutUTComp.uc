@@ -1722,7 +1722,7 @@ defaultproperties
      EnableBrightSkinsMode=3
      bEnableClanSkins=True
      bEnablePowerupsOverlay=True
-     EnableHitSoundsMode=1
+     EnableHitSoundsMode=2
      bEnableScoreboard=True  // really isn't configurable now, UTComp always tweaks scoreboards.
      
      bEnableWarmup=True
@@ -1731,7 +1731,7 @@ defaultproperties
      bEnablePowerupStats=True
 
      bShowTeamScoresInServerBrowser=True
-     ServerMaxPlayers=12
+     ServerMaxPlayers=32
      AlwaysUseThisMutator(0)="MutUTComp"
      AutoDemoRecMask="%d-(%t)-%m-%p"
      EnableWarmupWeaponsMode=1
