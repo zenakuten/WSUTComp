@@ -28,6 +28,7 @@ function InitComponent(GUIController MyController, GUIComponent MyComponent)
     MyController.RegisterStyle(class'STY_WSButton', true);
     MyController.RegisterStyle(class'STY_WSComboButton', true);
     MyController.RegisterStyle(class'STY_WSLabel', true);
+    MyController.RegisterStyle(class'STY_WSLabelWhite', true);
     MyController.RegisterStyle(class'STY_WSListBox', true);
     MyController.RegisterStyle(class'STY_WSSliderBar', true);
     MyController.RegisterStyle(class'STY_WSSliderCaption', true);

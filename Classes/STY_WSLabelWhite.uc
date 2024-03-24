@@ -1,4 +1,4 @@
-class STY_WSLabel extends STY2TextLabel;
+class STY_WSLabelWhite extends STY2TextLabel;
 
 //description:
 //	Img(0) Blurry	(component has no focus at all)
@@ -9,10 +9,10 @@ class STY_WSLabel extends STY2TextLabel;
 
 defaultproperties
 {
-	KeyName="WSLabel"
+	KeyName="WSLabelWhite"
 	FontColors(0)=(R=255,G=255,B=255)
-	FontColors(1)=(R=0,G=255,B=255)
-	FontColors(2)=(R=0,G=255,B=255)
-	FontColors(3)=(R=0,G=255,B=255)
+	FontColors(1)=(R=255,G=255,B=255)
+	FontColors(2)=(R=255,G=255,B=255)
+	FontColors(3)=(R=255,G=255,B=255)
 	FontColors(4)=(R=60,G=60,B=60)
 }
