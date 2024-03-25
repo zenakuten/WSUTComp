@@ -129,9 +129,11 @@ var bool bDidWhitelistCheck;
 var int LastDamage;
 var int SumDamage;
 var float SumDamageTime;
-var int HitDamage;
-var bool bHitContact;
-var Pawn HitPawn;
+
+// moved to pawn to support spectator hit sounds
+//var int HitDamage;
+//var bool bHitContact;
+//var Pawn HitPawn;
 
 //used by hud menu
 var EmoticonsReplicationInfo EmoteInfo;
@@ -446,6 +448,9 @@ simulated function ChangeDeathMessageOrder()
 event PlayerTick(float deltatime)
 {
     local int Damage;
+    local UTComp_xPawn utcPawn;
+
+    Super.PlayerTick(deltatime);
 
     if (RepInfo==None)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
@@ -505,12 +510,23 @@ event PlayerTick(float deltatime)
         log("UTComp: WARN net is saturated");
         LastSaturatedTime = Level.TimeSeconds + 3.0;
     }
-    
-    if(HitDamage != LastDamage)
+
+    utcPawn = UTComp_xPawn(Pawn);
+    if(utcPawn == None)
     {
-        Damage = HitDamage - LastDamage;
-            
-        if(HitPawn != None && RepInfo.bDamageIndicator)
+        utcPawn = UTComp_xPawn(ViewTarget);
+    }
+
+    if(utcPawn == None)
+    {
+        LastDamage = 0;
+        return;
+    }
+    
+    if(utcPawn.HitDamage != LastDamage)
+    {
+        Damage = utcPawn.HitDamage - LastDamage;
+        if(utcPawn.HitPawn != None && RepInfo.bDamageIndicator)
         {
             if (HUDSettings.DamageIndicatorType == 2)
             {
@@ -521,13 +537,13 @@ event PlayerTick(float deltatime)
             }
             
             if(HUDSettings.DamageIndicatorType == 3)
-                class'Emitter_Damage'.static.ShowDamage(HitPawn, HitPawn.Location, Damage);        
+            {
+                class'Emitter_Damage'.static.ShowDamage(utcPawn.HitPawn, utcPawn.HitPawn.Location, Damage);        
+            }
         }        
 
-        LastDamage = HitDamage;
+        LastDamage = utcPawn.HitDamage;
     }
-
-    Super.PlayerTick(deltatime);
 }
 
 function SetBStats(bool b)
@@ -783,11 +799,17 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 simulated function DamageIndicatorHit(int Damage, pawn injured, pawn instigatedBy)
 {
     local vector EyeHeight;
+    local UTComp_xPawn utcPawn;
 
-    HitDamage += Damage;
     EyeHeight.z = instigatedBy.EyeHeight;
-    bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
-    HitPawn = injured;
+
+    utcPawn = UTComp_xPawn(Pawn);
+    if(utcPawn != None)
+    {
+        utcPawn.HitDamage += Damage;
+        utcPawn.bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
+        utcPawn.HitPawn = injured;
+    }
 }
 
 // both stat/hitsound
@@ -801,7 +823,8 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     else if(Injured.GetTeamNum()==255 || (Injured.GetTeamNum() != GetTeamNum()))
     {
         RegisterEnemyHit(DamageType, Damage);
-        DamageIndicatorHit(Damage, injured, instigatedBy);
+        //moved to netdamage
+        //DamageIndicatorHit(Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
             if(Settings.bCPMAStyleHitsounds && (DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell') && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
@@ -815,7 +838,8 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     else
     {
         RegisterTeammateHit(DamageType, Damage);
-        DamageIndicatorHit(-Damage, injured, instigatedBy);
+        //moved to netdamage
+        //DamageIndicatorHit(-Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
             if(Settings.bCPMAStyleHitsounds && (DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell') && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
@@ -2030,27 +2054,6 @@ function ServerToggleBehindView()
 
 state spectating
 {
-    event PlayerTick( float DeltaTime )
-    {
-        // snarf fix spectate scoreboard issue
-        if (RepInfo==None)
-            foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
-                break;
-
-        if (UTCompPRI==None)
-            UTCompPRI=class'UTComp_Util'.static.GetUTCompPRIFor(self);
-        if (Level.NetMode!=NM_DedicatedServer && !Blah && PlayerReplicationInfo !=None && PlayerReplicationInfo.CustomReplicationInfo!=None && myHud !=None && RepInfo!=None && UTCompPRI!=None)
-        {
-            StartDemo();
-            InitializeStuff();
-            blah=true;
-        }
-
-        Super.PlayerTick(DeltaTime);
-        if (bRun == 1)
-            GoToState('PlayerMousing');
-    }
-
     function BeginState()
     {
         if ( Pawn != None )
@@ -4430,6 +4433,14 @@ simulated function ClientResetNetcode()
     }
 }
 
+event ClientSetViewTarget(Actor a)
+{
+    super.ClientSetViewTarget(a);
+    if(UTComp_xPawn(A) != None)
+    {
+        LastDamage = UTComp_xPawn(A).HitDamage;
+    }
+}
 
 defaultproperties
 {

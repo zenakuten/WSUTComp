@@ -31,10 +31,14 @@ var float EyeHeightOffset;
 var UTComp_Settings Settings;
 var UTComp_HUDSettings HUDSettings;
 
+var int HitDamage;
+var bool bHitContact;
+var Pawn HitPawn;
+
 replication
 {
   reliable if (Role==ROLE_Authority)
-     MultiDodgesRemaining;
+     MultiDodgesRemaining, HitDamage, bHitContact, HitPawn;
 
   unreliable if (Role==Role_authority)
      bShieldActive, bLinkActive, bShockActive, bLGactive, overlayActive;

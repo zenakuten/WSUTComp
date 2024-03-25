@@ -101,6 +101,8 @@ var config bool bAllowColorWeapons;
 var config bool bDamageIndicator;
 var config int MaxSavedMoves;
 var config bool bEnableEmoticons;
+var config bool bFastWeaponSwitch;
+
 var Emoticons EmoteActor;
 
 struct MapVotePair
@@ -974,7 +976,7 @@ function bool CheckReplacement(Actor Other, out byte bSuperRelevant)
     if (Controller(Other) != None && MessagingSpectator(Other) == None && ONSOnslaughtGame(Level.Game) != none )
 		Controller(Other).PlayerReplicationInfoClass = class'UTComp_ONSPlayerReplicationInfo';
     
-    if ( GameReplicationInfo(Other) != None )
+    if ( GameReplicationInfo(Other) != None && bFastWeaponSwitch)
     {
         GameReplicationInfo(Other).bFastWeaponSwitching = true;
     }
@@ -1560,6 +1562,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "MaxNetUpdateRate", "Maximum rate of client updates", 1, 1, "Text", "0;0:999",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", 1, 1,"Check");
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);
@@ -1596,6 +1599,7 @@ static event string GetDescriptionText(string PropName)
         case "MaxNetUpdateRate": return "Maximum Rate at which clients can send updates to the server";
         case "bShowSpawnsDuringWarmup": return "Show spawn points during warmup by spawning dummies on every one of them";
         case "bEnableEmoticons": return "Enable emoticons";
+        case "bFastWeaponSwitch": return "Enable UT2003 style fast weapon switch";
     }
 	return Super.GetDescriptionText(PropName);
 }
@@ -1945,4 +1949,5 @@ defaultproperties
      MaxSavedMoves=200
 
      bEnableEmoticons=true
+     bFastWeaponSwitch=true
 }
