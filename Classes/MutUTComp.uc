@@ -24,7 +24,6 @@ var config bool bEnableClanSkins;
 var config bool bEnableTeamOverlay;
 var config bool bEnablePowerupsOverlay;
 var config byte EnableHitSoundsMode;
-//var config bool bEnableScoreboard;  // Not used really
 var bool bEnableScoreboard;  // always true.
 // UTComp ALWAYS changes the scoreboard to either 1. Slightly tweaked Scoreboard with Colornames or 
 // 2.  Fancy Enhanced Graphic Scoreboard based n UTComp_Scoreboard (which is always instantiated to at least hold colored names)
