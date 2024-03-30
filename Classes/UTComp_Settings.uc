@@ -82,6 +82,10 @@ var config bool bTeamColorShock;
 var config bool bTeamColorSniper;
 var config Color TeamColorRed, TeamColorBlue;
 var config bool bTeamColorUseTeam;
+var config bool bOverlayEnabled;
+var config bool bPowerupOverlayEnabled;
+var config bool bOverlayDrawIcons;
+
 
 var UTComp_Settings instance;
 
@@ -173,6 +177,9 @@ defaultproperties
     TeamColorRed=(R=255,G=91,B=46,A=255)
     TeamColorBlue=(R=46,G=137,B=255,A=255)
     bTeamColorUseTeam=true
+    bOverlayEnabled=true
+    bPowerupOverlayEnabled=true
+    bOverlayDrawIcons=true
 
     instance=none
 }

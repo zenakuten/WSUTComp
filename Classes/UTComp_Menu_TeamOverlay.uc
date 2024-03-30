@@ -23,9 +23,9 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
     super.InitComponent(MyController,MyOwner);
 
-    ch_Enable.Checked(class'UTComp_Overlay'.default.OverlayEnabled);
+    ch_Enable.Checked(Settings.bOverlayEnabled);
     ch_ShowSelf.Checked(Settings.bShowSelfInTeamOverlay);
-    ch_Icons.Checked(class'UTComp_Overlay'.default.bDrawIcons);
+    ch_Icons.Checked(Settings.bOverlayDrawIcons);
 
     sl_redBG.SetValue(class'UTComp_Overlay'.default.BGColor.R);
     sl_greenBG.SetValue(class'UTComp_Overlay'.default.BGColor.G);
@@ -138,8 +138,9 @@ function UpdateOverlay()
   utcomp_Overlay(overl).BGColor=Class'utcomp_Overlay'.default.BGColor;
   utcomp_Overlay(overl).infotextcolor=Class'utcomp_Overlay'.default.infotextColor;
   utcomp_Overlay(overl).loctextcolor=Class'utcomp_Overlay'.default.loctextColor;
-  utcomp_Overlay(overl).OverlayEnabled=Class'utcomp_Overlay'.default.overlayenabled;
-  utcomp_Overlay(overl).bDrawIcons=Class'utcomp_Overlay'.default.bDrawIcons;
+  utcomp_Overlay(overl).OverlayEnabled=BS_xPlayer(PlayerOwner()).Settings.boverlayenabled;
+  utcomp_Overlay(overl).bDrawIcons=BS_xPlayer(PlayerOwner()).Settings.bOverlayDrawIcons;
+  utcomp_Overlay(overl).PowerupOverlayEnabled=BS_xPlayer(PlayerOwner()).Settings.bPowerupOverlayEnabled;
   utcomp_Overlay(overl).theFontSize=Class'utcomp_overlay'.default.theFontSize;
 }
 
@@ -147,9 +148,9 @@ function InternalOnChange( GUIComponent C )
 {
     switch(C)
     {
-    case ch_Enable: class'UTComp_Overlay'.default.OverlayEnabled=ch_Enable.IsChecked(); break;
+    case ch_Enable: BS_xPlayer(PlayerOwner()).SetOverlayEnabled(ch_Enable.IsChecked()); break;
     case ch_ShowSelf: BS_xPlayer(PlayerOwner()).SetShowSelf(ch_ShowSelf.IsChecked()); break;
-    case ch_Icons: class'UTComp_Overlay'.default.bDrawIcons=ch_Icons.IsChecked(); break;
+    case ch_Icons: BS_xPlayer(PlayerOwner()).SetOverlayDrawIcons(ch_Icons.IsChecked()); break;
 
     case sl_redBG: class'UTComp_Overlay'.default.BGColor.R=sl_redBG.Value; break;
     case sl_greenBG: class'UTComp_Overlay'.default.BGColor.G=sl_GreenBG.Value; break;

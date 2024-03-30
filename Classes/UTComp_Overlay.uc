@@ -44,7 +44,8 @@ var float currentX, currentY, strlenX, strlenY, strLenLocationX, strLenLocationY
 var float OnJoinMessageDrawTime;
 var config float DesiredOnJoinMessageTime;
 
-var config bool OverlayEnabled, PowerupOverlayEnabled, bDrawIcons;
+//var config bool OverlayEnabled, PowerupOverlayEnabled, bDrawIcons;
+var bool OverlayEnabled, PowerupOverlayEnabled, bDrawIcons;
 var bool BiggerFont;
 
 var vector savedLocation[8];
@@ -89,6 +90,10 @@ event Initialized()
     PRI = PC.PlayerReplicationInfo;
 
     OnJoinMessageDrawTime=Level.TimeSeconds+default.DesiredOnJoinMessageTime;
+
+    OverlayEnabled=PC.Settings.bOverlayEnabled;
+    PowerupOverlayEnabled=PC.Settings.bPowerupOverlayEnabled;
+    bDrawIcons=PC.Settings.bOverlayDrawIcons;
 }
 
 function float GetWeaponIconWidth()
@@ -281,7 +286,7 @@ function PostRender( canvas Canvas )
     PRI = PC.PlayerReplicationInfo;
    }
 
-   if (uPRI==None || ViewportOwner.Actor.myHUD.bShowScoreBoard || ViewportOwner.Actor.myHUD.bShowLocalStats || !default.OverlayEnabled)
+   if (uPRI==None || ViewportOwner.Actor.myHUD.bShowScoreBoard || ViewportOwner.Actor.myHUD.bShowLocalStats || !OverlayEnabled)
        return;
 
   // iconScale=Canvas.ClipX/1280.0;
@@ -467,7 +472,7 @@ function DrawPowerups(Canvas canvas, PlayerReplicationInfo PRI)
   local float nextRespawn;
   local float iconHeight;
 
-  if ((PC.uWarmup != None && PC.uWarmup.bInWarmup) || !PRI.bOnlySpectator || PC.IsCoaching() || !default.PowerupOverlayEnabled)
+  if ((PC.uWarmup != None && PC.uWarmup.bInWarmup) || !PRI.bOnlySpectator || PC.IsCoaching() || !PowerupOverlayEnabled)
     return;
 
   iconHeight = GetPowerupIconHeight();

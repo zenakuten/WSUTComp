@@ -2526,6 +2526,26 @@ simulated function SetShowSelf(Bool b)
         UTCompPRI.SetShowSelf(b);
 }
 
+simulated function SetOverlayEnabled(Bool b)
+{
+    Settings.bOverlayEnabled=b;
+    SaveSettings();
+    staticsaveconfig();
+}
+
+simulated function SetPowerupOverlayEnabled(Bool b)
+{
+    Settings.bPowerupOverlayEnabled=b;
+    SaveSettings();
+    staticsaveconfig();
+}
+
+simulated function SetOverlayDrawIcons(Bool b)
+{
+    Settings.bOverlayDrawIcons=b;
+    SaveSettings();
+    staticsaveconfig();
+}
 
 simulated function string StripColorCodes(String S)
 {
