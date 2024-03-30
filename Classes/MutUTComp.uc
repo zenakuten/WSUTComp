@@ -243,9 +243,40 @@ function PreBeginPlay()
     SetupPowerupInfo();
     SetupWhitelist();
     SetupEmoticons();
+    SetupInstagib();
 
     super.PreBeginPlay();
     if (bDebugLogging) log("Finished PreBeginPlay...",'MutUTComp');
+}
+
+function SetupInstagib()
+{
+    local MutInstagib instagib;
+
+    foreach DynamicActors(class'MutInstagib', instagib)
+        break;
+
+    if(instagib == None)
+        return;
+
+    if(bEnableEnhancedNetCode)
+    {
+        instagib.default.WeaponName='NewNet_SuperShockRifle';
+        instagib.default.WeaponString="WSUTComp.NewNet_SuperShockRifle";
+        instagib.default.DefaultWeaponName="WSUTComp.NewNet_SuperShockRifle";
+        instagib.WeaponName='NewNet_SuperShockRifle';
+        instagib.WeaponString="WSUTComp.NewNet_SuperShockRifle";
+        instagib.DefaultWeaponName="WSUTComp.NewNet_SuperShockRifle";
+    }
+    else
+    {
+        instagib.default.WeaponName='UTComp_SuperShockRifle';
+        instagib.default.WeaponString="WSUTComp.UTComp_SuperShockRifle";
+        instagib.default.DefaultWeaponName="WSUTComp.UTComp_SuperShockRifle";
+        instagib.WeaponName='UTComp_SuperShockRifle';
+        instagib.WeaponString="WSUTComp.UTComp_SuperShockRifle";
+        instagib.DefaultWeaponName="WSUTComp.UTComp_SuperShockRifle";
+    }
 }
 
 function SetupEmoticons()
