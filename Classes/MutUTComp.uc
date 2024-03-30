@@ -13,8 +13,6 @@ var config bool bEnablePowerupsOverlayVoting;
 var config bool bEnableMapVoting;
 var config bool bEnableGametypeVoting;
 var config bool bEnableTimedOvertimeVoting;
-var bool bEnableDoubleDamageVoting;
-var bool bWarmupDisabled;
 var config float VotingPercentRequired;
 var config float VotingTimeLimit;
 
@@ -24,16 +22,6 @@ var config bool bEnableClanSkins;
 var config bool bEnableTeamOverlay;
 var config bool bEnablePowerupsOverlay;
 var config byte EnableHitSoundsMode;
-var bool bEnableScoreboard;  // always true.
-// UTComp ALWAYS changes the scoreboard to either 1. Slightly tweaked Scoreboard with Colornames or 
-// 2.  Fancy Enhanced Graphic Scoreboard based n UTComp_Scoreboard (which is always instantiated to at least hold colored names)
-// WHAT IS CONFUSING is UTComp_Scoreboard is the fancy enhanced graphics version, but the only
-// one special Gametype  that's fancy is CTF that's based on UTComp_Scoreboard, the rest are all based on xInterface (eg. stock scoreboards)
-// added UTComp_Scoreboard_ONS 10/2023
-
-
-// pooty 10/2023
-
 var config bool bEnableWarmup;
 var config float WarmupReadyPercentRequired;
 var config bool bShowSpawnsDuringWarmup;
@@ -55,8 +43,6 @@ var config bool bForceMapVoteMatchPrefix;
 var config bool bEnableTimedOvertime;
 var config int TimedOverTimeLength;
 var config int NumGrenadesOnSpawn;
-
-var bool bDemoStarted;
 
 var config bool bShieldFix;
 var config bool  bAllowRestartVoteEvenIfMapVotingIsTurnedOff;
@@ -102,8 +88,6 @@ var config int MaxSavedMoves;
 var config bool bEnableEmoticons;
 var config bool bFastWeaponSwitch;
 
-var Emoticons EmoteActor;
-
 struct MapVotePair
 {
     var string GametypeOptions;
@@ -111,6 +95,21 @@ struct MapVotePair
 };
 
 var config array<MapVotePair> VotingGametype;
+
+var config bool bEnableEnhancedNetCode;
+var config bool bEnableEnhancedNetCodeVoting;
+var config float MinNetUpdateRate;
+var config float MaxNetUpdateRate;
+var config bool bUseDefaultScoreboardColor;
+var config float PawnCollisionHistoryLength;
+var config array<string> IgnoredHitSounds;
+
+var bool bEnableScoreboard;  
+var bool bDemoStarted;
+var bool bEnableDoubleDamageVoting;
+var bool bWarmupDisabled;
+
+var Emoticons EmoteActor;
 
 var UTComp_ServerReplicationInfo RepInfo;
 var UTComp_OverlayUpdate OverlayClass;
@@ -139,41 +138,9 @@ struct PowerupInfoStruct
 
 var PowerupInfoStruct PowerupInfo[8];
 
-
-/*    List Of Features to be completed(see utcomp_v2.txt for details)
-========Not Started========
-Extra Hud Clock
-========In Progress========
-Overtime
-=========Completed=========
-Scoreboard
-Onjoin box
-Voting
-Optional Standard Server Compatibility
-Force Models
-BrightSkins
-Autoscreenshot
-Clanskins
-Hitsounds
-Weapon Stats
-Client Console Commands
-Spectator Console Commands
-Powerup Stats
-Various Server Settings
-InGame Clock
-Coaching
-Team Overlay
-Warmup
-Autodemorec
-Quick Map Restarts
-Crosshair Factory
-Colored Names
-*/
-
 //==========================
 //  Begin Enhanced Netcode stuff
 //==========================
-
 var PawnCollisionCopy PCC;
 
 var TimeStamp StampInfo;
@@ -183,11 +150,6 @@ var float ClientTimeStamp;
 
 var array<float> DeltaHistory;
 var bool bEnhancedNetCodeEnabledAtStartOfMap;
-
-var config bool bEnableEnhancedNetCode;
-var config bool bEnableEnhancedNetCodeVoting;
-var config float MinNetUpdateRate;
-var config float MaxNetUpdateRate;
 
 var FakeProjectileManager FPM;
 
@@ -215,17 +177,11 @@ var class<WeaponPickup> WeaponPickupClassesUTComp[13];
 var string WeaponPickupClassNamesUTComp[13];
 
 var bool bDefaultWeaponsChanged;
-
 //==========================
 //  End Enhanced Netcode stuff
 //==========================
 
-var config array<string> IgnoredHitSounds;
-
 var UTComp_ONSGameRules ONSGameRules;
-
-var config bool bUseDefaultScoreboardColor;
-var config float PawnCollisionHistoryLength;
 var UTComp_Whitelist Whitelist;
 
 function PreBeginPlay()
