@@ -130,7 +130,7 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
-     MaxSavedMoves=350
+     MaxSavedMoves=250
 
      bEnableEmoticons=true
 }

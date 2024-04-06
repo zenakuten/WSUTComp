@@ -16,7 +16,6 @@ var automated wsCheckBox ch_FootSteps;
 var automated wsCheckBox ch_MatchHudColor;
 var automated wsCheckBox ch_UseEyeHeightAlgo;
 var automated wsCheckBox ch_UseNewNet;
-var automated moNumericEdit ne_NetUpdateRate;
 
 var automated GUIButton bu_adren;
 
@@ -37,11 +36,9 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     ch_MatchHudColor.Checked(HUDSettings.bMatchHudColor);
     ch_UseEyeHeightAlgo.Checked(Settings.bUseNewEyeHeightAlgorithm);
     ch_UseNewNet.Checked(Settings.bEnableEnhancedNetCode);
-    ne_NetUpdateRate.SetValue(Settings.DesiredNetUpdateRate);
     if(RepInfo != None && !RepInfo.bEnableEnhancedNetCode)
     {
         ch_UseNewNet.bVisible=false;
-        ne_NetUpdateRate.bVisible=false;
         l_NewNet.Caption="-----------Net Code (server disabled)----------";
     }
 }
@@ -71,7 +68,6 @@ function InternalOnChange( GUIComponent C )
             break;
         case ch_UseNewNet:  Settings.bEnableEnhancedNetCode=ch_UseNewNet.IsChecked();
                             BS_xPlayer(PlayerOwner()).TurnOffNetCode(); break;
-        case ne_NetUpdateRate: Settings.DesiredNetUpdateRate = ne_NetUpdateRate.GetValue(); break;
     }
     class'UTComp_Overlay'.static.StaticSaveConfig();
     class'BS_xPlayer'.static.StaticSaveConfig();
@@ -227,21 +223,4 @@ defaultproperties
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
     ch_UseNewNet=wsCheckBox'UTComp_Menu_Miscellaneous.NewNetCheck'
-
-    Begin Object Class=moNumericEdit Name=NetUpdateRate
-        LabelStyleName="WSButton"
-        MinValue=90
-        MaxValue=250
-        Step=5
-        CaptionWidth=0.9
-        Caption="Desired Network Update Rate"
-        OnCreateComponent=NetUpdateRate.InternalOnCreateComponent
-        WinWidth=0.500000
-        WinHeight=0.030000
-        WinLeft=0.250000
-        WinTop=0.770000
-        OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
-        ComponentClassName="WSUTComp.wsGUINumericEdit"        
-    End Object
-    ne_NetUpdateRate=moNumericEdit'UTComp_Menu_Miscellaneous.NetUpdateRate'
 }

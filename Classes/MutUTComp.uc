@@ -98,8 +98,6 @@ var config array<MapVotePair> VotingGametype;
 
 var config bool bEnableEnhancedNetCode;
 var config bool bEnableEnhancedNetCodeVoting;
-var config float MinNetUpdateRate;
-var config float MaxNetUpdateRate;
 var config bool bUseDefaultScoreboardColor;
 var config float PawnCollisionHistoryLength;
 var config array<string> IgnoredHitSounds;
@@ -1544,8 +1542,6 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bEnableMapVoting", "Allow players to vote for map changes", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "WarmupTime", "Warmup Time",1, 1, "Text","0;0:1800",,False,False);
     PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", 1, 1, "Text", "0;0:1800",, False, False);
-    PlayInfo.AddSetting("UTComp Settings", "MinNetUpdateRate", "Minimum rate of client updates", 1, 1, "Text", "0;0:999",, False, False);
-    PlayInfo.AddSetting("UTComp Settings", "MaxNetUpdateRate", "Maximum rate of client updates", 1, 1, "Text", "0;0:999",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", 1, 1,"Check");
@@ -1581,8 +1577,6 @@ static event string GetDescriptionText(string PropName)
         case "MinNetSpeed": return "Minimum NetSpeed for clients on this server";
         case "MaxNetSpeed": return "Maximum NetSpeed for clients on this server";
         case "SuicideInterval": return "Minimum time between two suicides";
-        case "MinNetUpdateRate": return "Minimum Rate at which clients are expected to send updates to the server";
-        case "MaxNetUpdateRate": return "Maximum Rate at which clients can send updates to the server";
         case "bShowSpawnsDuringWarmup": return "Show spawn points during warmup by spawning dummies on every one of them";
         case "bEnableEmoticons": return "Enable emoticons";
         case "bFastWeaponSwitch": return "Enable UT2003 style fast weapon switch";
@@ -1769,8 +1763,6 @@ defaultproperties
      NumGrenadesOnSpawn=4
      bEnableEnhancedNetCode=true
      bEnableEnhancedNetCodeVoting=false
-     MinNetUpdateRate=90
-     MaxNetUpdateRate=250
      PawnCollisionHistoryLength=0.35
 
      //original weapons
@@ -1932,7 +1924,7 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
-     MaxSavedMoves=200
+     MaxSavedMoves=250
 
      bEnableEmoticons=true
      bFastWeaponSwitch=true
