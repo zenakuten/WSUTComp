@@ -38,7 +38,7 @@ var Pawn HitPawn;
 replication
 {
   reliable if (Role==ROLE_Authority)
-     MultiDodgesRemaining, HitDamage, bHitContact, HitPawn;
+     MultiDodgesRemaining, HitDamage, bHitContact, HitPawn, ClientColorSkins;
 
   unreliable if (Role==Role_authority)
      bShieldActive, bLinkActive, bShockActive, bLGactive, overlayActive;
@@ -557,6 +557,11 @@ simulated function Setup(xUtil.PlayerRecord rec, optional bool bLoadNow)
     ColorSkins();
 }
 
+function PlayerChangedTeam()
+{
+    super.PlayerChangedTeam();
+    ClientColorSkins();
+}
 
 simulated function ColorSkins()
 {
@@ -579,6 +584,12 @@ simulated function ColorSkins()
     //used for checking if the player changed teams mid-game
     if(LocalPC!=None && LocalPC.PlayerReplicationInfo !=None && LocalPC.PlayerReplicationInfo.Team!=None)
         oldTeam=LocalPC.PlayerReplicationInfo.Team.TeamIndex;
+}
+
+simulated function ClientColorSkins()
+{
+    ColorSkins();
+    OldTeam=-1;
 }
 
 simulated function material ChangeColorOfSkin(material SkinToChange, byte SkinNum)
@@ -1061,13 +1072,6 @@ event UpdateEyeHeight( float DeltaTime )
     EyeHeight = BaseEyeHeight - EyeHeightOffset;
 
     Controller.AdjustView(DeltaTime);
-}
-
-// snarf attempt color fix
-simulated function NotifyTeamChanged()
-{
-    super.NotifyTeamChanged();
-    OldTeam=-1;
 }
 
 defaultproperties
