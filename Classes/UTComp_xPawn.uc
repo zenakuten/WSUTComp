@@ -16,7 +16,7 @@ var bool bWeaponsLocked;
 var UTComp_ServerReplicationInfo RepInfo;
 var color BrightSkinColors[8];
 
-var byte oldteam;
+var byte OldTeam;
 
 var EDoubleClickDir OldDodgeDir;
 var int MultiDodgesRemaining;
@@ -38,7 +38,7 @@ var Pawn HitPawn;
 replication
 {
   reliable if (Role==ROLE_Authority)
-     MultiDodgesRemaining, HitDamage, bHitContact, HitPawn, ClientColorSkins;
+     MultiDodgesRemaining, HitDamage, bHitContact, HitPawn;
 
   unreliable if (Role==Role_authority)
      bShieldActive, bLinkActive, bShockActive, bLGactive, overlayActive;
@@ -405,13 +405,15 @@ simulated function Tick(float DeltaTime)
     {
         return;
     }
+
     if(LocalPC==None)
         LocalPC=Level.GetLocalPlayerController();
 
-    if(LocalPC!=None && LocalPC.PlayerReplicationInfo != none && LocalPC.PlayerReplicationInfo.Team!=None && LocalPC.PlayerReplicationInfo.Team.TeamIndex!=OldTeam)
+    if(GetTeamNum() != OldTeam)
     {
         ColorSkins();
     }
+
     if(LocalPC!=None && LocalPC.PlayerReplicationInfo!=None && LocalPC.PlayerReplicationInfo.bOnlySpectator)
     {
         uPRI=class'UTComp_Util'.static.GetUTCompPRI(LocalPC.PlayerReplicationInfo);
@@ -557,18 +559,13 @@ simulated function Setup(xUtil.PlayerRecord rec, optional bool bLoadNow)
     ColorSkins();
 }
 
-function PlayerChangedTeam()
-{
-    super.PlayerChangedTeam();
-    ClientColorSkins();
-}
-
 simulated function ColorSkins()
 {
     local int i;
 
     if(Level.NetMode==NM_DedicatedServer)
         return;
+
     for(i=0; i<Skins.Length; i++)
     {
        if(!bSkinsSaved)
@@ -577,20 +574,9 @@ simulated function ColorSkins()
     }
     bSkinsSaved=True;
 
-    if(LocalPC==None)
-    {
-        LocalPC=Level.GetLocalPlayerController();
-    }
-    //used for checking if the player changed teams mid-game
-    if(LocalPC!=None && LocalPC.PlayerReplicationInfo !=None && LocalPC.PlayerReplicationInfo.Team!=None)
-        oldTeam=LocalPC.PlayerReplicationInfo.Team.TeamIndex;
+    oldTeam = GetTeamNum();
 }
 
-simulated function ClientColorSkins()
-{
-    ColorSkins();
-    OldTeam=-1;
-}
 
 simulated function material ChangeColorOfSkin(material SkinToChange, byte SkinNum)
 {
@@ -943,6 +929,7 @@ simulated function bool PawnIsEnemyOrBlue(bool bEnemyBased)
 {
    local int LocalPlayerTeamNum;
    local int PawnTeamNum;
+   local Pawn P;
 
    if(LocalPC==None)
        LocalPC=Level.GetLocalPlayerController();
@@ -955,7 +942,14 @@ simulated function bool PawnIsEnemyOrBlue(bool bEnemyBased)
            return true;
        return false;
    }
-   if(bEnemyBased && LocalPC.PlayerReplicationInfo!=None &&(!LocalPC.PlayerReplicationInfo.bOnlySpectator) )
+
+   P = Pawn(LocalPC.ViewTarget);
+   if(LocalPC.PlayerReplicationInfo.bOnlySpectator && P != None)
+   {
+       LocalPlayerTeamNum = P.GetTeamNum();
+   }
+
+   if(bEnemyBased && LocalPC.PlayerReplicationInfo!=None)
        return (PawnTeamNum!=LocalPlayerTeamNum);
    else
        return (PawnTeamNum==1);

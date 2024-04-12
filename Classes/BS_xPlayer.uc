@@ -3838,6 +3838,10 @@ event ClientSetViewTarget(Actor a)
     {
         LastDamage = UTComp_xPawn(A).HitDamage;
     }
+    if(PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator)
+    {
+        reskinall();
+    }
 }
 
 defaultproperties
