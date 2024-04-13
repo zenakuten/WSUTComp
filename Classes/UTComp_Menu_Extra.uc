@@ -46,6 +46,7 @@ defaultproperties
 {
     Begin Object Class=wsCheckBox Name=EnableWidescreenCheck
         Caption="Enable widescreen fixes"
+        Hint="Use built-in Fox WSFix"
         OnCreateComponent=EnableWidescreenCheck.InternalOnCreateComponent
         WinWidth=0.500000
         WinHeight=0.030000

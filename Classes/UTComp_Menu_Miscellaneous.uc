@@ -172,6 +172,7 @@ defaultproperties
 
     Begin Object Class=wsCheckBox Name=FootCheck
         Caption="Play own footstep sounds."
+        Hint="Play own footstep sounds.  Requires respawn for change to take effect"
         OnCreateComponent=FootCheck.InternalOnCreateComponent
         WinWidth=0.500000
         WinHeight=0.030000

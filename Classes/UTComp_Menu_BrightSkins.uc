@@ -916,6 +916,7 @@ defaultproperties
 {
      Begin Object Class=wsCheckBox Name=EnemyBasedSkinCheck
          Caption="Enemy Based Skins"
+         Hint="Color is based on your team/enemy team instead of red/blue"
          OnCreateComponent=EnemyBasedSkinCheck.InternalOnCreateComponent
 		WinWidth=0.257812
 		WinHeight=0.030000
@@ -927,6 +928,7 @@ defaultproperties
 
     Begin Object Class=wsCheckBox Name=EnemyBasedModelCheck
         Caption="Enemy Based models"
+         Hint="Model is based on your team/enemy team instead of red/blue"
         OnCreateComponent=EnemyBasedSkinCheck.InternalOnCreateComponent
 		WinWidth=0.273437
 		WinHeight=0.030000
