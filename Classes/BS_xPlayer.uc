@@ -1540,11 +1540,14 @@ exec function Ready()
     if(UTCompPRI!=None)
         UTCompPRI.bIsReady=True;
     UTCompPRI.Ready();
-    if(PlayerReplicationInfo!=None && !PlayerReplicationInfo.bOnlySpectator && Level.TimeSeconds > LastBroadcastReadyTime)
+    if(PlayerReplicationInfo!=None && !PlayerReplicationInfo.bOnlySpectator)
     {
         PlayerReplicationInfo.bReadyToPlay=true;
-        LastBroadcastReadyTime=5.0+Level.TimeSeconds;
-        BroadcastReady(True);
+        if(Level.TimeSeconds > LastBroadcastReadyTime)
+        {
+            LastBroadcastReadyTime=5.0+Level.TimeSeconds;
+            BroadcastReady(True);
+        }
     }
 }
 
@@ -1553,10 +1556,10 @@ exec function NotReady(optional bool bSilent)
     if(UTCompPRI!=None)
         UTCompPRI.bIsReady=False;
     UTCompPRI.NotReady();
-    if(PlayerReplicationInfo!=None && !PlayerReplicationInfo.bOnlySpectator && Level.TimeSeconds > LastBroadcastReadyTime)
+    if(PlayerReplicationInfo!=None && !PlayerReplicationInfo.bOnlySpectator)
     {
         PlayerReplicationInfo.bReadyToPlay=false;
-        if(!bSilent)
+        if(!bSilent && Level.TimeSeconds > LastBroadcastReadyTime)
         {
             LastBroadcastReadyTime=5.0+Level.TimeSeconds;
             BroadcastReady(False);
