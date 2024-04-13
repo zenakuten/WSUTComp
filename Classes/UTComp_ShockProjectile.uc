@@ -1,6 +1,6 @@
-
-
 class UTComp_ShockProjectile extends TeamColorShockProjectile;
+
+var class<WeaponDamageType> ComboRadiusDamageType;
 
 function SuperExplosion()
 {
@@ -8,7 +8,7 @@ function SuperExplosion()
 	local vector HitLocation, HitNormal;
     local TeamColorShockCombo combo;
 
-	HurtRadius(ComboDamage, ComboRadius, class'DamTypeShockCombo', ComboMomentumTransfer, Location );
+	HurtRadius(ComboDamage, ComboRadius, ComboRadiusDamageType, ComboMomentumTransfer, Location );
 
 	//Spawn(class'ShockCombo');
 	combo = Spawn(class'TeamColorShockCombo');
@@ -55,4 +55,5 @@ event TakeDamage( int Damage, Pawn EventInstigator, vector HitLocation, vector M
 
 defaultproperties
 {
+    ComboRadiusDamageType=class'DamTypeShockCombo'
 }
