@@ -48,6 +48,8 @@ function RandomCrap()
    {
      bu_Ready.Caption="Ready";
      bu_NotReady.Caption="Not Ready";
+     bu_Ready.bVisible=true;
+     bu_NotReady.bVisible=true;
    }
    else
    {
