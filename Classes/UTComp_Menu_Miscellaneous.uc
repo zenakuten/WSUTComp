@@ -195,6 +195,7 @@ defaultproperties
 
     Begin Object Class=wsCheckBox Name=UseEyeHeightAlgoCheck
         Caption="Use New EyeHeight Algorithm"
+        Hint="You want this"
         OnCreateComponent=HudColorCheck.InternalOnCreateComponent
         WinWidth=0.500000
         WinHeight=0.030000
