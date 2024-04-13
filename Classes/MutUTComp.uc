@@ -1689,6 +1689,11 @@ function Reset()
     }
 }
 
+// provide hook for derived classes
+function WarmupEnded()
+{
+}
+
 defaultproperties
 {
      bAddToServerPackages=True

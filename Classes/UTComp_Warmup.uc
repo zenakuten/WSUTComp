@@ -321,6 +321,7 @@ function EndWarmup(bool bIsRestart)
     ResetCore();
     ResetWarmupVariables();
     ClearRandomStuff();
+    NotifySelf();
     ResetTheLevel();
     if(!bIsRestart)
         NotifyPlayers();
@@ -561,6 +562,13 @@ function NotifyPlayers()
         {
             BS_xPlayer(C).NotifyEndWarmup();
         }
+}
+
+function NotifySelf()
+{
+    local MutUTComp MutOwner;
+    foreach DynamicActors(class'MutUTComp', MutOwner) 
+        MutOwner.WarmupEnded();
 }
 
 function ResetVehicles()
