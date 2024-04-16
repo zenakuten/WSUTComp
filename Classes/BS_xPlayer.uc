@@ -794,6 +794,11 @@ simulated function DamageIndicatorHit(int Damage, pawn injured, pawn instigatedB
     }
 }
 
+simulated function bool IsGroupedDamageType(class<DamageType> DamageType)
+{
+    return DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell' || DamageType == class'DamTypeRocket';
+}
+
 // both stat/hitsound
 simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Injured, pawn instigatedBy)
 {
@@ -809,7 +814,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
         //DamageIndicatorHit(Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
-            if(Settings.bCPMAStyleHitsounds && (DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell') && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
+            if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
             {
                 GroupDamageSound(DamageType, Damage, true);
             }
@@ -824,7 +829,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
         //DamageIndicatorHit(-Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
-            if(Settings.bCPMAStyleHitsounds && (DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell') && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
+            if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
             {
                 GroupDamageSound(DamageType, Damage, false);
             }

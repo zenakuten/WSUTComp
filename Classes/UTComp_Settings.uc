@@ -124,7 +124,7 @@ defaultproperties
     bEnableHitSounds=true
     HitSoundVolume=1.0
     bCPMAStyleHitsounds=true
-    CPMAPitchModifier=1.40
+    CPMAPitchModifier=1.60
     SavedSpectateSpeed=800.00
     bShowSelfInTeamOverlay=True
     bEnableEnhancedNetCode=True
