@@ -69,6 +69,7 @@ var bool bDamageIndicator;
 var int MaxSavedMoves;
 
 var bool bEnableEmoticons;
+var bool bKeepMomentumOnLanding;
 
 replication
 {
@@ -85,7 +86,7 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons;
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding;
 }
 
 defaultproperties
@@ -133,5 +134,6 @@ defaultproperties
      MaxSavedMoves=250
 
      bEnableEmoticons=true
+     bKeepMomentumOnLanding=true
 }
 

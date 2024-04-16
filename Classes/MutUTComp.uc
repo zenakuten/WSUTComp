@@ -87,6 +87,7 @@ var config bool bDamageIndicator;
 var config int MaxSavedMoves;
 var config bool bEnableEmoticons;
 var config bool bFastWeaponSwitch;
+var config bool bKeepMomentumOnLanding;
 
 struct MapVotePair
 {
@@ -875,7 +876,8 @@ function SpawnReplicationClass()
     RepInfo.bAllowColorWeapons = bAllowColorWeapons;
     RepInfo.bDamageIndicator = bDamageIndicator;
     RepInfo.MaxSavedMoves = MaxSavedMoves;
-    Repinfo.bEnableEmoticons = bEnableEmoticons;
+    RepInfo.bEnableEmoticons = bEnableEmoticons;
+    RepInfo.bKeepMomentumOnLanding = bKeepMomentumOnLanding;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1545,6 +1547,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);
@@ -1580,6 +1584,8 @@ static event string GetDescriptionText(string PropName)
         case "bShowSpawnsDuringWarmup": return "Show spawn points during warmup by spawning dummies on every one of them";
         case "bEnableEmoticons": return "Enable emoticons";
         case "bFastWeaponSwitch": return "Enable UT2003 style fast weapon switch";
+        case "bAllowColorWeapons": return "Enable color weapons";
+        case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
     }
 	return Super.GetDescriptionText(PropName);
 }
@@ -1933,4 +1939,5 @@ defaultproperties
 
      bEnableEmoticons=true
      bFastWeaponSwitch=true
+     bKeepMomentumOnLanding=true
 }

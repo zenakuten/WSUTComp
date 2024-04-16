@@ -3055,6 +3055,9 @@ state PlayerWalking
 {
     function bool NotifyLanded(vector HitNormal)
     {
+        if(RepInfo == None || (RepInfo != None && RepInfo.bKeepMomentumOnLanding))
+            return super.NotifyLanded(HitNormal);
+
         if (DoubleClickDir == DCLICK_Active)
         {
             DoubleClickDir = DCLICK_Done;
