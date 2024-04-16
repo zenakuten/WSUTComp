@@ -113,7 +113,8 @@ var Emoticons EmoteActor;
 var UTComp_ServerReplicationInfo RepInfo;
 var UTComp_OverlayUpdate OverlayClass;
 var UTComp_VotingHandler VotingClass;
-var UTComp_Warmup WarmupClass;
+var UTComp_Warmup WarmupInfo;
+var class<UTComp_Warmup> WarmupClass;
 var bool bHasInteraction;
 
 var string origcontroller;
@@ -461,7 +462,7 @@ function ModifyPlayer(Pawn Other)
     local int i;
 
     //Give all weps if its warmup
-    if(WarmupClass!=None && !Level.Game.IsA('UTComp_ClanArena')&& (WarmupClass.bInWarmup==True || WarmupClass.bGivePlayerWeaponHack ))
+    if(WarmupInfo!=None && !Level.Game.IsA('UTComp_ClanArena')&& (WarmupInfo.bInWarmup==True || WarmupInfo.bGivePlayerWeaponHack ))
     {
         switch(EnableWarmupWeaponsMode)
         {
@@ -484,10 +485,10 @@ function ModifyPlayer(Pawn Other)
             break;
 
         case 1:
-            if(!WarmupClass.bWeaponsChecked)
-                WarmupClass.FindWhatWeaponsToGive();
-            for(i=0; i<WarmupClass.sWeaponsToGive.Length; i++)
-                Other.CreateInventory(WarmupClass.sWeaponsToGive[i]);
+            if(!WarmupInfo.bWeaponsChecked)
+                WarmupInfo.FindWhatWeaponsToGive();
+            for(i=0; i<WarmupInfo.sWeaponsToGive.Length; i++)
+                Other.CreateInventory(WarmupInfo.sWeaponsToGive[i]);
         }
 
         for(Inv=Other.Inventory; Inv!=None; Inv=Inv.Inventory)
@@ -647,13 +648,13 @@ function SetupWarmup()
         return;
     }
 
-    if(WarmupClass==None)
-        WarmupClass=Spawn(Class'UTComp_Warmup', self);
+    if(WarmupInfo==None)
+        WarmupInfo=Spawn(WarmupClass, self);
 
-    WarmupClass.iWarmupTime=WarmupTime;
+    WarmupInfo.iWarmupTime=WarmupTime;
 
-    WarmupClass.fReadyPercent=WarmupReadyPercentRequired;
-    WarmupClass.InitializeWarmup();
+    WarmupInfo.fReadyPercent=WarmupReadyPercentRequired;
+    WarmupInfo.InitializeWarmup();
 }
 
 function SetupVoting()
@@ -1721,6 +1722,7 @@ defaultproperties
      bEnableScoreboard=True  // really isn't configurable now, UTComp always tweaks scoreboards.
      
      bEnableWarmup=True
+     WarmupClass=class'UTComp_Warmup'
      WarmupReadyPercentRequired=100.000000
      bEnableWeaponStats=True
      bEnablePowerupStats=True

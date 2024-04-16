@@ -112,9 +112,9 @@ function TakeActionOnVote(byte VoteType, byte VoteSwitch, string Options)
         UTCompMutator.default.bEnableWarmup=(VoteSwitch==1);
         UTCompMutator.RepInfo.bEnableWarmup=(VoteSwitch==1);
     }
-    else if(VoteType==5 && UTCompMutator.WarmupClass!=None && (UTCompMutator.bEnableMapVoting || UTCompMutator.bAllowRestartVoteEvenIfMapVotingIsTurnedOff) )
+    else if(VoteType==5 && UTCompMutator.WarmupInfo!=None && (UTCompMutator.bEnableMapVoting || UTCompMutator.bAllowRestartVoteEvenIfMapVotingIsTurnedOff) )
     {
-        UTCompMutator.WarmupClass.SoftRestart();
+        UTCompMutator.WarmupInfo.SoftRestart();
     }
     else if(VoteType==6 && UTCompMutator.bEnableGameTypeVoting && UTCompMutator.bEnableMapVoting)
     {
