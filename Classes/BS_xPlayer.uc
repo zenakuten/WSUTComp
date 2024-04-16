@@ -796,7 +796,10 @@ simulated function DamageIndicatorHit(int Damage, pawn injured, pawn instigatedB
 
 simulated function bool IsGroupedDamageType(class<DamageType> DamageType)
 {
-    return DamageType == class'DamTypeFlakChunk' || DamageType == class'DamTypeFlakShell' || DamageType == class'DamTypeRocket';
+    return DamageType == class'DamTypeFlakChunk' 
+        || DamageType == class'DamTypeFlakShell' 
+        || DamageType == class'DamTypeRocket'
+        || DamageType == class'DamTypeRocketHoming';
 }
 
 // both stat/hitsound
