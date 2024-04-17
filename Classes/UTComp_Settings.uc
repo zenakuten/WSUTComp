@@ -64,6 +64,7 @@ var config byte PreferredSkinColorRedTeammate;
 var config byte PreferredSkinColorBlueEnemy;
 var config color BlueEnemyUTCompSkinColor;
 var config color RedTeammateUTCompSkinColor;
+var config color SpawnProtectedUTCompSkinColor;
 var config bool bBlueEnemyModelsForced;
 var config bool bRedTeammateModelsForced;
 var config string BlueEnemyModelName;

@@ -34,11 +34,13 @@ var UTComp_HUDSettings HUDSettings;
 var int HitDamage;
 var bool bHitContact;
 var Pawn HitPawn;
+var bool InSpawnProtection;
+var bool OldInSpawnProtection;
 
 replication
 {
   reliable if (Role==ROLE_Authority)
-     MultiDodgesRemaining, HitDamage, bHitContact, HitPawn;
+     MultiDodgesRemaining, HitDamage, bHitContact, HitPawn, InSpawnProtection;
 
   unreliable if (Role==Role_authority)
      bShieldActive, bLinkActive, bShockActive, bLGactive, overlayActive;
@@ -400,6 +402,9 @@ simulated function Tick(float DeltaTime)
             break;
 
     super.Tick(DeltaTime);
+    
+    if(Role == ROLE_Authority)
+        InSpawnProtection = Level.TimeSeconds - SpawnTime < DeathMatch(Level.Game).SpawnProtectionTime;
 
     if(Level.NetMode==NM_DedicatedServer)
     {
@@ -409,7 +414,7 @@ simulated function Tick(float DeltaTime)
     if(LocalPC==None)
         LocalPC=Level.GetLocalPlayerController();
 
-    if(GetTeamNum() != OldTeam)
+    if(ShouldUpdateSkin())
     {
         ColorSkins();
     }
@@ -428,6 +433,30 @@ simulated function Tick(float DeltaTime)
 
 }
 
+simulated function bool IsSpawnProtectionEnabled()
+{
+	return InSpawnProtection;
+}
+
+simulated function bool ShouldUpdateSkin()
+{
+    local bool shouldUpdate;
+    local bool GameEnded;
+    local bool spawnProtectionChanged;
+
+   if(LocalPC==None)
+       LocalPC=Level.GetLocalPlayerController();
+
+    if(LocalPC != None && LocalPC.IsInState('GameEnded'))
+        GameEnded=true;
+
+    shouldUpdate = (GetTeamNum() != OldTeam);
+    spawnProtectionChanged = IsSpawnProtectionEnabled() != OldInSpawnProtection;
+    shouldUpdate = (shouldUpdate || spawnProtectionChanged) && !GameEnded;
+    OldInSpawnProtection = IsSpawnProtectionEnabled();
+
+    return shouldUpdate;
+}
 
 /* -- manages the hit effects for skins
    really big hack necessitated by dx9 renderer -- */
@@ -588,10 +617,14 @@ simulated function material ChangeColorOfSkin(material SkinToChange, byte SkinNu
     if(RepInfo!=None && RepInfo.EnableBrightSkinsMode==0)
         return SkinToChange;
 
+    if(IsSpawnProtectionEnabled())
+        return ChangeToUTCompSkin(SkinToChange, SkinNum);
+
     if(RepInfo!=None)
         SkinMode=Min(RepInfo.EnableBrightSkinsMode, FindSkinMode());
     else
         SkinMode=FindSkinMode();
+
     switch(SkinMode)
     {
         case 1: bUnlit=False;
@@ -742,7 +775,9 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
 
     C.CombineOperation=CO_Add;
     C.Material1=MakeDMSkin(SkinToChange);
-    if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
+    if(IsSpawnProtectionEnabled())
+        CC.Color=MakeClanSkin(Settings.SpawnProtectedUTCompSkinColor);
+    else if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
         CC.Color=MakeClanSkin(Settings.BlueEnemyUTCompSkinColor);
     else
         CC.Color=MakeClanSkin(Settings.RedTeammateUTCompSkinColor);
