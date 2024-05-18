@@ -299,12 +299,14 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
 {
     local Projectile p;
 
-    local vector End, HitNormal, HitLocation;
+    local vector End, HitNormal, HitLocation, OriginalStart;
     local actor Other;
     local float f,g;
 
     if(!bUseEnhancedNetCode)
         return super.SpawnProjectile(Start,Dir);
+
+    OriginalStart = Start;
     /* change this to use gravity */
     if( ProjectileClass != None )
     {
@@ -339,12 +341,12 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
            {
                  HitLocation = HitLocation + PawnCollisionCopy(Other).CopiedPawn.Location - Other.Location;
                  Other=PawnCollisionCopy(Other).CopiedPawn;
+                 p = Weapon.Spawn(ProjectileClass,,, HitLocation - Vector(dir)*default.ProjSpawnOffset.X, Dir);
            }
-
-           if(Other == none)
-               p = Weapon.Spawn(ProjectileClass,,, End, Dir);
            else
-               p = Weapon.Spawn(ProjectileClass,,, HitLocation - Vector(dir)*20.0, Dir);
+           {
+               p = Weapon.Spawn(ProjectileClass,,, OriginalStart, Dir);
+           }
         }
         else
             p = Weapon.Spawn(ProjectileClass,,, Start, Dir);
