@@ -50,7 +50,6 @@ simulated function HitWall(vector HitNormal, Actor Wall)
   local PlayerController PC;
 
   SetOwner(None);   // HACK: make sure non-moving owner can be hit as well
-  bCanHitOwner = True;
 
   if ( Pawn(Wall) != None || GameObjective(Wall) != None ) {
     if (Level.NetMode != NM_Client)
