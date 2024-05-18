@@ -39,5 +39,5 @@ function Projectile SpawnProjectile(vector Start, rotator Dir)
 
 defaultproperties
 {
-    ProjectileClass = Class'UTComp_Grenade'
+    ProjectileClass = Class'Grenade'
 }
