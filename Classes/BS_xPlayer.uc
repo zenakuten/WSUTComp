@@ -150,7 +150,7 @@ replication
         SetbStats, TurnOffNetCode, ServerSetEyeHeightAlgorithm, ServerViewPlayer;
 
     unreliable if(Role<Role_Authority)
-        ServerNextPlayer, ServerGoToPlayer, ServerFindNextNode,
+        ServerNextPlayer, ServerGoToPlayer, ServerFindNextNode, UTComp_ServerUse,
         serverfindprevnode, servergotonode, ServerGoToWepBase, speclockRed, speclockBlue, ServerGoToTarget, CallVote;
 
     reliable if(Role<Role_Authority)

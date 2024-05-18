@@ -52,43 +52,7 @@ simulated event ClientStartFire(int Mode)
     if(Level.NetMode!=NM_Client || !BS_xPlayer(Level.GetLocalPlayerController()).UseNewNet())
         super.ClientStartFire(mode);
     else
-    {
-        // snarf
-        // since flak primary has a hard time hitting nodes for new net, only use old net
-        if(Mode == 0 && AimingAtNode())
-        {
-            NewNet_FlakFire(FireMode[0]).bUseEnhancedNetCode = false;
-            NewNet_FlakFire(FireMode[0]).PingDT = 0.00;
-            //NewNet_FlakFire(FireMode[0]).ProjectileClass = class'FlakChunk';
-            super.ClientStartFire(mode);
-            //NewNet_FlakFire(FireMode[0]).ProjectileClass = class'NewNet_FlakChunk';
-        }
-        else
-        {
-            NewNet_ClientStartFire(mode);
-        }
-    }
-}
-
-function bool AimingAtNode()
-{
-    local vector HitLocation, HitNormal, X, Y, Z, traceStart, traceEnd, Aim;
-    local actor HitActor;
-
-    if(Instigator != None && Instigator.Controller != None)
-    {
-        GetAxes(Instigator.Controller.Rotation, X, Y, Z);
-        traceStart = GetFireStart(X,Y,Z);
-        Aim = Vector(Instigator.Controller.Rotation);
-        traceEnd = traceStart + 300 * Aim;
-        HitActor = Trace(HitLocation,HitNormal,traceEnd,traceStart,true);
-    }
-
-    return ONSPowerCore(HitActor) != None ||
-           ONSPowerNodeEnergySphere(HitActor) != None ||
-           ONSPowerCoreShield(hitActor) != None ||
-           ONSPowerNodeShield(HitActor) != None;
-
+        NewNet_ClientStartFire(mode);
 }
 
 simulated event NewNet_ClientStartFire(int Mode)
