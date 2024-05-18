@@ -27,6 +27,6 @@ defaultproperties
 {
     bEnableCrosshairSizing=True
     bEnableWidescreenFix=False
-    DamageIndicatorType=1
+    DamageIndicatorType=2
     bEnableEmoticons=True
 }
