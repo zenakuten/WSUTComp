@@ -1745,7 +1745,7 @@ defaultproperties
      VotingGametype(8)=(GametypeOptions="?game=XGame.xBombingRun?timelimit=20?goalscore=0?FriendlyFireScale=0,WeaponStay=True?mutator=XWeapons.MutNoSuperWeapon?DoubleDamage=True?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Bombing Run")
 
      MinNetSpeed=10000
-     MaxNetSpeed=100000
+     MaxNetSpeed=1000000
 
      //ONS
      NodeIsolateBonusPct=20
