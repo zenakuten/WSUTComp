@@ -43,13 +43,15 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
         {
             co_TeamSelect.AddItem("Teammates(Skins), Red(Models)");
             co_TeamSelect.AddItem("Enemies(Skins), Blue(Models)");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
         else
         {
             co_TeamSelect.AddItem("Teammates");
             co_TeamSelect.AddItem("Enemies");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
     }
     else
@@ -58,13 +60,15 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
         {
             co_TeamSelect.AddItem("Red(Skins), Teammates(Models)");
             co_TeamSelect.AddItem("Blue(Skins), Enemies(Models)");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
         else
         {
             co_TeamSelect.AddItem("Red Team");
             co_TeamSelect.AddItem("Blue Team");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
     }
     for(i=0; i<Settings.ClanSkins.Length; i++)
@@ -196,8 +200,10 @@ function InternalOnChange( GUIComponent C )
                               Settings.BlueEnemyUTCompSkinColor.R=sl_RedSkin.Value;
                           else if(Team==2)
                               Settings.SpawnProtectedUTCompSkinColor.R=sl_RedSkin.Value;
-                          else if(Team>=3 && Settings.ClanSkins.Length>Team-3)
-                              Settings.ClanSkins[Team-3].PlayerColor.R=sl_RedSkin.Value;
+                          else if(Team==3)
+                              Settings.SpawnProtectedUTCompSkinColorTeam.R=sl_RedSkin.Value;
+                          else if(Team>=4 && Settings.ClanSkins.Length>Team-4)
+                              Settings.ClanSkins[Team-4].PlayerColor.R=sl_RedSkin.Value;
                               if(!bUpdatingCrap)
                                   UpdateSpinnyDude(); break;
 
@@ -207,8 +213,10 @@ function InternalOnChange( GUIComponent C )
                               Settings.BlueEnemyUTCompSkinColor.G=sl_GreenSkin.Value;
                           else if(Team==2)
                               Settings.SpawnProtectedUTCompSkinColor.G=sl_GreenSkin.Value;
-                          else if(Team>=3 && Settings.ClanSkins.Length>Team-3)
-                              Settings.ClanSkins[Team-3].PlayerColor.G=sl_GreenSkin.Value;
+                          else if(Team==3)
+                              Settings.SpawnProtectedUTCompSkinColorTeam.G=sl_GreenSkin.Value;
+                          else if(Team>=4 && Settings.ClanSkins.Length>Team-4)
+                              Settings.ClanSkins[Team-4].PlayerColor.G=sl_GreenSkin.Value;
                               if(!bUpdatingCrap)
                                   UpdateSpinnyDude(); break;
 
@@ -218,8 +226,10 @@ function InternalOnChange( GUIComponent C )
                               Settings.BlueEnemyUTCompSkinColor.B=sl_BlueSkin.Value;
                           else if(Team==2)
                               Settings.SpawnProtectedUTCompSkinColor.B=sl_BlueSkin.Value;
-                          else if(Team>=3 && Settings.ClanSkins.Length>Team-3)
-                              Settings.ClanSkins[Team-3].PlayerColor.B=sl_BlueSkin.Value;
+                          else if(Team==3)
+                              Settings.SpawnProtectedUTCompSkinColorTeam.B=sl_BlueSkin.Value;
+                          else if(Team>=4 && Settings.ClanSkins.Length>Team-4)
+                              Settings.ClanSkins[Team-4].PlayerColor.B=sl_BlueSkin.Value;
                               if(!bUpdatingCrap)
                                   UpdateSpinnyDude(); break;
 
@@ -253,10 +263,10 @@ function InternalOnChange( GUIComponent C )
        case co_ModelSelect:
        if(bUpdatingCrap)
             break;
-        if(co_TeamSelect.GetIndex()>=3 && Settings.ClanSkins.Length>co_TeamSelect.GetIndex()-3)
+        if(co_TeamSelect.GetIndex()>=4 && Settings.ClanSkins.Length>co_TeamSelect.GetIndex()-4)
         {
-            Settings.ClanSkins[co_TeamSelect.GetIndex()-2].PlayerName=eb_ClanSkin.GetText();
-            Settings.ClanSkins[co_TeamSelect.GetIndex()-2].ModelName = co_ModelSelect.GetText();
+            Settings.ClanSkins[co_TeamSelect.GetIndex()-4].PlayerName=eb_ClanSkin.GetText();
+            Settings.ClanSkins[co_TeamSelect.GetIndex()-4].ModelName = co_ModelSelect.GetText();
         }
     else if(co_TeamSelect.GetIndex()==0)
         Settings.RedTeammateModelName=co_ModelSelect.GetText();
@@ -296,10 +306,10 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 		}
 	}
 
-    if(co_TeamSelect.GetIndex()>=3 && Settings.ClanSkins.Length>co_TeamSelect.GetIndex()-3)
+    if(co_TeamSelect.GetIndex()>=4 && Settings.ClanSkins.Length>co_TeamSelect.GetIndex()-4)
     {
-        Settings.ClanSkins[co_TeamSelect.GetIndex()-3].PlayerName = eb_ClanSkin.GetText();
-        Settings.ClanSkins[co_TeamSelect.GetIndex()-3].ModelName = co_ModelSelect.GetText();
+        Settings.ClanSkins[co_TeamSelect.GetIndex()-4].PlayerName = eb_ClanSkin.GetText();
+        Settings.ClanSkins[co_TeamSelect.GetIndex()-4].ModelName = co_ModelSelect.GetText();
     }
     else if(co_TeamSelect.GetIndex()==0)
         Settings.RedTeammateModelName=co_ModelSelect.GetText();
@@ -558,7 +568,38 @@ function UpdateAllComponents()
             ch_ForceThismodel.mylabel.Caption="Force Blue Models";
         ch_ForceThisModel.Checked(Settings.bBlueEnemyModelsForced);
     }
-    else if(Team>=3)
+    else if(Team==3)
+    {
+        co_TypeSkinSelect.EnableMe();
+        co_ModelSelect.EnableMe();
+        eb_ClanSkin.DisableMe();
+
+        //co_TypeSkinSelect.SetIndex(Settings.ClientSkinModeBlueEnemy-1);
+        co_TypeSkinSelect.SetIndex(2);
+        co_TypeSkinSelect.DisableMe();
+        co_EpicSkinSelect.DisableMe();
+        co_EpicSkinSelect.SetIndex(-1);
+
+        SkinStyle=co_TypeSkinSelect.GetIndex();
+
+        co_EpicSkinSelect.DisableMe();
+        sl_RedSkin.EnableMe();
+        sl_GreenSkin.EnableMe();
+        sl_BlueSkin.EnableMe();
+
+        sl_RedSkin.SetValue(Settings.SpawnProtectedUTCompSkinColorTeam.R);
+        sl_GreenSkin.SetValue(Settings.SpawnProtectedUTCompSkinColorTeam.G);
+        sl_BlueSkin.SetValue(Settings.SpawnProtectedUTCompSkinColorTeam.B);
+
+        co_ModelSelect.SetIndex(co_ModelSelect.FindIndex(Settings.BlueEnemyModelName));
+        ch_ForceThisModel.EnableMe();
+        if(ch_EnemyModels.IsChecked())
+            ch_ForceThismodel.mylabel.Caption="Force Enemy Models";
+        else
+            ch_ForceThismodel.mylabel.Caption="Force Blue Models";
+        ch_ForceThisModel.Checked(Settings.bBlueEnemyModelsForced);
+    }
+    else if(Team>=4)
     {
         co_ModelSelect.EnableMe();
         co_TypeSkinSelect.SetIndex(2);
@@ -567,20 +608,20 @@ function UpdateAllComponents()
         co_EpicSkinSelect.SetIndex(-1);
 
         eb_ClanSkin.EnableMe();
-        if(Settings.ClanSkins.Length > Team-3)
-           eb_ClanSkin.SetText(Settings.ClanSkins[Team-3].PlayerName);
+        if(Settings.ClanSkins.Length > Team-4)
+           eb_ClanSkin.SetText(Settings.ClanSkins[Team-4].PlayerName);
 
         sl_RedSkin.EnableMe();
         sl_GreenSkin.EnableMe();
         sl_BlueSkin.EnableMe();
 
-        if(Settings.ClanSkins.Length > Team-3)
+        if(Settings.ClanSkins.Length > Team-4)
         {
-            sl_RedSkin.SetValue(Settings.ClanSkins[Team-3].PlayerColor.R);
-            sl_GreenSkin.SetValue(Settings.ClanSkins[Team-3].PlayerColor.G);
-            sl_BlueSkin.SetValue(Settings.ClanSkins[Team-3].PlayerColor.B);
+            sl_RedSkin.SetValue(Settings.ClanSkins[Team-4].PlayerColor.R);
+            sl_GreenSkin.SetValue(Settings.ClanSkins[Team-4].PlayerColor.G);
+            sl_BlueSkin.SetValue(Settings.ClanSkins[Team-4].PlayerColor.B);
 
-            co_ModelSelect.SetIndex(co_ModelSelect.FindIndex(Settings.ClanSkins[Team-3].ModelName));
+            co_ModelSelect.SetIndex(co_ModelSelect.FindIndex(Settings.ClanSkins[Team-4].ModelName));
         }
         ch_ForceThismodel.mylabel.Caption="Force This Model";
         ch_ForceThisModel.DisableMe();

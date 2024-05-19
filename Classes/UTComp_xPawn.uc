@@ -766,6 +766,7 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
 {
     local Combiner C;
     local ConstantColor CC;
+    local PlayerController LocalPC;
 
     if(SkinNum>0)
         return MakeDMSkin(SkinToChange);
@@ -776,7 +777,13 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
     C.CombineOperation=CO_Add;
     C.Material1=MakeDMSkin(SkinToChange);
     if(IsSpawnProtectionEnabled())
-        CC.Color=MakeClanSkin(Settings.SpawnProtectedUTCompSkinColor);
+    {
+        LocalPC = Level.GetLocalPlayerController();
+        if(LocalPC != None && LocalPC.GetTeamNum() == GetTeamNum())
+            CC.Color=MakeClanSkin(Settings.SpawnProtectedUTCompSkinColorTeam);
+        else
+            CC.Color=MakeClanSkin(Settings.SpawnProtectedUTCompSkinColor);
+    }
     else if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
         CC.Color=MakeClanSkin(Settings.BlueEnemyUTCompSkinColor);
     else

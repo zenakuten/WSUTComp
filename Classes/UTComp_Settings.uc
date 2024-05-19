@@ -65,6 +65,7 @@ var config byte PreferredSkinColorBlueEnemy;
 var config color BlueEnemyUTCompSkinColor;
 var config color RedTeammateUTCompSkinColor;
 var config color SpawnProtectedUTCompSkinColor;
+var config color SpawnProtectedUTCompSkinColorTeam;
 var config bool bBlueEnemyModelsForced;
 var config bool bRedTeammateModelsForced;
 var config string BlueEnemyModelName;
@@ -160,6 +161,7 @@ defaultproperties
     BlueEnemyUTCompSkinColor=(R=0,G=0,B=128,A=255)
     RedTeammateUTCompSkinColor=(R=128,G=0,B=0,A=255)
     SpawnProtectedUTCompSkinColor=(R=128,G=128,B=0,A=255)
+    SpawnProtectedUTCompSkinColorTeam=(R=0,G=128,B=128,A=255)
     BlueEnemyModelName="Arclite"
     RedTeammateModelName="Arclite"
     bEnableDarkSkinning=True
