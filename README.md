@@ -7,6 +7,7 @@ Release Notes
 
 V2
 
+- add kokuei's SSR fixes
 - add spawn protected bright skin option for teammates
 - update default damage indicator from disabled to centered
 - increase max netspeed to 1000000
