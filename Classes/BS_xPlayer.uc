@@ -131,7 +131,7 @@ var float SumDamageTime;
 
 var int HitDamage;
 var bool bHitContact;
-var Pawn HitPawn;
+var Actor HitDamageActor;
 
 //used by hud menu
 var EmoticonsReplicationInfo EmoteInfo;
@@ -173,7 +173,7 @@ replication
         ClientResetNetcode;
 
     reliable if (Role==ROLE_Authority)
-        HitDamage, bHitContact, HitPawn;        
+        HitDamage, bHitContact, HitDamageActor;        
 }
 
 simulated function SaveSettings()
@@ -433,8 +433,6 @@ simulated function ChangeDeathMessageOrder()
 event PlayerTick(float deltatime)
 {
     local int Damage;
-    local UTComp_xPawn utcPawn;
-
     Super.PlayerTick(deltatime);
 
     if (RepInfo==None)
@@ -499,7 +497,7 @@ event PlayerTick(float deltatime)
     if(HitDamage != LastDamage)
     {
         Damage = HitDamage - LastDamage;
-        if(HitPawn != None && RepInfo.bDamageIndicator)
+        if(HitDamageActor != None && RepInfo.bDamageIndicator)
         {
             if (HUDSettings.DamageIndicatorType == 2)
             {
@@ -511,7 +509,7 @@ event PlayerTick(float deltatime)
             
             if(HUDSettings.DamageIndicatorType == 3)
             {
-                class'Emitter_Damage'.static.ShowDamage(HitPawn, HitPawn.Location, Damage);        
+                class'Emitter_Damage'.static.ShowDamage(HitDamageActor, HitDamageActor.Location, Damage);        
             }
         }        
 
@@ -768,14 +766,14 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 // Stats / Hitsounds
 //====================================
 
-simulated function DamageIndicatorHit(int Damage, pawn injured, pawn instigatedBy)
+simulated function DamageIndicatorHit(int Damage, actor injured, pawn instigatedBy)
 {
     local vector EyeHeight;
 
     HitDamage += Damage;
     EyeHeight.z = instigatedBy.EyeHeight;
     bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
-    HitPawn = injured;
+    HitDamageActor = injured;
 }
 
 simulated function bool IsGroupedDamageType(class<DamageType> DamageType)

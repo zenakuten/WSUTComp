@@ -7,6 +7,7 @@ function Trigger(Actor Other, Pawn EventInstigator)
 
     if(EventInstigator != None && N != None && EventInstigator.Controller != None && EventInstigator.Controller == Owner)
     {
+        BS_xPlayer(EventInstigator.Controller).DamageIndicatorHit(N.AccumulatedDamage, N, EventInstigator);
         BS_xPlayer(EventInstigator.Controller).ReceiveHitSound(N.AccumulatedDamage, 1);
     }
 }

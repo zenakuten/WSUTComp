@@ -21,8 +21,6 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
             if(BS_xPlayer(instigatedBy.Controller) != None)
                 BS_xPlayer(InstigatedBy.Controller).ReceiveHit(DamageType, Damage, Injured, instigatedBy);
 
-            //DamageIndicatorHit(Damage, injured, instigatedBy);
-
             if(InstigatedBy==Injured)
                 HitSoundType=0;
             else if(InstigatedBy.GetTeamNum()==255 || InstigatedBy.GetTeamNum() != Injured.GetTeamNum())
