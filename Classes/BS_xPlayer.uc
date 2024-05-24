@@ -129,10 +129,9 @@ var int LastDamage;
 var int SumDamage;
 var float SumDamageTime;
 
-// moved to pawn to support spectator hit sounds
-//var int HitDamage;
-//var bool bHitContact;
-//var Pawn HitPawn;
+var int HitDamage;
+var bool bHitContact;
+var Pawn HitPawn;
 
 //used by hud menu
 var EmoticonsReplicationInfo EmoteInfo;
@@ -172,6 +171,9 @@ replication
 
     reliable if(Role == ROLE_Authority)
         ClientResetNetcode;
+
+    reliable if (Role==ROLE_Authority)
+        HitDamage, bHitContact, HitPawn;        
 }
 
 simulated function SaveSettings()
@@ -494,22 +496,10 @@ event PlayerTick(float deltatime)
         LastSaturatedTime = Level.TimeSeconds + 3.0;
     }
 
-    utcPawn = UTComp_xPawn(Pawn);
-    if(utcPawn == None)
+    if(HitDamage != LastDamage)
     {
-        utcPawn = UTComp_xPawn(ViewTarget);
-    }
-
-    if(utcPawn == None)
-    {
-        LastDamage = 0;
-        return;
-    }
-    
-    if(utcPawn.HitDamage != LastDamage)
-    {
-        Damage = utcPawn.HitDamage - LastDamage;
-        if(utcPawn.HitPawn != None && RepInfo.bDamageIndicator)
+        Damage = HitDamage - LastDamage;
+        if(HitPawn != None && RepInfo.bDamageIndicator)
         {
             if (HUDSettings.DamageIndicatorType == 2)
             {
@@ -521,11 +511,11 @@ event PlayerTick(float deltatime)
             
             if(HUDSettings.DamageIndicatorType == 3)
             {
-                class'Emitter_Damage'.static.ShowDamage(utcPawn.HitPawn, utcPawn.HitPawn.Location, Damage);        
+                class'Emitter_Damage'.static.ShowDamage(HitPawn, HitPawn.Location, Damage);        
             }
         }        
 
-        LastDamage = utcPawn.HitDamage;
+        LastDamage = HitDamage;
     }
 }
 
@@ -781,17 +771,11 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 simulated function DamageIndicatorHit(int Damage, pawn injured, pawn instigatedBy)
 {
     local vector EyeHeight;
-    local UTComp_xPawn utcPawn;
 
+    HitDamage += Damage;
     EyeHeight.z = instigatedBy.EyeHeight;
-
-    utcPawn = UTComp_xPawn(Pawn);
-    if(utcPawn != None)
-    {
-        utcPawn.HitDamage += Damage;
-        utcPawn.bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
-        utcPawn.HitPawn = injured;
-    }
+    bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
+    HitPawn = injured;
 }
 
 simulated function bool IsGroupedDamageType(class<DamageType> DamageType)
@@ -813,8 +797,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     else if(Injured.GetTeamNum()==255 || (Injured.GetTeamNum() != GetTeamNum()))
     {
         RegisterEnemyHit(DamageType, Damage);
-        //moved to netdamage
-        //DamageIndicatorHit(Damage, injured, instigatedBy);
+        DamageIndicatorHit(Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
             if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
@@ -3855,7 +3838,8 @@ event ClientSetViewTarget(Actor a)
     super.ClientSetViewTarget(a);
     if(UTComp_xPawn(A) != None)
     {
-        LastDamage = UTComp_xPawn(A).HitDamage;
+        //LastDamage = UTComp_xPawn(A).HitDamage;
+        LastDamage = HitDamage;
     }
     if(PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator)
     {

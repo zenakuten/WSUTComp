@@ -7,21 +7,6 @@ var float OverTimeEndTime;
 var bool bFirstRun;
 var bool bFirstEndOT;
 
-simulated function DamageIndicatorHit(int Damage, pawn injured, pawn instigatedBy)
-{
-    local vector EyeHeight;
-    local UTComp_xPawn utcPawn;
-
-    EyeHeight.z = instigatedBy.EyeHeight;
-
-    utcPawn = UTComp_xPawn(instigatedBy);
-    if(utcPawn != None)
-    {
-        utcPawn.HitDamage += Damage;
-        utcPawn.bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
-        utcPawn.HitPawn = injured;
-    }
-}
 
 function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn instigatedBy, vector HitLocation, out vector Momentum, class<DamageType> DamageType )
 {
@@ -36,7 +21,7 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
             if(BS_xPlayer(instigatedBy.Controller) != None)
                 BS_xPlayer(InstigatedBy.Controller).ReceiveHit(DamageType, Damage, Injured, instigatedBy);
 
-            DamageIndicatorHit(Damage, injured, instigatedBy);
+            //DamageIndicatorHit(Damage, injured, instigatedBy);
 
             if(InstigatedBy==Injured)
                 HitSoundType=0;
@@ -48,6 +33,7 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
             {
                 if(BS_xPlayer(C)!=None && C.PlayerReplicationInfo!=None && (C.PlayerReplicationInfo.bOnlySpectator || C.PlayerReplicationInfo.bOutOfLives) && PlayerController(C).ViewTarget == InstigatedBy)
                 {
+                    BS_xPlayer(C).DamageIndicatorHit(Damage, injured, instigatedBy);
                     BS_xPlayer(C).ReceiveHitSound(Damage, HitSoundType);
                 }
             }
