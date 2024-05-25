@@ -11,6 +11,9 @@ V3
 - Add damage indicators for power nodes
 - Add checkbox to enable / disable view smoothing when using new eyeheight algorithm
 - Fix issue with no view smoothing in new eyeheight algoritm when landing shake was enabled
+- Add option to disable team from knocking you around
+- Add option to disable team from knocking you around in a vehicle
+- Fix kick momentum for avril when online
 
 V2
 

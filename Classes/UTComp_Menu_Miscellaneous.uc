@@ -210,7 +210,7 @@ defaultproperties
     ch_UseEyeHeightAlgo=wsCheckBox'UTComp_Menu_Miscellaneous.UseEyeHeightAlgoCheck'
 
     Begin Object Class=wsCheckBox Name=UseViewSmoothing
-        Caption="View smoothing in New Eyeheight Algorithm"
+        Caption="Use view smoothing in New Eyeheight Algorithm"
         Hint="Smooth the view when using new Eyeheight algorithm"
         OnCreateComponent=HudColorCheck.InternalOnCreateComponent
         WinWidth=0.500000
