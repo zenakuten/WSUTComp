@@ -19,15 +19,6 @@ function DoFireEffect()
 		Instigator.AddVelocity(KickMomentum >> Instigator.GetViewRotation());
 }
 
-function DoFireEffect() 
-{
-	Super.DoFireEffect();
-	
-	if (Instigator != None && (!bDisableOnGround || Instigator.Base == None)
-	&& (!bDisableIfCrouched || !Instigator.bIsCrouched))
-		Instigator.AddVelocity(KickMomentum >> Instigator.GetViewRotation());
-}
-
 event ModeDoFire()
 {
     local UTComp_PRI uPRI;
