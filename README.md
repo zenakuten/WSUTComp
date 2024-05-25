@@ -14,6 +14,9 @@ V3
 - Add option to disable team from knocking you around
 - Add option to disable team from knocking you around in a vehicle
 - Fix kick momentum for avril when online
+- disable dynamic netspeed
+- Add NetMoveDelta config 
+- Add MaxSavedMoves config to webadmin
 
 V2
 
