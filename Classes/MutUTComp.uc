@@ -103,6 +103,9 @@ var config bool bUseDefaultScoreboardColor;
 var config float PawnCollisionHistoryLength;
 var config array<string> IgnoredHitSounds;
 
+var config bool bNoTeamBoosting;
+var config bool bNoTeamBoostingVehicles;
+
 var bool bEnableScoreboard;  
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
@@ -1550,6 +1553,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", 1, 1,"Check");
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);
@@ -1587,6 +1592,8 @@ static event string GetDescriptionText(string PropName)
         case "bFastWeaponSwitch": return "Enable UT2003 style fast weapon switch";
         case "bAllowColorWeapons": return "Enable color weapons";
         case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
+        case "bNoTeamBoosting": return "Teammates can't knock you around with weapons";
+        case "bNoTeamBoostingVehicles": return "Teammates can't knock you around in a vehicle";
     }
 	return Super.GetDescriptionText(PropName);
 }

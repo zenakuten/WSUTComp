@@ -3044,7 +3044,7 @@ state PlayerWalking
 {
     function bool NotifyLanded(vector HitNormal)
     {
-        if(RepInfo == None || (RepInfo != None && RepInfo.bKeepMomentumOnLanding))
+        if(RepInfo == None || (RepInfo != None && !RepInfo.bKeepMomentumOnLanding))
             return super.NotifyLanded(HitNormal);
 
         if (DoubleClickDir == DCLICK_Active)
@@ -3434,11 +3434,28 @@ function UpdateRotation(float DeltaTime, float maxPitch)
 
 function bool WantsSmoothedView()
 {
-    if (Pawn == none) return false;
+    if (Pawn == none) 
+        return false;
 
-    return
-        (((Pawn.Physics == PHYS_Walking) || (Pawn.Physics == PHYS_Spider)) && Pawn.bJustLanded == false) ||
-        (Pawn.Physics == PHYS_Falling && UTComp_xPawn(Pawn).OldPhysics2 == PHYS_Walking);
+    if(Settings.bUseNewEyeHeightAlgorithm == false)
+    {
+        // old algorithm + oldphysics2 check
+        // bJustLanded is weird, it's only set if landingshake = true
+        return
+            (((Pawn.Physics == PHYS_Walking) || (Pawn.Physics == PHYS_Spider)) && Pawn.bJustLanded == false) ||
+            (Pawn.Physics == PHYS_Falling && UTComp_xPawn(Pawn).OldPhysics2 == PHYS_Walking);
+    }
+
+    if(Settings.bViewSmoothing)
+    {
+        // new algorithm 
+        return
+            (((Pawn.Physics == PHYS_Walking) || (Pawn.Physics == PHYS_Spider))) ||
+            (Pawn.Physics == PHYS_Falling && UTComp_xPawn(Pawn).OldPhysics2 == PHYS_Walking);
+    }
+
+    // no view smoothing
+    return false;
 }
 
 state PlayerSwimming {

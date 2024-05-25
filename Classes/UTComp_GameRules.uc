@@ -50,9 +50,32 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
             if(uPRI!=None)
                 uPRI.DamR+=Damage;
     }
+
+    DoTeamboostCheck(injured, instigatedBy, momentum);
+
     if ( NextGameRules != None )
 		return NextGameRules.NetDamage( OriginalDamage,Damage,injured,instigatedBy,HitLocation,Momentum,DamageType );
 	return Damage;
+}
+
+function DoTeamboostCheck(Pawn injured, Pawn instigatedBy, out vector momentum)
+{
+    local controller InstigatorController;
+    if((((injured != instigatedBy) && injured != none) && injured.Controller != none) && ((instigatedBy != none) && instigatedBy.Controller != none) || injured.DelayedDamageInstigatorController != none)
+    {
+        InstigatorController = injured.DelayedDamageInstigatorController;
+        if(InstigatorController == none)
+        {
+            InstigatorController = instigatedBy.Controller;
+        }
+        if((InstigatorController != injured.Controller) && InstigatorController.SameTeamAs(injured.Controller))
+        {
+            if(UTCompMutator.bNoTeamBoosting && Vehicle(injured) == None)
+                Momentum = vect(0.0, 0.0, 0.0);
+            if(UTCompMutator.bNoTeamBoostingVehicles && Vehicle(injured) != None)
+                Momentum = vect(0.0, 0.0, 0.0);
+        }
+    }            
 }
 
 

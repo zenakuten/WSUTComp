@@ -16,6 +16,7 @@ var automated wsCheckBox ch_FootSteps;
 var automated wsCheckBox ch_MatchHudColor;
 var automated wsCheckBox ch_UseEyeHeightAlgo;
 var automated wsCheckBox ch_UseNewNet;
+var automated wsCheckBox ch_ViewSmoothing;
 
 var automated GUIButton bu_adren;
 
@@ -36,6 +37,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     ch_MatchHudColor.Checked(HUDSettings.bMatchHudColor);
     ch_UseEyeHeightAlgo.Checked(Settings.bUseNewEyeHeightAlgorithm);
     ch_UseNewNet.Checked(Settings.bEnableEnhancedNetCode);
+    ch_ViewSmoothing.Checked(Settings.bViewSmoothing);
     if(RepInfo != None && !RepInfo.bEnableEnhancedNetCode)
     {
         ch_UseNewNet.bVisible=false;
@@ -68,6 +70,8 @@ function InternalOnChange( GUIComponent C )
             break;
         case ch_UseNewNet:  Settings.bEnableEnhancedNetCode=ch_UseNewNet.IsChecked();
                             BS_xPlayer(PlayerOwner()).TurnOffNetCode(); break;
+        case ch_ViewSmoothing:  Settings.bViewSmoothing=ch_ViewSmoothing.IsChecked(); 
+            break;
     }
     class'UTComp_Overlay'.static.StaticSaveConfig();
     class'BS_xPlayer'.static.StaticSaveConfig();
@@ -205,13 +209,25 @@ defaultproperties
     End Object
     ch_UseEyeHeightAlgo=wsCheckBox'UTComp_Menu_Miscellaneous.UseEyeHeightAlgoCheck'
 
+    Begin Object Class=wsCheckBox Name=UseViewSmoothing
+        Caption="View smoothing in New Eyeheight Algorithm"
+        Hint="Smooth the view when using new Eyeheight algorithm"
+        OnCreateComponent=HudColorCheck.InternalOnCreateComponent
+        WinWidth=0.500000
+        WinHeight=0.030000
+        WinLeft=0.250000
+        WinTop=0.690000
+        OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
+    End Object
+    ch_ViewSmoothing=wsCheckBox'UTComp_Menu_Miscellaneous.UseViewSmoothing'
+
     Begin Object Class=GUILabel Name=NewNetLabel
         Caption="-----------Net Code-----------"
         TextColor=(B=255,G=255,R=0)
         WinWidth=1.000000
         WinHeight=0.060000
         WinLeft=0.250000
-        WinTop=0.690000
+        WinTop=0.730000
     End Object
     l_NewNet=GUILabel'NewNetLabel'
 
@@ -221,7 +237,7 @@ defaultproperties
         WinWidth=0.500000
         WinHeight=0.030000
         WinLeft=0.250000
-        WinTop=0.730000
+        WinTop=0.770000
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
     ch_UseNewNet=wsCheckBox'UTComp_Menu_Miscellaneous.NewNetCheck'

@@ -5,6 +5,13 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V3 
+- Fix 'Use UTComp style gliding movement' logic, was backwards
+- Fix damage indicators for vehicles
+- Add damage indicators for power nodes
+- Add checkbox to enable / disable view smoothing when using new eyeheight algorithm
+- Fix issue with no view smoothing in new eyeheight algoritm when landing shake was enabled
+
 V2
 
 - add kokuei's SSR fixes

@@ -86,6 +86,7 @@ var config bool bTeamColorUseTeam;
 var config bool bOverlayEnabled;
 var config bool bPowerupOverlayEnabled;
 var config bool bOverlayDrawIcons;
+var config bool bViewSmoothing;
 
 
 var UTComp_Settings instance;
@@ -182,6 +183,7 @@ defaultproperties
     bOverlayEnabled=true
     bPowerupOverlayEnabled=true
     bOverlayDrawIcons=true
+    bViewSmoothing=true
 
     instance=none
 }
