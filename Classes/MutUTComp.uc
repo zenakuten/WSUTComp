@@ -88,6 +88,7 @@ var config int MaxSavedMoves;
 var config bool bEnableEmoticons;
 var config bool bFastWeaponSwitch;
 var config bool bKeepMomentumOnLanding;
+var config float NetMoveDelta;
 
 struct MapVotePair
 {
@@ -882,6 +883,7 @@ function SpawnReplicationClass()
     RepInfo.MaxSavedMoves = MaxSavedMoves;
     RepInfo.bEnableEmoticons = bEnableEmoticons;
     RepInfo.bKeepMomentumOnLanding = bKeepMomentumOnLanding;
+    RepInfo.NetMoveDelta = NetMoveDelta;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1555,6 +1557,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "NetMoveDelta", "How often clients send move updates, lower is faster (default 0.011)",1, 1, "Text","0.011;0.001:0.022",,False,False);
+    PlayInfo.AddSetting("UTComp Settings", "MaxSavedMoves", "Maximum saved moves for warping fix (default 300)",1, 1, "Text","300;100:750",,False,False);
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);
@@ -1944,9 +1948,10 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
-     MaxSavedMoves=250
+     MaxSavedMoves=300
 
      bEnableEmoticons=true
      bFastWeaponSwitch=true
      bKeepMomentumOnLanding=true
+     NetMoveDelta=0.011
 }

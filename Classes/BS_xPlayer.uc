@@ -4009,11 +4009,16 @@ function ReplicateMove
 
 	if ( PendingMove == None )
 	{
+        /*
 		// Decide whether to hold off on move
 		if ( (Player.CurrentNetSpeed > 10000) && (GameReplicationInfo != None) && (GameReplicationInfo.PRIArray.Length <= 10) )
 			NetMoveDelta = 0.011;
 		else
 			NetMoveDelta = FMax(0.0222,2 * Level.MoveRepSize/Player.CurrentNetSpeed);
+        */
+        NetMoveDelta = 0.011;
+        if(RepInfo != None && RepInfo.NetMoveDelta > 0)
+            NetMoveDelta = RepInfo.NetMoveDelta;
 
 		if ( (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 < NetMoveDelta )
 		{
@@ -4126,6 +4131,228 @@ function SavedMove GetFreeMoveEx() {
         s.NextMove = None;
         return s;
     }
+}
+
+// remove dynamic netspeed ability which also removes MoveRepSize usage
+function LongClientAdjustPosition
+(
+    float TimeStamp,
+    name newState,
+    EPhysics newPhysics,
+    float NewLocX,
+    float NewLocY,
+    float NewLocZ,
+    float NewVelX,
+    float NewVelY,
+    float NewVelZ,
+    Actor NewBase,
+    float NewFloorX,
+    float NewFloorY,
+    float NewFloorZ
+)
+{
+    local vector NewLocation, NewVelocity, NewFloor;
+    local Actor MoveActor;
+    local SavedMove CurrentMove;
+    local float NewPing;
+
+	// update ping
+	if ( (PlayerReplicationInfo != None) && !bDemoOwner )
+	{
+		NewPing = FMin(1.5, Level.TimeSeconds - TimeStamp);
+
+		if ( ExactPing < 0.004 )
+			ExactPing = FMin(0.3,NewPing);
+		else
+		{
+			if ( NewPing > 2 * ExactPing )
+				NewPing = FMin(NewPing, 3*ExactPing);
+			ExactPing = FMin(0.99, 0.99 * ExactPing + 0.008 * NewPing); // placebo effect
+		}
+		PlayerReplicationInfo.Ping = Min(250.0 * ExactPing, 255);
+		PlayerReplicationInfo.bReceivedPing = true;
+		if ( Level.TimeSeconds - LastPingUpdate > 4 )
+		{
+            // remove dynamic netspeed feature
+            /*
+			if ( bDynamicNetSpeed && (OldPing > DynamicPingThreshold * 0.001) && (ExactPing > DynamicPingThreshold * 0.001) )
+			{
+				if ( Level.MoveRepSize < 64 )
+					Level.MoveRepSize += 8;
+				else if ( Player.CurrentNetSpeed >= 6000 )
+					SetNetSpeed(Player.CurrentNetSpeed - 1000);
+				OldPing = 0;
+			}
+			else
+            */
+				OldPing = ExactPing;
+			LastPingUpdate = Level.TimeSeconds;
+			ServerUpdatePing(1000 * ExactPing);
+		}
+	}
+    if ( Pawn != None )
+    {
+        if ( Pawn.bTearOff )
+        {
+            Pawn = None;
+			if ( !IsInState('GameEnded') && !IsInState('RoundEnded') && !IsInState('Dead') )
+			{
+            	GotoState('Dead');
+            }
+            return;
+        }
+        MoveActor = Pawn;
+        if ( (ViewTarget != Pawn)
+			&& ((ViewTarget == self) || ((Pawn(ViewTarget) != None) && (Pawn(ViewTarget).Health <= 0))) )
+		{
+			bBehindView = false;
+			SetViewTarget(Pawn);
+		}
+    }
+    else
+    {
+        MoveActor = self;
+ 	   	if( GetStateName() != newstate )
+		{
+		    if ( NewState == 'GameEnded' || NewState == 'RoundEnded' )
+			    GotoState(NewState);
+			else if ( IsInState('Dead') )
+			{
+		    	if ( (NewState != 'PlayerWalking') && (NewState != 'PlayerSwimming') )
+		        {
+				    GotoState(NewState);
+		        }
+		        return;
+			}
+			else if ( NewState == 'Dead' )
+				GotoState(NewState);
+		}
+	}
+    if ( CurrentTimeStamp >= TimeStamp )
+        return;
+    CurrentTimeStamp = TimeStamp;
+
+    NewLocation.X = NewLocX;
+    NewLocation.Y = NewLocY;
+    NewLocation.Z = NewLocZ;
+    NewVelocity.X = NewVelX;
+    NewVelocity.Y = NewVelY;
+    NewVelocity.Z = NewVelZ;
+
+	// skip update if no error
+    CurrentMove = SavedMoves;
+    while ( CurrentMove != None )
+    {
+        if ( CurrentMove.TimeStamp <= CurrentTimeStamp )
+        {
+            SavedMoves = CurrentMove.NextMove;
+            CurrentMove.NextMove = FreeMoves;
+            FreeMoves = CurrentMove;
+			if ( CurrentMove.TimeStamp == CurrentTimeStamp )
+			{
+				FreeMoves.Clear();
+				if ( ((Mover(NewBase) != None) || (Vehicle(NewBase) != None))
+					&& (NewBase == CurrentMove.EndBase) )
+				{
+					if ( (GetStateName() == NewState)
+						&& IsInState('PlayerWalking')
+						&& ((MoveActor.Physics == PHYS_Walking) || (MoveActor.Physics == PHYS_Falling)) )
+					{
+						if ( VSize(CurrentMove.SavedRelativeLocation - NewLocation) < 3 )
+						{
+							CurrentMove = None;
+							return;
+						}
+						else if ( (Vehicle(NewBase) != None)
+								&& (VSize(Velocity) < 3) && (VSize(NewVelocity) < 3)
+								&& (VSize(CurrentMove.SavedRelativeLocation - NewLocation) < 30) )
+						{
+							CurrentMove = None;
+							return;
+						}
+					}
+				}
+				else if ( (VSize(CurrentMove.SavedLocation - NewLocation) < 3)
+					&& (VSize(CurrentMove.SavedVelocity - NewVelocity) < 3)
+					&& (GetStateName() == NewState)
+					&& IsInState('PlayerWalking')
+					&& ((MoveActor.Physics == PHYS_Walking) || (MoveActor.Physics == PHYS_Falling)) )
+				{
+					CurrentMove = None;
+					return;
+				}
+				CurrentMove = None;
+			}
+			else
+			{
+				FreeMoves.Clear();
+				CurrentMove = SavedMoves;
+			}
+        }
+        else
+			CurrentMove = None;
+    }
+	if ( MoveActor.bHardAttach )
+	{
+		if ( MoveActor.Base == None )
+		{
+			if ( NewBase != None )
+				MoveActor.SetBase(NewBase);
+			if ( MoveActor.Base == None )
+				MoveActor.bHardAttach = false;
+			else
+				return;
+		}
+		else
+			return;
+	}
+
+	NewFloor.X = NewFloorX;
+	NewFloor.Y = NewFloorY;
+	NewFloor.Z = NewFloorZ;
+	if ( (Mover(NewBase) != None) || (Vehicle(NewBase) != None) )
+		NewLocation += NewBase.Location;
+
+	if ( !bDemoOwner )
+	{
+		//if ( Pawn != None )
+		//	log("Client "$Role$" adjust "$self$" stamp "$TimeStamp$" time "$Level.TimeSeconds$" location "$MoveActor.Location);
+		MoveActor.bCanTeleport = false;
+		if ( !MoveActor.SetLocation(NewLocation) && (Pawn(MoveActor) != None)
+			&& (MoveActor.CollisionHeight > Pawn(MoveActor).CrouchHeight)
+			&& !Pawn(MoveActor).bIsCrouched
+			&& (newPhysics == PHYS_Walking)
+			&& (MoveActor.Physics != PHYS_Karma) && (MoveActor.Physics != PHYS_KarmaRagDoll) )
+		{
+			MoveActor.SetPhysics(newPhysics);
+
+			if ( !MoveActor.SetLocation(NewLocation + vect(0,0,1)*MAXSTEPHEIGHT) )
+			{
+				Pawn(MoveActor).ForceCrouch();
+				MoveActor.SetLocation(NewLocation);
+			}
+			else
+			{
+				MoveActor.MoveSmooth(vect(0,0,-1)*MAXSTEPHEIGHT);
+			}
+		}
+		MoveActor.bCanTeleport = true;
+	}
+	// Hack. Don't let network change physics mode of karma stuff on the client.
+	if( (MoveActor.Physics != newPhysics) && (MoveActor.Physics != PHYS_Karma) && (MoveActor.Physics != PHYS_KarmaRagDoll)
+		&& (newPhysics != PHYS_Karma) && (newPhysics != PHYS_KarmaRagDoll) )
+	{
+	    MoveActor.SetPhysics(newPhysics);
+	}
+	if ( MoveActor != self )
+		MoveActor.SetBase(NewBase, NewFloor);
+
+    MoveActor.Velocity = NewVelocity;
+
+    if( GetStateName() != newstate )
+        GotoState(newstate);
+
+	bUpdatePosition = true;
 }
 
 defaultproperties
