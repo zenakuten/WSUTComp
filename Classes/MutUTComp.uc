@@ -1569,11 +1569,11 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bChargedWeaponsNoSpawnProtection", "Disable spawn protection during weapon charging", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Movement Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
-    PlayInfo.AddSetting("UTComp Movement Settings", "NetMoveDelta", "How often clients send move updates, lower is faster (default 0.011)",1, 1, "Text","0.011;0.001:0.022",,False,False);
-    PlayInfo.AddSetting("UTComp Movement Settings", "MaxSavedMoves", "Maximum saved moves for warping fix (default 300)",1, 1, "Text","300;100:750",,False,False);
-    PlayInfo.AddSetting("UTComp Movement Settings", "MaxResponseTime", "server delay for client move update before setting position (default 0.125)",1, 1, "Text","0.125;0.001:0.250",,False,False);
-    PlayInfo.AddSetting("UTComp Movement Settings", "bMoveErrorAccumFix", "use server define movement accumulation (default false)",1, 1, "Check");
-    PlayInfo.AddSetting("UTComp Movement Settings", "MoveErrorAccumFixValue", "server defined movement accumulation value (default 0.009)",1, 1, "Text", "0.009:0.001:0.018",,false, false);
+    PlayInfo.AddSetting("UTComp Movement Settings", "NetMoveDelta", "How often clients send move updates (default 0.011)",1, 1, "Text","0.011;0.001:0.022",,False,False);
+    PlayInfo.AddSetting("UTComp Movement Settings", "MaxSavedMoves", "Max saved moves for warp fix (default 300)",1, 1, "Text","300;100:750",,False,False);
+    PlayInfo.AddSetting("UTComp Movement Settings", "MaxResponseTime", "delay for client move update (default 0.125)",1, 1, "Text","0.125;0.001:0.250",,False,False);
+    PlayInfo.AddSetting("UTComp Movement Settings", "bMoveErrorAccumFix", "use move accum fix (default false)",1, 1, "Check");
+    PlayInfo.AddSetting("UTComp Movement Settings", "MoveErrorAccumFixValue", "move accum fix value (default 0.009)",1, 1, "Text", "0.009:0.001:0.018",,false, false);
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);

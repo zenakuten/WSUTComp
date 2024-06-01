@@ -4516,6 +4516,9 @@ function ServerMove
     if ( (Level.Pauser == None) && (DeltaTime > 0) )
         MoveAutonomous(DeltaTime, NewbRun, NewbDuck, NewbPressedJump, NewbDoubleJump, DoubleClickMove, Accel, DeltaRot);
 
+    if (RepInfo==None)
+        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
 
     // Accumulate movement error.
     if ( ClientLoc == vect(0,0,0) )
