@@ -823,8 +823,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     else
     {
         RegisterTeammateHit(DamageType, Damage);
-        //moved to netdamage
-        //DamageIndicatorHit(-Damage, injured, instigatedBy);
+        DamageIndicatorHit(-Damage, injured, instigatedBy);
         if(!IsIgnoredDamageSound(DamageType))
         {
             if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
