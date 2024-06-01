@@ -5,6 +5,11 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V4
+- fix friendly fire damage indicators
+- fix negative damage indicators
+- Add more knobs for movement, move to separate config section
+
 V3 
 - Fix 'Use UTComp style gliding movement' logic, was backwards
 - Fix damage indicators for vehicles
