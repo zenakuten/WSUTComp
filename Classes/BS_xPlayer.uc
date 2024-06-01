@@ -542,7 +542,7 @@ function SetMaxSavedMoves()
 function SetMaxResponseTime()
 {
     if(RepInfo != None)
-        MaxResponseTime = RepInfo.MaxResponseTime;
+        Default.MaxResponseTime = RepInfo.MaxResponseTime;
 }
 
 simulated function InitializeStuff()
