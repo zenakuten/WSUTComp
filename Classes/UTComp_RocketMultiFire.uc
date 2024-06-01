@@ -2,6 +2,8 @@
 
 class UTComp_RocketMultiFire extends RocketMultiFire;
 
+var MutUTComp MutOwner;
+
 event ModeDoFire()
 {
     local UTComp_PRI uPRI;
@@ -12,6 +14,18 @@ event ModeDoFire()
             uPRI.NormalWepStatsPrim[6]+=Load;
     }
     Super.ModeDoFire();
+}
+
+function ModeHoldFire()
+{
+    if(MutOwner == None && Weapon != None)
+        foreach Weapon.DynamicActors(class'MutUTComp', MutOwner)
+            break;
+
+    if(Instigator != none && MutOwner != None && MutOwner.bChargedWeaponsNoSpawnProtection)
+        Instigator.DeactivateSpawnProtection();
+
+    super.ModeHoldFire();
 }
 
 defaultproperties

@@ -112,6 +112,8 @@ var config array<string> IgnoredHitSounds;
 var config bool bNoTeamBoosting;
 var config bool bNoTeamBoostingVehicles;
 
+var config bool bChargedWeaponsNoSpawnProtection;
+
 var bool bEnableScoreboard;  
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
@@ -1565,6 +1567,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bChargedWeaponsNoSpawnProtection", "Disable spawn protection during weapon charging", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Movement Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Movement Settings", "NetMoveDelta", "How often clients send move updates, lower is faster (default 0.011)",1, 1, "Text","0.011;0.001:0.022",,False,False);
     PlayInfo.AddSetting("UTComp Movement Settings", "MaxSavedMoves", "Maximum saved moves for warping fix (default 300)",1, 1, "Text","300;100:750",,False,False);
@@ -1609,6 +1612,8 @@ static event string GetDescriptionText(string PropName)
         case "bAllowColorWeapons": return "Enable color weapons";
         case "bNoTeamBoosting": return "Teammates can't knock you around with weapons";
         case "bNoTeamBoostingVehicles": return "Teammates can't knock you around in a vehicle";
+        case "bChargedWeaponsNoSpawnProtection": return "Disable spawn protection during weapon charging";
+
         case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
         case "NetMoveDelta": return "How often clients send move updates, lower is faster (default 0.011)";
         case "MaxSavedMoves": return "Maximum saved moves for warping fix (default 300)";
@@ -1968,8 +1973,9 @@ defaultproperties
 
      bEnableEmoticons=true
      bFastWeaponSwitch=true
-     bKeepMomentumOnLanding=true
+     bChargedWeaponsNoSpawnProtection=false
 
+     bKeepMomentumOnLanding=true
      MaxSavedMoves=300
      NetMoveDelta=0.011
      MaxResponseTime=0.125000
