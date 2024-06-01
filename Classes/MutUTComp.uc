@@ -84,11 +84,16 @@ var config bool bUseWhitelist;
 var config string WhitelistBanMessage;
 var config bool bAllowColorWeapons;
 var config bool bDamageIndicator;
-var config int MaxSavedMoves;
 var config bool bEnableEmoticons;
 var config bool bFastWeaponSwitch;
 var config bool bKeepMomentumOnLanding;
+
+// warping fix stuff
+var config int MaxSavedMoves;
 var config float NetMoveDelta;
+var config float MaxResponseTime;
+var config bool bMoveErrorAccumFix;
+var config float MoveErrorAccumFixValue;
 
 struct MapVotePair
 {
@@ -880,10 +885,14 @@ function SpawnReplicationClass()
     RepInfo.bDebugLogging = bDebugLogging;
     RepInfo.bAllowColorWeapons = bAllowColorWeapons;
     RepInfo.bDamageIndicator = bDamageIndicator;
-    RepInfo.MaxSavedMoves = MaxSavedMoves;
     RepInfo.bEnableEmoticons = bEnableEmoticons;
     RepInfo.bKeepMomentumOnLanding = bKeepMomentumOnLanding;
+
+    RepInfo.MaxSavedMoves = MaxSavedMoves;
     RepInfo.NetMoveDelta = NetMoveDelta;
+    RepInfo.MaxResponseTime = MaxResponseTime;
+    RepInfo.bMoveErrorAccumFix = bMoveErrorAccumFix;
+    Repinfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1554,11 +1563,14 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", 1, 1,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", 1, 1,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "NetMoveDelta", "How often clients send move updates, lower is faster (default 0.011)",1, 1, "Text","0.011;0.001:0.022",,False,False);
-    PlayInfo.AddSetting("UTComp Settings", "MaxSavedMoves", "Maximum saved moves for warping fix (default 300)",1, 1, "Text","300;100:750",,False,False);
+    PlayInfo.AddSetting("UTComp Movement Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Movement Settings", "NetMoveDelta", "How often clients send move updates, lower is faster (default 0.011)",1, 1, "Text","0.011;0.001:0.022",,False,False);
+    PlayInfo.AddSetting("UTComp Movement Settings", "MaxSavedMoves", "Maximum saved moves for warping fix (default 300)",1, 1, "Text","300;100:750",,False,False);
+    PlayInfo.AddSetting("UTComp Movement Settings", "MaxResponseTime", "server delay for client move update before setting position (default 0.125)",1, 1, "Text","0.125;0.001:0.250",,False,False);
+    PlayInfo.AddSetting("UTComp Movement Settings", "bMoveErrorAccumFix", "use server define movement accumulation (default false)",1, 1, "Check");
+    PlayInfo.AddSetting("UTComp Movement Settings", "MoveErrorAccumFixValue", "server defined movement accumulation value (default 0.009)",1, 1, "Text", "0.009:0.001:0.018",,false, false);
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);
@@ -1595,9 +1607,14 @@ static event string GetDescriptionText(string PropName)
         case "bEnableEmoticons": return "Enable emoticons";
         case "bFastWeaponSwitch": return "Enable UT2003 style fast weapon switch";
         case "bAllowColorWeapons": return "Enable color weapons";
-        case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
         case "bNoTeamBoosting": return "Teammates can't knock you around with weapons";
         case "bNoTeamBoostingVehicles": return "Teammates can't knock you around in a vehicle";
+        case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
+        case "NetMoveDelta": return "How often clients send move updates, lower is faster (default 0.011)";
+        case "MaxSavedMoves": return "Maximum saved moves for warping fix (default 300)";
+        case "MaxResponseTime": return "server delay for client move update before setting position (default 0.125)";
+        case "bMoveErrorAccumFix": return "use server define movement accumulation (default false)";
+        case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
     }
 	return Super.GetDescriptionText(PropName);
 }
@@ -1773,9 +1790,9 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="WSUTComp Version 3"
+     FriendlyName="WSUTComp Version 4"
      FriendlyVersionPrefix="WSUTComp Version"
-     FriendlyVersionNumber="3"
+     FriendlyVersionNumber="4"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
@@ -1948,10 +1965,14 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
-     MaxSavedMoves=300
 
      bEnableEmoticons=true
      bFastWeaponSwitch=true
      bKeepMomentumOnLanding=true
+
+     MaxSavedMoves=300
      NetMoveDelta=0.011
+     MaxResponseTime=0.125000
+     bMoveErrorAccumFix=false
+     MoveErrorAccumFixValue=0.009
 }

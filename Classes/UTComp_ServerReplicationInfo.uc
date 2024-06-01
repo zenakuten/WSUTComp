@@ -66,11 +66,15 @@ var bool bDebugLogging;
 
 var bool bAllowColorWeapons;
 var bool bDamageIndicator;
-var int MaxSavedMoves;
 
 var bool bEnableEmoticons;
 var bool bKeepMomentumOnLanding;
+
+var int MaxSavedMoves;
 var float NetMoveDelta;
+var float MaxResponseTime;
+var bool bMoveErrorAccumFix;
+var float MoveErrorAccumFixValue;
 
 replication
 {
@@ -87,7 +91,8 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta;
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
+        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue;
 }
 
 defaultproperties
@@ -132,10 +137,13 @@ defaultproperties
 
      bAllowColorWeapons=true
      bDamageIndicator=true
-     MaxSavedMoves=250
 
      bEnableEmoticons=true
      bKeepMomentumOnLanding=true
+     MaxSavedMoves=250
      NetMoveDelta=0.011
+     MaxResponseTime=0.125000
+     bMoveErrorAccumFix=false
+     MoveErrorAccumFixValue=0.009
 }
 

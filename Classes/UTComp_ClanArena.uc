@@ -865,7 +865,7 @@ DefaultProperties
     LockWeaponTime=6.0
     TimeLimit = 2
     GoalScore=8
-    GameName="UTComp Clan Arena 1.8c"
+    GameName="WSUTComp Clan Arena"
     bAllowWeaponThrowing=false
     SecondaryMutatorClass="WSUTComp.MutUTComp"
     Description = "No Powerups, No Distractions, Full Weapon and armor Load! Kill the enemy team before they kill yours. Dead players are out until the round is over."

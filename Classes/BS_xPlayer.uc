@@ -138,7 +138,7 @@ var EmoticonsReplicationInfo EmoteInfo;
 
 
 // Modern Player from kokuei
-var config int MaxSavedMoves;
+var int MaxSavedMoves;
 var config float SavedMovesWarningInterval;
 var float LastSavedMovesWarning;
 
@@ -539,6 +539,12 @@ function SetMaxSavedMoves()
         MaxSavedMoves = RepInfo.MaxSavedMoves;
 }
 
+function SetMaxResponseTime()
+{
+    if(RepInfo != None)
+        MaxResponseTime = RepInfo.MaxResponseTime;
+}
+
 simulated function InitializeStuff()
 {
     InitializeScoreboard();
@@ -547,6 +553,7 @@ simulated function InitializeStuff()
     SetBStats(class'UTComp_Scoreboard'.default.bDrawStats || class'UTComp_Scoreboard'.default.bOverrideDisplayStats);
     SetEyeHeightAlgorithm(Settings.bUseNewEyeHeightAlgorithm);
     SetMaxSavedMoves();
+    SetMaxResponseTime();
     if(Settings.bFirstRun)
     {
         Settings.bFirstRun=False;
@@ -4353,6 +4360,217 @@ function LongClientAdjustPosition
         GotoState(newstate);
 
 	bUpdatePosition = true;
+}
+
+/* ServerMove()
+- replicated function sent by client to server - contains client movement and firing info.
+*/
+function ServerMove
+(
+    float TimeStamp,
+    vector InAccel,
+    vector ClientLoc,
+    bool NewbRun,
+    bool NewbDuck,
+    bool NewbJumpStatus,
+    bool NewbDoubleJump,
+    eDoubleClickDir DoubleClickMove,
+    byte ClientRoll,
+    int View,
+    optional byte OldTimeDelta,
+    optional int OldAccel
+)
+{
+    local float DeltaTime, clientErr, OldTimeStamp;
+    local rotator DeltaRot, Rot, ViewRot;
+    local vector Accel, LocDiff;
+    local int maxPitch, ViewPitch, ViewYaw;
+    local bool NewbPressedJump, OldbRun, OldbDoubleJump;
+    local eDoubleClickDir OldDoubleClickMove;
+
+    // If this move is outdated, discard it.
+    if ( CurrentTimeStamp >= TimeStamp )
+        return;
+
+	if ( AcknowledgedPawn != Pawn )
+	{
+		OldTimeDelta = 0;
+		InAccel = vect(0,0,0);
+		GivePawn(Pawn);
+	}
+
+    // if OldTimeDelta corresponds to a lost packet, process it first
+    if (  OldTimeDelta != 0 )
+    {
+        OldTimeStamp = TimeStamp - float(OldTimeDelta)/500 - 0.001;
+        if ( CurrentTimeStamp < OldTimeStamp - 0.001 )
+        {
+            // split out components of lost move (approx)
+            Accel.X = OldAccel >>> 23;
+            if ( Accel.X > 127 )
+                Accel.X = -1 * (Accel.X - 128);
+            Accel.Y = (OldAccel >>> 15) & 255;
+            if ( Accel.Y > 127 )
+                Accel.Y = -1 * (Accel.Y - 128);
+            Accel.Z = (OldAccel >>> 7) & 255;
+            if ( Accel.Z > 127 )
+                Accel.Z = -1 * (Accel.Z - 128);
+            Accel *= 20;
+
+            OldbRun = ( (OldAccel & 64) != 0 );
+            OldbDoubleJump = ( (OldAccel & 32) != 0 );
+            NewbPressedJump = ( (OldAccel & 16) != 0 );
+            if ( NewbPressedJump )
+                bJumpStatus = NewbJumpStatus;
+            switch (OldAccel & 7)
+            {
+                case 0:
+                    OldDoubleClickMove = DCLICK_None;
+                    break;
+                case 1:
+                    OldDoubleClickMove = DCLICK_Left;
+                    break;
+                case 2:
+                    OldDoubleClickMove = DCLICK_Right;
+                    break;
+                case 3:
+                    OldDoubleClickMove = DCLICK_Forward;
+                    break;
+                case 4:
+                    OldDoubleClickMove = DCLICK_Back;
+                    break;
+            }
+            //log("Recovered move from "$OldTimeStamp$" acceleration "$Accel$" from "$OldAccel);
+            OldTimeStamp = FMin(OldTimeStamp, CurrentTimeStamp + MaxResponseTime);
+            MoveAutonomous(OldTimeStamp - CurrentTimeStamp, OldbRun, (bDuck == 1), NewbPressedJump, OldbDoubleJump, OldDoubleClickMove, Accel, rot(0,0,0));
+			CurrentTimeStamp = OldTimeStamp;
+        }
+    }
+
+    // View components
+    ViewPitch = View/32768;
+    ViewYaw = 2 * (View - 32768 * ViewPitch);
+    ViewPitch *= 2;
+    // Make acceleration.
+    Accel = InAccel * 0.1;
+
+    NewbPressedJump = (bJumpStatus != NewbJumpStatus);
+    bJumpStatus = NewbJumpStatus;
+
+    // Save move parameters.
+    DeltaTime = FMin(MaxResponseTime,TimeStamp - CurrentTimeStamp);
+
+	if ( Pawn == None )
+	{
+		ResetTimeMargin();
+	}
+	else if ( !CheckSpeedHack(DeltaTime) )
+	{
+		bWasSpeedHack = true;
+		DeltaTime = 0;
+		Pawn.Velocity = vect(0,0,0);
+	}
+	else if ( bWasSpeedHack )
+	{
+		// if have had a speedhack detection, then modify deltatime if getting too far ahead again
+		if ( (TimeMargin > 0.5 * Level.MaxTimeMargin) && (Level.MaxTimeMargin > 0) )
+			DeltaTime *= 0.8;
+	}
+
+    CurrentTimeStamp = TimeStamp;
+    ServerTimeStamp = Level.TimeSeconds;
+    ViewRot.Pitch = ViewPitch;
+    ViewRot.Yaw = ViewYaw;
+    ViewRot.Roll = 0;
+
+    if ( NewbPressedJump || (InAccel != vect(0,0,0)) )
+		LastActiveTime = Level.TimeSeconds;
+
+	if ( Pawn == None || Pawn.bServerMoveSetPawnRot )
+		SetRotation(ViewRot);
+
+	if ( AcknowledgedPawn != Pawn )
+		return;
+
+    if ( (Pawn != None) && Pawn.bServerMoveSetPawnRot )
+    {
+        Rot.Roll = 256 * ClientRoll;
+        Rot.Yaw = ViewYaw;
+        if ( (Pawn.Physics == PHYS_Swimming) || (Pawn.Physics == PHYS_Flying) )
+            maxPitch = 2;
+        else
+            maxPitch = 0;
+        if ( (ViewPitch > maxPitch * RotationRate.Pitch) && (ViewPitch < 65536 - maxPitch * RotationRate.Pitch) )
+        {
+            If (ViewPitch < 32768)
+                Rot.Pitch = maxPitch * RotationRate.Pitch;
+            else
+                Rot.Pitch = 65536 - maxPitch * RotationRate.Pitch;
+        }
+        else
+            Rot.Pitch = ViewPitch;
+        DeltaRot = (Rotation - Rot);
+        Pawn.SetRotation(Rot);
+    }
+
+    // Perform actual movement
+    if ( (Level.Pauser == None) && (DeltaTime > 0) )
+        MoveAutonomous(DeltaTime, NewbRun, NewbDuck, NewbPressedJump, NewbDoubleJump, DoubleClickMove, Accel, DeltaRot);
+
+
+    // Accumulate movement error.
+    if ( ClientLoc == vect(0,0,0) )
+		return;		// first part of double servermove
+    else if ( Level.TimeSeconds - LastUpdateTime > 0.3 )
+        ClientErr = 10000;
+    else if (RepInfo.bMoveErrorAccumFix)
+    {
+        if(Level.TimeSeconds - LastUpdateTime > Repinfo.MoveErrorAccumFixValue)
+        {
+            if ( Pawn == None )
+                LocDiff = Location - ClientLoc;
+            else
+                LocDiff = Pawn.Location - ClientLoc;
+            ClientErr = LocDiff Dot LocDiff;
+        }
+    }
+    else if ( (Level.TimeSeconds - LastUpdateTime > 180.0/Player.CurrentNetSpeed))
+    {
+        if ( Pawn == None )
+            LocDiff = Location - ClientLoc;
+        else
+            LocDiff = Pawn.Location - ClientLoc;
+        ClientErr = LocDiff Dot LocDiff;
+    }
+
+    // If client has accumulated a noticeable positional error, correct him.
+    if ( ClientErr > 3 )
+    {
+        if ( Pawn == None )
+        {
+            PendingAdjustment.newPhysics = Physics;
+            PendingAdjustment.NewLoc = Location;
+            PendingAdjustment.NewVel = Velocity;
+        }
+        else
+        {
+            PendingAdjustment.newPhysics = Pawn.Physics;
+            PendingAdjustment.NewVel = Pawn.Velocity;
+            PendingAdjustment.NewBase = Pawn.Base;
+            if ( (Mover(Pawn.Base) != None) || (Vehicle(Pawn.Base) != None) )
+                PendingAdjustment.NewLoc = Pawn.Location - Pawn.Base.Location;
+            else
+                PendingAdjustment.NewLoc = Pawn.Location;
+            PendingAdjustment.NewFloor = Pawn.Floor;
+        }
+    //if ( (ClientErr != 10000) && (Pawn != None) )
+//		log(" Client Error at "$TimeStamp$" is "$ClientErr$" with acceleration "$Accel$" LocDiff "$LocDiff$" Physics "$Pawn.Physics);
+        LastUpdateTime = Level.TimeSeconds;
+
+		PendingAdjustment.TimeStamp = TimeStamp;
+		PendingAdjustment.newState = GetStateName();
+    }
+	//log("Server moved stamp "$TimeStamp$" location "$Pawn.Location$" Acceleration "$Pawn.Acceleration$" Velocity "$Pawn.Velocity);
 }
 
 defaultproperties
