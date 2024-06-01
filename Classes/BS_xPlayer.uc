@@ -3867,8 +3867,8 @@ event ClientSetViewTarget(Actor a)
     super.ClientSetViewTarget(a);
     if(UTComp_xPawn(A) != None)
     {
-        //LastDamage = UTComp_xPawn(A).HitDamage;
-        LastDamage = HitDamage;
+        LastDamage = 0;
+        SumDamage = 0;
     }
     if(PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator)
     {
