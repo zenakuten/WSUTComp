@@ -1,5 +1,5 @@
 
-class NewNet_Fake_FlakChunk extends TeamColorFlakChunk;
+class NewNet_Fake_FlakChunk extends FlakChunk;
 
 simulated function ProcessTouch (Actor Other, vector HitLocation)
 {
