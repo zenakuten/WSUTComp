@@ -8,7 +8,15 @@ Release Notes
 V4
 - fix friendly fire damage indicators
 - fix negative damage indicators
-- Add more knobs for movement, move to separate config section
+- Add alternate MoveErrorAccum algorithm, default disabled.  
+- Add more knobs for movement (gliding movement, NetMoveDelta, MaxSavedMoves, MaxResponseTime, MoveErrorAccum) 
+- move movement config to separate config section
+- Add missing NetMoveDelta, MaxSavedMoves to WebAdmin
+- fix negative damage showing when changing view target
+- fix negative damage not showing when doing friendly fire
+- add config bChargedWeaponsNoSpawnProtection to disable spawn protection when charging rox, bio
+- fix flak primary/secondary visual showing too many/wrong shards
+
 
 V3 
 - Fix 'Use UTComp style gliding movement' logic, was backwards
