@@ -1795,7 +1795,6 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     GroupName="WSUTComp"
      FriendlyName="WSUTComp Version 4"
      FriendlyVersionPrefix="WSUTComp Version"
      FriendlyVersionNumber="4"
