@@ -1795,9 +1795,9 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="WSUTComp Version 4"
+     FriendlyName="WSUTComp Version 5"
      FriendlyVersionPrefix="WSUTComp Version"
-     FriendlyVersionNumber="4"
+     FriendlyVersionNumber="5"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True

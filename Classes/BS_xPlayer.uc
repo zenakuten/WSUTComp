@@ -146,7 +146,7 @@ var float LastSavedMovesWarning;
 replication
 {
     unreliable if(Role==Role_Authority)
-        ReceiveHit, ReceiveStats, ReceiveHitSound;
+        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit;
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
@@ -3868,6 +3868,10 @@ event ClientSetViewTarget(Actor a)
     {
         LastDamage = 0;
         SumDamage = 0;
+        SumDamageTime = 0;
+        HitDamage = 0;
+        bHitContact = false;        
+        HitDamageActor = None;
     }
     if(PlayerReplicationInfo != None && PlayerReplicationInfo.bOnlySpectator)
     {
