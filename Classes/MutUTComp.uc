@@ -134,7 +134,6 @@ var class<PlayerController> origcclass;
 var float StampArray[256];
 var float counter;
 var controller countercontroller;
-var pawn counterpawn;
 
 var string FriendlyVersionPrefix;
 var string FriendlyVersionNumber;
@@ -534,7 +533,10 @@ function ModifyPlayer(Pawn Other)
 		if (!UTComp_ONSPlayerReplicationInfo(Other.PlayerReplicationInfo).bInitializedVSpawnList
 			|| UTComp_ONSPlayerReplicationInfo(Other.PlayerReplicationInfo).LastInitialiseTeam != Other.GetTeamNum())
 		{
-			ONSGameRules.InitialiseVehicleSpawnList(UTComp_ONSPlayerReplicationInfo(Other.PlayerReplicationInfo));
+            if(ONSGameRules != None)
+            {
+                ONSGameRules.InitialiseVehicleSpawnList(UTComp_ONSPlayerReplicationInfo(Other.PlayerReplicationInfo));
+            }
 			UTComp_ONSPlayerReplicationInfo(Other.PlayerReplicationInfo).bInitializedVSpawnList = True;
 			UTComp_ONSPlayerReplicationInfo(Other.PlayerReplicationInfo).LastInitialiseTeam = Other.GetTeamNum();
 		}
@@ -787,7 +789,7 @@ simulated function Tick(float DeltaTime)
         return;
     PC=Level.GetLocalPlayerController();
 
-    if(PC!=None)
+    if(PC!=None && BS_xPlayer(PC) != None)
     {
         BS_xPlayer(PC).Overlay = UTComp_Overlay(PC.Player.InteractionMaster.AddInteraction(string(class'UTComp_Overlay'), PC.Player));
         bHasInteraction=True;
@@ -797,23 +799,25 @@ simulated function Tick(float DeltaTime)
 
 function SetPawnStamp()
 {
-   local rotator R;
-   local int i;
+    local rotator R;
+    local int i;
+    local Pawn P;
 
-   if(counterpawn==none)
-   {
-       if(countercontroller==none)
-           countercontroller = spawn(class'TimeStamp_Controller');
-       if(countercontroller.pawn!=None)
-           counterpawn=countercontroller.pawn;
-       return;
-   }
+    if(countercontroller==none)
+        countercontroller = spawn(class'TimeStamp_Controller');
 
-   R.Yaw = (counter%256)*256;
-   i=counter/256;
-   R.Pitch = i*256;
+    if(countercontroller != none && countercontroller.Pawn == none)
+    {
+        P = spawn(countercontroller.PawnClass);
+        countercontroller.Possess(P);
+    }
 
-   counterpawn.SetRotation(R);
+    R.Yaw = (counter%256)*256;
+    i=counter/256;
+    R.Pitch = i*256;
+
+    if(countercontroller.Pawn != None)
+        countercontroller.Pawn.SetRotation(R);
 }
 
 simulated function float GetStamp(int stamp)
@@ -1715,15 +1719,15 @@ function Reset()
     }
 
     // delete these server side, the get recreated in SetPawnStamp function
-    if(counterpawn != None)
-    {
-        counterpawn.Unpossessed();
-        counterpawn.Destroy();
-        counterpawn = none;
-    }
     if(countercontroller != None)
     {
-        countercontroller.Pawn = None;
+        if(countercontroller.Pawn != None)
+        {
+            countercontroller.Pawn.Unpossessed();
+            countercontroller.Pawn.Destroy();
+            countercontroller.Pawn = None;
+        }
+
         countercontroller.Destroy();
         countercontroller = None;
     }

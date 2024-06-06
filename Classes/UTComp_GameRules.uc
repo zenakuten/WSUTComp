@@ -375,15 +375,6 @@ function bool CheckEndGame(PlayerReplicationInfo Winner, string Reason)
         if(!OvertimeOver())
             return false;
     }
-    if(ONSOnslaughtGame(Level.Game) != none)
-    {
-        if ( NextGameRules != None )
-            return NextGameRules.CheckEndGame(Winner,Reason);
-
-        //for ONS, return false to use default endgame logic from engine
-    	 return false; 
-    }
-
 
     if ( NextGameRules != None )
 		return NextGameRules.CheckEndGame(Winner,Reason);
