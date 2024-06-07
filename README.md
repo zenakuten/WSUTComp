@@ -5,6 +5,11 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V5
+- Really fix damage indicators
+- Fix issue with timestamp_controller getting clobbered end of round / end of game
+- add > 2K resolution fix for overlay
+
 V4
 - fix friendly fire damage indicators
 - fix negative damage indicators
