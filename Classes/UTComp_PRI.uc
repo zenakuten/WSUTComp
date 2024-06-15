@@ -330,4 +330,5 @@ defaultproperties
      VoteSwitch=255
      bSendWepStats=True
      CurrentVoteID=255
+}
 

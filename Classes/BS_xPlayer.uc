@@ -141,6 +141,7 @@ var EmoticonsReplicationInfo EmoteInfo;
 var int MaxSavedMoves;
 var config float SavedMovesWarningInterval;
 var float LastSavedMovesWarning;
+var int TauntCount;
 
 
 replication
@@ -539,6 +540,12 @@ function SetMaxSavedMoves()
         MaxSavedMoves = RepInfo.MaxSavedMoves;
 }
 
+function SetTauntCount()
+{
+    if(RepInfo != None)
+        TauntCount = RepInfo.TauntCount;
+}
+
 function SetMaxResponseTime()
 {
     if(RepInfo != None)
@@ -553,6 +560,7 @@ simulated function InitializeStuff()
     SetBStats(class'UTComp_Scoreboard'.default.bDrawStats || class'UTComp_Scoreboard'.default.bOverrideDisplayStats);
     SetEyeHeightAlgorithm(Settings.bUseNewEyeHeightAlgorithm);
     SetMaxSavedMoves();
+    SetTauntCount();
     SetMaxResponseTime();
     if(Settings.bFirstRun)
     {
@@ -4579,6 +4587,23 @@ function ServerMove
 	//log("Server moved stamp "$TimeStamp$" location "$Pawn.Location$" Acceleration "$Pawn.Acceleration$" Velocity "$Pawn.Velocity);
 }
 
+function bool AllowVoiceMessage(name MessageType)
+{
+    if (RepInfo==None)
+        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+
+    if((MessageType == 'TAUNT' || MessageType == 'AUTOTAUNT') && RepInfo != None && RepInfo.bLimitTaunts)
+    {
+        if(TauntCount > 0)
+            TauntCount = TauntCount - 1;
+
+        return TauntCount > 0;
+    }
+
+    return super.AllowVoiceMessage(MessageType);
+}
+
 defaultproperties
 {
 
@@ -4651,4 +4676,5 @@ defaultproperties
     MaxSavedMoves=300
     SavedMovesWarningInterval=5.0
     LastSavedMovesWarning=0     
+    TauntCount=0
 }

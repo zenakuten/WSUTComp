@@ -95,6 +95,9 @@ var config float MaxResponseTime;
 var config bool bMoveErrorAccumFix;
 var config float MoveErrorAccumFixValue;
 
+var config bool bLimitTaunts;
+var config int TauntCount;
+
 struct MapVotePair
 {
     var string GametypeOptions;
@@ -899,7 +902,10 @@ function SpawnReplicationClass()
     RepInfo.NetMoveDelta = NetMoveDelta;
     RepInfo.MaxResponseTime = MaxResponseTime;
     RepInfo.bMoveErrorAccumFix = bMoveErrorAccumFix;
-    Repinfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
+    RepInfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
+
+    RepInfo.bLimitTaunts = bLimitTaunts;
+    RepInfo.TauntCount = TauntCount;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1573,6 +1579,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bChargedWeaponsNoSpawnProtection", "Disable spawn protection during weapon charging", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bLimitTaunts", "Limit the number of voice taunts allowed", 1, 1,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "TauntCount", "Number of voice taunts allowed",1, 1, "Text","0;0:999",,False,False);
     PlayInfo.AddSetting("UTComp Movement Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Movement Settings", "NetMoveDelta", "How often clients send move updates (default 0.011)",1, 1, "Text","0.011;0.001:0.022",,False,False);
     PlayInfo.AddSetting("UTComp Movement Settings", "MaxSavedMoves", "Max saved moves for warp fix (default 300)",1, 1, "Text","300;100:750",,False,False);
@@ -1618,6 +1626,8 @@ static event string GetDescriptionText(string PropName)
         case "bNoTeamBoosting": return "Teammates can't knock you around with weapons";
         case "bNoTeamBoostingVehicles": return "Teammates can't knock you around in a vehicle";
         case "bChargedWeaponsNoSpawnProtection": return "Disable spawn protection during weapon charging";
+        case "bLimitTaunts": return "Limit the number of voice taunts allowed";
+        case "TauntCount": return "Number of voice taunts allowed";
 
         case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
         case "NetMoveDelta": return "How often clients send move updates, lower is faster (default 0.011)";
@@ -1987,4 +1997,7 @@ defaultproperties
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
+
+     bLimitTaunts=false
+     TauntCount=10
 }

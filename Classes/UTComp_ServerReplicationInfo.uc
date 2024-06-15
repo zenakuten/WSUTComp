@@ -76,6 +76,9 @@ var float MaxResponseTime;
 var bool bMoveErrorAccumFix;
 var float MoveErrorAccumFixValue;
 
+var bool bLimitTaunts;
+var int TauntCount;
+
 replication
 {
     reliable if(Role==Role_Authority)
@@ -92,7 +95,7 @@ replication
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
-        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue;
+        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount;
 }
 
 defaultproperties
@@ -145,5 +148,8 @@ defaultproperties
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
+
+     bLimitTaunts=false
+     TauntCount=10
 }
 
