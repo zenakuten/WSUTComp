@@ -16,7 +16,8 @@ var bool bWeaponsLocked;
 var UTComp_ServerReplicationInfo RepInfo;
 var color BrightSkinColors[8];
 
-var byte OldTeam;
+var byte OldPawnTeam;
+var byte OldLocalPCTeam;
 
 var EDoubleClickDir OldDodgeDir;
 var int MultiDodgesRemaining;
@@ -447,7 +448,8 @@ simulated function bool ShouldUpdateSkin()
     if(LocalPC != None && LocalPC.IsInState('GameEnded'))
         GameEnded=true;
 
-    shouldUpdate = (GetTeamNum() != OldTeam);
+    shouldUpdate = (GetTeamNum() != OldPawnTeam);
+    shouldUpdate = shouldUpdate || (LocalPC != None && LocalPC.GetTeamNum() != OldLocalPCTeam);
     spawnProtectionChanged = IsSpawnProtectionEnabled() != OldInSpawnProtection;
     shouldUpdate = (shouldUpdate || spawnProtectionChanged) && !GameEnded;
     OldInSpawnProtection = IsSpawnProtectionEnabled();
@@ -600,7 +602,11 @@ simulated function ColorSkins()
     }
     bSkinsSaved=True;
 
-    oldTeam = GetTeamNum();
+    oldPawnTeam = GetTeamNum();
+    if(LocalPC==None)
+       LocalPC=Level.GetLocalPlayerController();
+    if(LocalPC != None)
+        OldLocalPCTeam = LocalPC.GetTeamNum();
 }
 
 
@@ -1125,4 +1131,6 @@ defaultproperties
      beffectscleared=True
 
      MultiDodgesRemaining=0
+     OldPawnTeam=255
+     OldLocalPCTeam=255
 }
