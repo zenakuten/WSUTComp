@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V6
+- Fix bug with bright skins when switching teams
+
 V5
 - Really fix damage indicators
 - Fix issue with timestamp_controller getting clobbered end of round / end of game
