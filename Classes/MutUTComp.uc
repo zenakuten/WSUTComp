@@ -136,6 +136,7 @@ var float counter;
 var controller countercontroller;
 
 var string FriendlyVersionPrefix;
+var string FriendlyVersionName;
 var string FriendlyVersionNumber;
 
 struct PowerupInfoStruct
@@ -1500,7 +1501,7 @@ function GetServerDetails( out GameInfo.ServerResponseLine ServerState )
 	i = ServerState.ServerInfo.Length;
 	ServerState.ServerInfo.Length = i+2;
 	ServerState.ServerInfo[i].Key = FriendlyVersionPrefix;
-	ServerState.ServerInfo[i].Value = FriendlyVersionNumber;
+	ServerState.ServerInfo[i].Value = FriendlyVersionName$" "$FriendlyVersionNumber;
 	ServerState.ServerInfo[i+1].Key = "Enhanced Netcode";
 	ServerState.ServerInfo[i+1].Value = string(bEnhancedNetCodeEnabledAtStartOfMap);
 }
@@ -1799,9 +1800,10 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="WSUTComp Version 6"
-     FriendlyVersionPrefix="WSUTComp Version"
-     FriendlyVersionNumber="6"
+     FriendlyName="Wicked Sick UTComp"
+     FriendlyVersionPrefix="UTComp Version"
+     FriendlyVersionName="Wicked Sick"
+     FriendlyVersionNumber="V6"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True

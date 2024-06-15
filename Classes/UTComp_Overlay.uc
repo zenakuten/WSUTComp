@@ -229,30 +229,37 @@ function DrawBackground(Canvas canvas, int numPlayers, int team)
 
 function DrawWelcomeBanner(Canvas canvas)
 {
-  Canvas.SetPos(currentX, currentY);
-  Canvas.Style=5;
-  Canvas.DrawColor=BGColor;
-  Canvas.Font=GetFont(AutoPickFont(Canvas.SizeX, -3), 1);
-  Canvas.StrLen("This server is running", StrLenX3, StrLenY3);
-  if(GetNewNetEnabled())
-     Canvas.DrawTileStretched(material'Engine.WhiteTexture',StrLenX3+5.0, 8*(StrLenY3));
-  else
-     Canvas.DrawTileStretched(material'Engine.WhiteTexture',StrLenX3+5.0, 6*(StrLenY3));
-  Canvas.SetPos(currentX, currentY);
-  Canvas.DrawColor=InfoTextColor;
-  Canvas.DrawText("This server is running");
-  Canvas.StrLen("W", StrLenX3, StrLenY3);
-  Canvas.SetPos(currentX, currentY+1*(StrLenY3+2.0));
-  Canvas.DrawText("WSUTComp "$MakeColorCode(class'Hud'.Default.GoldColor)$class'MutUTComp'.default.FriendlyVersionNumber$MakeColorCode(InfoTextColor)$".");
-  Canvas.SetPos(currentX, currentY+3*(StrLenY3+2.0));
-  Canvas.DrawText("Press "$MakeColorCode(class'Hud'.Default.GoldColor)$class'GameInfo'.Static.GetKeyBindName("mymenu", PC)$MakeColorCode(InfoTextColor)$" to change");
-  Canvas.SetPos(currentX, currentY+4*(StrLenY3+2.0));
-  Canvas.DrawText("your settings");
-  if(GetNewNetEnabled())
-  {
-     Canvas.SetPos(currentX, currentY+5*(StrLenY3+2.0));
-     Canvas.DrawText("Enh. Net:"@MakeColorCode(class'Hud'.Default.GoldColor)$"Enabled"$MakeColorCode(InfoTextColor)$".");
-  }
+    local string mutName;
+    Canvas.SetPos(currentX, currentY);
+    Canvas.Style=5;
+    Canvas.DrawColor=BGColor;
+    Canvas.Font=GetFont(AutoPickFont(Canvas.SizeX, -3), 1);
+    Canvas.StrLen( "This server is running       ", StrLenX3, StrLenY3);
+
+    if(GetNewNetEnabled())
+        Canvas.DrawTileStretched(material'Engine.WhiteTexture',StrLenX3, 8*(StrLenY3));
+    else
+        Canvas.DrawTileStretched(material'Engine.WhiteTexture',StrLenX3, 6*(StrLenY3));
+
+    Canvas.SetPos(currentX, currentY);
+    Canvas.DrawColor=InfoTextColor;
+    Canvas.DrawText("This server is running");
+    Canvas.StrLen("W", StrLenX3, StrLenY3);
+    Canvas.SetPos(currentX, currentY+1*(StrLenY3+2.0));
+    mutName = "UTComp ";
+    mutName = mutName$" "$MakeColorCode(class'Hud'.Default.GoldColor)$class'MutUTComp'.default.FriendlyVersionName$MakeColorCode(InfoTextColor);
+    mutName = mutName$" "$MakeColorCode(class'Hud'.Default.GoldColor)$class'MutUTComp'.default.FriendlyVersionNumber$MakeColorCode(InfoTextColor);
+    Canvas.DrawText(mutName);
+    Canvas.SetPos(currentX, currentY+3*(StrLenY3+2.0));
+    Canvas.DrawText("Press "$MakeColorCode(class'Hud'.Default.GoldColor)$class'GameInfo'.Static.GetKeyBindName("mymenu", PC)$MakeColorCode(InfoTextColor)$" to change");
+    Canvas.SetPos(currentX, currentY+4*(StrLenY3+2.0));
+    Canvas.DrawText("your settings");
+
+    if(GetNewNetEnabled())
+    {
+        Canvas.SetPos(currentX, currentY+5*(StrLenY3+2.0));
+        Canvas.DrawText("Enh. Net:"@MakeColorCode(class'Hud'.Default.GoldColor)$"Enabled"$MakeColorCode(InfoTextColor)$".");
+    }
 }
 
 function float GetRedBoxPositionX()
