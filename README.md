@@ -7,6 +7,8 @@ Release Notes
 
 V6
 - Fix bug with bright skins when switching teams
+- new feature 'Limit taunts', limit the number of voice taunts allowed (default off)
+- cosmetic UI updates
 
 V5
 - Really fix damage indicators
