@@ -262,7 +262,7 @@ function TakeActionOnVote(byte VoteType, byte VoteSwitch, string Options)
             {
                if(UTCompMutator.AlwaysUseThisMutator[i]~="xGame.MutNoAdrenaline")
                    bUseAdren=False;
-               if(UTCompMutator.AlwaysUseThisMutator[i]~="xWeapons.MutNoSuperWeapon")
+               if(UTCompMutator.AlwaysUseThisMutator[i]~="XWeapons.MutNoSuperWeapon")
                    bUseSuper=False;
             }
 
@@ -281,11 +281,11 @@ function TakeActionOnVote(byte VoteType, byte VoteSwitch, string Options)
                     }
                     if(bFoundSuper && bUseSuper)
                     {
-                        if(InstrNonCaseSensitive(S, "xWeapons.MutNoSuperWeapon"))
+                        if(InstrNonCaseSensitive(S, "XWeapons.MutNoSuperWeapon"))
                         {
-                            S=repl(S, ",xWeapons.MutNoSuperWeapon", "");
-                            S=repl(S, "=xWeapons.MutNoSuperWeapon,", "=");
-                            S=repl(S, "xWeapons.MutNoSuperWeapon", "");
+                            S=repl(S, ",XWeapons.MutNoSuperWeapon", "");
+                            S=repl(S, "=XWeapons.MutNoSuperWeapon,", "=");
+                            S=repl(S, "XWeapons.MutNoSuperWeapon", "");
                         }
                     }
                     if(bFoundAdren && !bUseAdren)
@@ -295,8 +295,8 @@ function TakeActionOnVote(byte VoteType, byte VoteSwitch, string Options)
                     }
                     if(bFoundSuper && !bUseSuper)
                     {
-                        if(!instrNonCaseSensitive(S, "xWeapons.MutNoSuperWeapon"))
-                            S=Repl(S, "Mutator=", "Mutator=xWeapons.MutNoSuperWeapon,");
+                        if(!instrNonCaseSensitive(S, "XWeapons.MutNoSuperWeapon"))
+                            S=Repl(S, "Mutator=", "Mutator=XWeapons.MutNoSuperWeapon,");
                     }
                 }
                 else
@@ -304,14 +304,14 @@ function TakeActionOnVote(byte VoteType, byte VoteSwitch, string Options)
                     if(bFoundSuper && bFoundAdren)
                     {
                         if(bUseSuper && bUseAdren)
-                            S=S$"?Mutator=xGame.MutNoAdrenaline,xWeapons.MutNoSuperWeapon";
+                            S=S$"?Mutator=xGame.MutNoAdrenaline,XWeapons.MutNoSuperWeapon";
                         else if(bUseSuper)
-                           S=S$"?Mutator=xWeapons.MutNoSuperWeapon";
+                           S=S$"?Mutator=XWeapons.MutNoSuperWeapon";
                         else if(bUseAdren)
                            S=S$"?Mutator=xGame.MutNoAdrenaline";
                     }
                     else if(bFoundSuper && bUseSuper)
-                        S=S$"?Mutator=xWeapons.MutNoSuperWeapon";
+                        S=S$"?Mutator=XWeapons.MutNoSuperWeapon";
                     else if(bFoundAdren && bUseAdren)
                         S=S$"?Mutator=xGame.MutNoAdrenaline";
                 }
@@ -360,7 +360,7 @@ function bool ValidMutator(string mutatorsString)
     Split(mutatorsString, ",", mutators);
     for(i = 0; i < mutators.length; i++)
     {
-        if (mutators[i] ~= "xGame.MutNoAdrenaline" || mutators[i] ~= "xWeapons.MutNoSuperWeapon")
+        if (mutators[i] ~= "xGame.MutNoAdrenaline" || mutators[i] ~= "XWeapons.MutNoSuperWeapon")
             continue;
 
         for (j = 0; j < UTCompMutator.AlwaysUseThisMutator.length; j++)

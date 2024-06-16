@@ -690,36 +690,36 @@ function SetupVoting()
 
 function SetupStats()
 {
-    Class'xWeapons.TransRecall'.Default.Transmaterials[0]=None;
-    Class'xWeapons.TransRecall'.Default.Transmaterials[1]=None;
+    Class'XWeapons.TransRecall'.Default.Transmaterials[0]=None;
+    Class'XWeapons.TransRecall'.Default.Transmaterials[1]=None;
 
     if(!bEnableWeaponStats)
         return;
     if(bEnableEnhancedNetcode)
-        class'xWeapons.ShieldFire'.default.AutoFireTestFreq=0.05;
+        class'XWeapons.ShieldFire'.default.AutoFireTestFreq=0.05;
 
-    class'xWeapons.AssaultRifle'.default.FireModeClass[0] = Class'UTComp_AssaultFire';
-    class'xWeapons.AssaultRifle'.default.FireModeClass[1] = Class'UTComp_AssaultGrenade';
+    class'XWeapons.AssaultRifle'.default.FireModeClass[0] = Class'UTComp_AssaultFire';
+    class'XWeapons.AssaultRifle'.default.FireModeClass[1] = Class'UTComp_AssaultGrenade';
 
-    class'xWeapons.BioRifle'.default.FireModeClass[0] = Class'UTComp_BioFire';
-    class'xWeapons.BioRifle'.default.FireModeClass[1] = Class'UTComp_BioChargedFire';
+    class'XWeapons.BioRifle'.default.FireModeClass[0] = Class'UTComp_BioFire';
+    class'XWeapons.BioRifle'.default.FireModeClass[1] = Class'UTComp_BioChargedFire';
 
-    class'xWeapons.ShockRifle'.default.FireModeClass[0] = Class'UTComp_ShockBeamFire';
-    class'xWeapons.ShockRifle'.default.FireModeClass[1] = Class'UTComp_ShockProjFire';
+    class'XWeapons.ShockRifle'.default.FireModeClass[0] = Class'UTComp_ShockBeamFire';
+    class'XWeapons.ShockRifle'.default.FireModeClass[1] = Class'UTComp_ShockProjFire';
 
-    class'xWeapons.LinkGun'.default.FireModeClass[0] = Class'UTComp_LinkAltFire';
-    class'xWeapons.LinkGun'.default.FireModeClass[1] = Class'UTComp_LinkFire';
+    class'XWeapons.LinkGun'.default.FireModeClass[0] = Class'UTComp_LinkAltFire';
+    class'XWeapons.LinkGun'.default.FireModeClass[1] = Class'UTComp_LinkFire';
 
-    class'xWeapons.MiniGun'.default.FireModeClass[0] = Class'UTComp_MinigunFire';
-    class'xWeapons.MiniGun'.default.FireModeClass[1] = Class'UTComp_MinigunAltFire';
+    class'XWeapons.MiniGun'.default.FireModeClass[0] = Class'UTComp_MinigunFire';
+    class'XWeapons.MiniGun'.default.FireModeClass[1] = Class'UTComp_MinigunAltFire';
 
-    class'xWeapons.FlakCannon'.default.FireModeClass[0] = Class'UTComp_FlakFire';
-    class'xWeapons.FlakCannon'.default.FireModeClass[1] = Class'UTComp_FlakAltFire';
+    class'XWeapons.FlakCannon'.default.FireModeClass[0] = Class'UTComp_FlakFire';
+    class'XWeapons.FlakCannon'.default.FireModeClass[1] = Class'UTComp_FlakAltFire';
 
-    class'xWeapons.RocketLauncher'.default.FireModeClass[0] = Class'UTComp_RocketFire';
-    class'xWeapons.RocketLauncher'.default.FireModeClass[1] = Class'UTComp_RocketMultiFire';
+    class'XWeapons.RocketLauncher'.default.FireModeClass[0] = Class'UTComp_RocketFire';
+    class'XWeapons.RocketLauncher'.default.FireModeClass[1] = Class'UTComp_RocketMultiFire';
 
-    class'xWeapons.SniperRifle'.default.FireModeClass[0]= Class'UTComp_SniperFire';
+    class'XWeapons.SniperRifle'.default.FireModeClass[0]= Class'UTComp_SniperFire';
     class'UTClassic.ClassicSniperRifle'.default.FireModeClass[0]= Class'UTComp_ClassicSniperFire';
 
     class'Onslaught.ONSMineLayer'.default.FireModeClass[0] = Class'UTComp_ONSMineThrowFire';
@@ -728,8 +728,8 @@ function SetupStats()
 
     class'OnsLaught.ONSAvril'.default.FireModeClass[0] =Class'UTComp_ONSAvrilFire';
 
-    class'xWeapons.SuperShockRifle'.default.FireModeClass[0]=class'UTComp_SuperShockBeamFire';
-    class'xWeapons.SuperShockRifle'.default.FireModeClass[1]=class'UTComp_SuperShockBeamFire';
+    class'XWeapons.SuperShockRifle'.default.FireModeClass[0]=class'UTComp_SuperShockBeamFire';
+    class'XWeapons.SuperShockRifle'.default.FireModeClass[1]=class'UTComp_SuperShockBeamFire';
 
  }
 
@@ -1286,31 +1286,31 @@ function ServerTraveling(string URL, bool bItems)
 {
    class'xPawn'.default.ControllerClass=class'XGame.XBot';
 
-   class'xWeapons.ShockRifle'.default.FireModeClass[1]=Class'XWeapons.ShockProjFire';
+   class'XWeapons.ShockRifle'.default.FireModeClass[1]=Class'XWeapons.ShockProjFire';
    class'GrenadeAmmo'.default.InitialAmount = 4;
 
-   class'xWeapons.AssaultRifle'.default.FireModeClass[0] = Class'xWeapons.AssaultFire';
-   class'xWeapons.AssaultRifle'.default.FireModeClass[1] = Class'xWeapons.AssaultGrenade';
+   class'XWeapons.AssaultRifle'.default.FireModeClass[0] = Class'XWeapons.AssaultFire';
+   class'XWeapons.AssaultRifle'.default.FireModeClass[1] = Class'XWeapons.AssaultGrenade';
 
-    class'xWeapons.BioRifle'.default.FireModeClass[0] = Class'xWeapons.BioFire';
-    class'xWeapons.BioRifle'.default.FireModeClass[1] = Class'xWeapons.BioChargedFire';
+    class'XWeapons.BioRifle'.default.FireModeClass[0] = Class'XWeapons.BioFire';
+    class'XWeapons.BioRifle'.default.FireModeClass[1] = Class'XWeapons.BioChargedFire';
 
-    class'xWeapons.ShockRifle'.default.FireModeClass[0] = Class'xWeapons.ShockBeamFire';
-    class'xWeapons.ShockRifle'.default.FireModeClass[1] = Class'xWeapons.ShockProjFire';
+    class'XWeapons.ShockRifle'.default.FireModeClass[0] = Class'XWeapons.ShockBeamFire';
+    class'XWeapons.ShockRifle'.default.FireModeClass[1] = Class'XWeapons.ShockProjFire';
 
-    class'xWeapons.LinkGun'.default.FireModeClass[0] = Class'xWeapons.LinkAltFire';
-    class'xWeapons.LinkGun'.default.FireModeClass[1] = Class'xWeapons.LinkFire';
+    class'XWeapons.LinkGun'.default.FireModeClass[0] = Class'XWeapons.LinkAltFire';
+    class'XWeapons.LinkGun'.default.FireModeClass[1] = Class'XWeapons.LinkFire';
 
-    class'xWeapons.MiniGun'.default.FireModeClass[0] = Class'xWeapons.MinigunFire';
-    class'xWeapons.MiniGun'.default.FireModeClass[1] = Class'xWeapons.MinigunAltFire';
+    class'XWeapons.MiniGun'.default.FireModeClass[0] = Class'XWeapons.MinigunFire';
+    class'XWeapons.MiniGun'.default.FireModeClass[1] = Class'XWeapons.MinigunAltFire';
 
-    class'xWeapons.FlakCannon'.default.FireModeClass[0] = Class'xWeapons.FlakFire';
-    class'xWeapons.FlakCannon'.default.FireModeClass[1] = Class'xWeapons.FlakAltFire';
+    class'XWeapons.FlakCannon'.default.FireModeClass[0] = Class'XWeapons.FlakFire';
+    class'XWeapons.FlakCannon'.default.FireModeClass[1] = Class'XWeapons.FlakAltFire';
 
-    class'xWeapons.RocketLauncher'.default.FireModeClass[0] = Class'xWeapons.RocketFire';
-    class'xWeapons.RocketLauncher'.default.FireModeClass[1] = Class'xWeapons.RocketMultiFire';
+    class'XWeapons.RocketLauncher'.default.FireModeClass[0] = Class'XWeapons.RocketFire';
+    class'XWeapons.RocketLauncher'.default.FireModeClass[1] = Class'XWeapons.RocketMultiFire';
 
-    class'xWeapons.SniperRifle'.default.FireModeClass[0]= Class'xWeapons.SniperFire';
+    class'XWeapons.SniperRifle'.default.FireModeClass[0]= Class'XWeapons.SniperFire';
     class'UTClassic.ClassicSniperRifle'.default.FireModeClass[0]= Class'UTClassic.ClassicSniperFire';
 
     class'Onslaught.ONSMineLayer'.default.FireModeClass[0] = Class'Onslaught.ONSMineThrowFire';
@@ -1319,8 +1319,8 @@ function ServerTraveling(string URL, bool bItems)
 
     class'Onslaught.ONSAVRiL'.default.FireModeClass[0] =Class'Onslaught.ONSAVRiLFire';
 
-    class'xWeapons.SuperShockRifle'.default.FireModeClass[0]=class'xWeapons.SuperShockBeamFire';
-    class'xWeapons.SuperShockRifle'.default.FireModeClass[1]=class'xWeapons.SuperShockBeamFire';
+    class'XWeapons.SuperShockRifle'.default.FireModeClass[0]=class'XWeapons.SuperShockBeamFire';
+    class'XWeapons.SuperShockRifle'.default.FireModeClass[1]=class'XWeapons.SuperShockBeamFire';
 
    ParseUrl(Url);
 
@@ -1828,19 +1828,19 @@ defaultproperties
      PawnCollisionHistoryLength=0.35
 
      //original weapons
-     WeaponClassNames(0)="xWeapons.ShockRifle"
-     WeaponClassNames(1)="xWeapons.LinkGun"
-     WeaponClassNames(2)="xWeapons.MiniGun"
-     WeaponClassNames(3)="xWeapons.FlakCannon"
-     WeaponClassNames(4)="xWeapons.RocketLauncher"
-     WeaponClassNames(5)="xWeapons.SniperRifle"
-     WeaponClassNames(6)="xWeapons.BioRifle"
-     WeaponClassNames(7)="xWeapons.AssaultRifle"
+     WeaponClassNames(0)="XWeapons.ShockRifle"
+     WeaponClassNames(1)="XWeapons.LinkGun"
+     WeaponClassNames(2)="XWeapons.MiniGun"
+     WeaponClassNames(3)="XWeapons.FlakCannon"
+     WeaponClassNames(4)="XWeapons.RocketLauncher"
+     WeaponClassNames(5)="XWeapons.SniperRifle"
+     WeaponClassNames(6)="XWeapons.BioRifle"
+     WeaponClassNames(7)="XWeapons.AssaultRifle"
      WeaponClassNames(8)="UTClassic.ClassicSniperRifle"
      WeaponClassNames(9)="Onslaught.ONSAVRiL"
      WeaponClassNames(10)="Onslaught.ONSMineLayer"
      WeaponClassNames(11)="Onslaught.ONSGrenadeLauncher"
-     WeaponClassNames(12)="xWeapons.SuperShockRifle"
+     WeaponClassNames(12)="XWeapons.SuperShockRifle"
      ReplacedWeaponClasses(0)=Class'XWeapons.ShockRifle'
      ReplacedWeaponClasses(1)=Class'XWeapons.LinkGun'
      ReplacedWeaponClasses(2)=Class'XWeapons.Minigun'
@@ -1853,7 +1853,7 @@ defaultproperties
      ReplacedWeaponClasses(9)=Class'Onslaught.ONSAVRiL'
      ReplacedWeaponClasses(10)=Class'Onslaught.ONSMineLayer'
      ReplacedWeaponClasses(11)=Class'Onslaught.ONSGrenadeLauncher'
-     ReplacedWeaponClasses(12)=Class'xWeapons.SuperShockRifle'
+     ReplacedWeaponClasses(12)=Class'XWeapons.SuperShockRifle'
      ReplacedWeaponPickupClasses(0)=Class'XWeapons.ShockRiflePickup'
      ReplacedWeaponPickupClasses(1)=Class'XWeapons.LinkGunPickup'
      ReplacedWeaponPickupClasses(2)=Class'XWeapons.MinigunPickup'

@@ -166,7 +166,7 @@ function NewFunc()
         else if(Left(Parts[i],8)~="Mutator=")
         {
             cb_Adren.Checked(!InStrNonCaseSensitive(Parts[i], "xGame.MutNoAdrenaline"));
-            cb_SuperWeapons.Checked(!InStrNonCaseSensitive(Parts[i], "xWeapons.MutNoSuperWeapon"));
+            cb_SuperWeapons.Checked(!InStrNonCaseSensitive(Parts[i], "XWeapons.MutNoSuperWeapon"));
             MutsFound=True;
         }
         else if(Left(Parts[i],13)~="DoubleDamage=")
