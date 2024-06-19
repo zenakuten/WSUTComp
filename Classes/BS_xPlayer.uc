@@ -20,7 +20,7 @@ class BS_xPlayer extends xPlayer;
 
 var float LastHitSoundTime;
 
-var bool blah;
+var bool bClientInitialized;
 var byte ScreenshotsTaken;
 var bool bAutoDemoStarted;
 var bool clientChangedScoreboard;
@@ -142,6 +142,7 @@ var int MaxSavedMoves;
 var config float SavedMovesWarningInterval;
 var float LastSavedMovesWarning;
 var int TauntCount;
+var bool bLimitTaunts;
 
 
 replication
@@ -161,7 +162,7 @@ replication
         serverfindprevnode, servergotonode, ServerGoToWepBase, speclockRed, speclockBlue, ServerGoToTarget, CallVote;
 
     reliable if(Role<Role_Authority)
-        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist;
+        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist, ServerSetTauntCount;
 
     unreliable if(role < Role_Authority)
         RequestStats, RequestCTFStats;
@@ -459,12 +460,13 @@ event PlayerTick(float deltatime)
 
     if (UTCompPRI==None)
         UTCompPRI=class'UTComp_Util'.static.GetUTCompPRIFor(self);
-    if (Level.NetMode!=NM_DedicatedServer && !Blah && PlayerReplicationInfo !=None && PlayerReplicationInfo.CustomReplicationInfo!=None && myHud !=None && RepInfo!=None && UTCompPRI!=None)
+
+    if (Level.NetMode!=NM_DedicatedServer && !bClientInitialized && PlayerReplicationInfo !=None && PlayerReplicationInfo.CustomReplicationInfo!=None && myHud !=None && RepInfo!=None && UTCompPRI!=None)
     {
         if (uWarmup==None || !uWarmup.bInWarmup)
         	StartDemo();
-        InitializeStuff();
-        blah=true;
+        InitializeClient();
+        bClientInitialized=true;
     }
 
     if(bWaitingOnGrouping)
@@ -543,7 +545,13 @@ function SetMaxSavedMoves()
 function SetTauntCount()
 {
     if(RepInfo != None)
-        TauntCount = RepInfo.TauntCount;
+        ServerSetTauntCount(RepInfo.TauntCount, RepInfo.bLimitTaunts);
+}
+
+function ServerSetTauntCount(int tc, bool blt)
+{
+    TauntCount = tc;
+    bLimitTaunts = blt;
 }
 
 function SetMaxResponseTime()
@@ -552,7 +560,7 @@ function SetMaxResponseTime()
         Default.MaxResponseTime = RepInfo.MaxResponseTime;
 }
 
-simulated function InitializeStuff()
+simulated function InitializeClient()
 {
     InitializeScoreboard();
     SetInitialColoredName();
@@ -4589,19 +4597,18 @@ function ServerMove
 
 function bool AllowVoiceMessage(name MessageType)
 {
-    if (RepInfo==None)
-        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
-            break;
+    local bool retval;
+    retval = super.AllowVoiceMessage(MessageType);
 
-    if((MessageType == 'TAUNT' || MessageType == 'AUTOTAUNT') && RepInfo != None && RepInfo.bLimitTaunts)
+    if((MessageType == 'TAUNT' || MessageType == 'AUTOTAUNT') && blimitTaunts)
     {
-        if(TauntCount > 0)
-            TauntCount = TauntCount - 1;
+        retval = (TauntCount > 0) && retval;
 
-        return TauntCount > 0;
+        if((TauntCount > 0) && retval)
+            TauntCount = TauntCount - 1;
     }
 
-    return super.AllowVoiceMessage(MessageType);
+    return retval;
 }
 
 defaultproperties
