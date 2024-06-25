@@ -299,14 +299,12 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
 {
     local Projectile p;
 
-    local vector End, HitNormal, HitLocation, OriginalStart;
+    local vector End, HitNormal, HitLocation;
     local actor Other;
     local float f,g;
 
     if(!bUseEnhancedNetCode)
         return super.SpawnProjectile(Start,Dir);
-
-    OriginalStart = Start;
     /* change this to use gravity */
     if( ProjectileClass != None )
     {
@@ -318,11 +316,15 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
                 //Make sure the last trace we do is right where we want
                 //the proj to spawn if it makes it to the end
                 g = Fmin(pingdt, f);
-                //Where will it be after deltaF, Dir byRef for next tick
-                if(f >= pingDT)
-                    End = Start + Extrapolate(Dir, (pingDT-f+PROJ_TIMESTEP));
-                else
-                    End = Start + Extrapolate(Dir, PROJ_TIMESTEP);
+                //Where will it be after deltaF, Dir byRef for next tick                
+                
+                // snarf - remove utcomp 'f >= pingDT' check and use simpler 3spn 
+                //if(f >= pingDT)
+                //    End = Start + Extrapolate(Dir, (pingDT-f+PROJ_TIMESTEP));
+                //else
+                End = Start + Extrapolate(Dir, PROJ_TIMESTEP);
+                
+                
                 //Put pawns there
                 TimeTravel(pingdt - g);
                 //RadiusTimeTravel(pingDT-g);
@@ -341,12 +343,12 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
            {
                  HitLocation = HitLocation + PawnCollisionCopy(Other).CopiedPawn.Location - Other.Location;
                  Other=PawnCollisionCopy(Other).CopiedPawn;
-                 p = Weapon.Spawn(ProjectileClass,,, HitLocation - Vector(dir)*default.ProjSpawnOffset.X, Dir);
            }
+
+           if(Other == none)
+               p = Weapon.Spawn(ProjectileClass,,, End, Dir);
            else
-           {
-               p = Weapon.Spawn(ProjectileClass,,, OriginalStart, Dir);
-           }
+               p = Weapon.Spawn(ProjectileClass,,, HitLocation - Vector(dir)*20.0, Dir);
         }
         else
             p = Weapon.Spawn(ProjectileClass,,, Start, Dir);
