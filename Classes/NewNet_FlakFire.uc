@@ -316,14 +316,12 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
                 //Make sure the last trace we do is right where we want
                 //the proj to spawn if it makes it to the end
                 g = Fmin(pingdt, f);
+
                 //Where will it be after deltaF, Dir byRef for next tick                
-                
-                // snarf - remove utcomp 'f >= pingDT' check and use simpler 3spn 
-                //if(f >= pingDT)
-                //    End = Start + Extrapolate(Dir, (pingDT-f+PROJ_TIMESTEP));
-                //else
-                End = Start + Extrapolate(Dir, PROJ_TIMESTEP);
-                
+                if(f >= pingDT)
+                    End = Start + Extrapolate(Dir, (pingDT-f+PROJ_TIMESTEP));
+                else
+                    End = Start + Extrapolate(Dir, PROJ_TIMESTEP);
                 
                 //Put pawns there
                 TimeTravel(pingdt - g);
