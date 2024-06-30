@@ -312,26 +312,26 @@ defaultproperties
      End Object
      ch_EnemyNames=wsCheckBox'UTComp_Menu_ColorNames.EnemyNamesCheck'
 
-     Begin Object Class=GUILabel Name=lblColorDeathCombo
-        Caption="Death Message Color:"
-        TextColor=(R=255,G=255,B=255)
-		WinWidth=0.33
-		WinHeight=0.030000
-		WinLeft=0.200
-		WinTop=0.435
-     End Object
-     l_DeathSelect=GUILabel'UTComp_Menu_ColorNames.lblColorDeathCombo'
-
      Begin Object Class=wsCheckBox Name=Colorq3Check
         Caption="Show colored text in chat messages(Q3 Style)"
         OnCreateComponent=Colorq3Check.InternalOnCreateComponent
 		WinWidth=0.600000
 		WinHeight=0.030000
 		WinLeft=0.200000
-		WinTop=0.47000
+		WinTop=0.435
         OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
      ch_ColorQ3=wsCheckBox'UTComp_Menu_ColorNames.Colorq3Check'
+
+     Begin Object Class=GUILabel Name=lblColorDeathCombo
+        Caption="Death Message Color:"
+        TextColor=(R=255,G=255,B=255)
+		WinWidth=0.33
+		WinHeight=0.030000
+		WinLeft=0.200
+		WinTop=0.47
+     End Object
+     l_DeathSelect=GUILabel'UTComp_Menu_ColorNames.lblColorDeathCombo'
 
      Begin Object Class=wsGUIComboBox Name=ComboSaved
          WinTop=0.612320
@@ -478,7 +478,7 @@ defaultproperties
 		WinWidth=0.40
 		WinHeight=0.030000
 		WinLeft=0.398749
-		WinTop=0.435
+		WinTop=0.47
         OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
      co_DeathSelect=wsComboBox'UTComp_Menu_ColorNames.ColorDeathCombo'
