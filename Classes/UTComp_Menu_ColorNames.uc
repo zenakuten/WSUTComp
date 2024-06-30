@@ -4,7 +4,7 @@ class UTComp_Menu_ColorNames extends UTComp_Menu_MainMenu;
 
 var automated GUILabel l_ColorNameLetters[20];
 var automated GUILabel l_LetterSelection;
-var automated wsCheckBox ch_ColorChat, ch_ColorScoreboard, ch_ColorQ3, ch_EnemyNames/*, ch_ColorRedBlue, ch_ColorDeath*/;
+var automated wsCheckBox ch_ColorChat, ch_ColorScoreboard, ch_ColorQ3, ch_EnemyNames, ch_ColorHUD;
 var automated wsGUIComboBox co_SavedNames;
 var automated GUIButton bu_SaveName, bu_DeleteName, bu_ResetWhite, bu_Apply;
 var automated GUISlider sl_RedColor, sl_BlueColor, sl_GreenColor;
@@ -37,6 +37,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
      ch_ColorScoreboard.Checked(class'UTComp_ScoreBoard'.default.bEnableColoredNamesOnScoreboard);
      ch_ColorQ3.Checked(Settings.bAllowColoredMessages);
      ch_EnemyNames.Checked(Settings.bEnableColoredNamesOnEnemies);
+     ch_ColorHUD.Checked(Settings.bEnableColoredNamesOnHUD);
    //  ch_ColorRedBlue.Checked(class'UTComp_xDeathMessage'.default.bEnableTeamColoredDeaths);
    //  ch_ColorDeath.Checked(class'UTComp_xDeathMessage'.default.drawcolorednamesindeathmessages);
      co_DeathSelect.AddItem("Disabled");
@@ -117,6 +118,7 @@ function InternalOnChange( GUIComponent C )
     {
     case ch_ColorChat: Settings.bEnableColoredNamesInTalk=ch_ColorChat.IsChecked();  break;
     case ch_ColorScoreboard: class'UTComp_ScoreBoard'.default.bEnableColoredNamesOnScoreboard=ch_ColorScoreboard.IsChecked(); break;
+    case ch_ColorHUD: Settings.bEnableColoredNamesOnHUD=ch_ColorHUD.IsChecked(); break;
     case ch_ColorQ3: Settings.bAllowColoredMessages=ch_ColorQ3.IsChecked(); break;
     case ch_EnemyNames: Settings.bEnableColoredNamesOnEnemies=ch_EnemyNames.IsChecked(); break;
   //  case ch_ColorRedBlue: class'UTComp_xDeathMessage'.default.bEnableTeamColoredDeaths=ch_ColorRedBlue.IsChecked(); break;
@@ -273,7 +275,7 @@ defaultproperties
      Begin Object Class=wsCheckBox Name=ColorChatCheck
          Caption="Show colored names in chat messages"
          OnCreateComponent=ColorChatCheck.InternalOnCreateComponent
-         WinTop=0.330000
+         WinTop=0.2950000
          WinLeft=0.20000
          WinWidth=0.600000
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
@@ -283,12 +285,42 @@ defaultproperties
      Begin Object Class=wsCheckBox Name=ColorScoreboardCheck
          Caption="Show colored names on scoreboard"
          OnCreateComponent=ColorScoreboardCheck.InternalOnCreateComponent
-         WinTop=0.365000
+         WinTop=0.33
          WinLeft=0.20000
          WinWidth=0.600000
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
      ch_ColorScoreboard=wsCheckBox'UTComp_Menu_ColorNames.ColorScoreboardCheck'
+
+     Begin Object Class=wsCheckBox Name=ColorHudCheck
+         Caption="Show colored names on HUD"
+         OnCreateComponent=ColorHudCheck.InternalOnCreateComponent
+         WinTop=0.365
+         WinLeft=0.20000
+         WinWidth=0.600000
+         OnChange=UTComp_Menu_ColorNames.InternalOnChange
+     End Object
+     ch_ColorHUD=wsCheckBox'UTComp_Menu_ColorNames.ColorHudCheck'
+
+     Begin Object Class=wsCheckBox Name=EnemyNamesCheck
+         Caption="Show colored enemy names on targeting"
+         OnCreateComponent=EnemyNamesCheck.InternalOnCreateComponent
+         WinTop=0.4
+         WinLeft=0.20000
+         WinWidth=0.600000
+         OnChange=UTComp_Menu_ColorNames.InternalOnChange
+     End Object
+     ch_EnemyNames=wsCheckBox'UTComp_Menu_ColorNames.EnemyNamesCheck'
+
+     Begin Object Class=GUILabel Name=lblColorDeathCombo
+        Caption="Death Message Color:"
+        TextColor=(R=255,G=255,B=255)
+		WinWidth=0.33
+		WinHeight=0.030000
+		WinLeft=0.200
+		WinTop=0.435
+     End Object
+     l_DeathSelect=GUILabel'UTComp_Menu_ColorNames.lblColorDeathCombo'
 
      Begin Object Class=wsCheckBox Name=Colorq3Check
         Caption="Show colored text in chat messages(Q3 Style)"
@@ -296,20 +328,10 @@ defaultproperties
 		WinWidth=0.600000
 		WinHeight=0.030000
 		WinLeft=0.200000
-		WinTop=0.433814
+		WinTop=0.47000
         OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
      ch_ColorQ3=wsCheckBox'UTComp_Menu_ColorNames.Colorq3Check'
-
-     Begin Object Class=wsCheckBox Name=EnemyNamesCheck
-         Caption="Show colored enemy names on targeting"
-         OnCreateComponent=EnemyNamesCheck.InternalOnCreateComponent
-         WinTop=0.400000
-         WinLeft=0.20000
-         WinWidth=0.600000
-         OnChange=UTComp_Menu_ColorNames.InternalOnChange
-     End Object
-     ch_EnemyNames=wsCheckBox'UTComp_Menu_ColorNames.EnemyNamesCheck'
 
      Begin Object Class=wsGUIComboBox Name=ComboSaved
          WinTop=0.612320
@@ -456,19 +478,10 @@ defaultproperties
 		WinWidth=0.40
 		WinHeight=0.030000
 		WinLeft=0.398749
-		WinTop=0.467990
+		WinTop=0.435
         OnChange=UTComp_Menu_ColorNames.InternalOnChange
      End Object
      co_DeathSelect=wsComboBox'UTComp_Menu_ColorNames.ColorDeathCombo'
 
-     Begin Object Class=GUILabel Name=lblColorDeathCombo
-        Caption="Death Message Color:"
-        TextColor=(R=255,G=255,B=255)
-		WinWidth=0.33
-		WinHeight=0.030000
-		WinLeft=0.200
-		WinTop=0.467990
-     End Object
-     l_DeathSelect=GUILabel'UTComp_Menu_ColorNames.lblColorDeathCombo'
 
 }

@@ -26,6 +26,7 @@ var config bool bUseDefaultScoreBoard;
 var config bool bShowSelfInTeamOverlay;
 var config bool bEnableEnhancedNetCode;
 var config bool bEnableColoredNamesOnEnemies;
+var config bool bEnableColoredNamesOnHUD;
 var config bool ballowcoloredmessages;
 var config bool bEnableColoredNamesInTalk;
 var config array<byte> DontDrawInStats;
@@ -184,6 +185,7 @@ defaultproperties
     bPowerupOverlayEnabled=true
     bOverlayDrawIcons=true
     bViewSmoothing=true
+    bEnableColoredNamesOnHUD=true
 
     instance=none
 }
