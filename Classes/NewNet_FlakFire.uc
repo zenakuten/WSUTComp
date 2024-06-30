@@ -302,6 +302,9 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
     local vector End, HitNormal, HitLocation;
     local actor Other;
     local float f,g;
+    local vector originalStart;
+
+    originalStart = start;
 
     if(!bUseEnhancedNetCode)
         return super.SpawnProjectile(Start,Dir);
@@ -339,17 +342,19 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
 
            if(Other!=None && Other.IsA('PawnCollisionCopy'))
            {
-                 HitLocation = HitLocation + PawnCollisionCopy(Other).CopiedPawn.Location - Other.Location;
-                 Other=PawnCollisionCopy(Other).CopiedPawn;
-           }
-
-           if(Other == none)
-               p = Weapon.Spawn(ProjectileClass,,, End, Dir);
-           else
+               HitLocation = HitLocation + PawnCollisionCopy(Other).CopiedPawn.Location - Other.Location;
+               Other=PawnCollisionCopy(Other).CopiedPawn;
                p = Weapon.Spawn(ProjectileClass,,, HitLocation - Vector(dir)*20.0, Dir);
+           }
+           else
+           {
+               p = Weapon.Spawn(ProjectileClass,,, originalStart, Dir);
+           }
         }
         else
+        {
             p = Weapon.Spawn(ProjectileClass,,, Start, Dir);
+        }
     }
 
     if( p == None )
