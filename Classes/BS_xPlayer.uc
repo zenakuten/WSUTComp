@@ -147,8 +147,8 @@ var bool bLimitTaunts;
 
 replication
 {
-    unreliable if(Role==Role_Authority)
-        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit;
+    reliable if(Role==Role_Authority)
+        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound;
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
@@ -830,10 +830,12 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
         {
             if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
             {
-                GroupDamageSound(DamageType, Damage, true);
+                GroupDamageSound(Damage, true);
             }
             else if(RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured) || IsHitScan(DamageType))
+            {
                 PlayEnemyHitSound(Damage);
+            }
         }
     }
     else
@@ -844,7 +846,7 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
         {
             if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
             {
-                GroupDamageSound(DamageType, Damage, false);
+                GroupDamageSound(Damage, false);
             }
             else if(RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured) || IsHitScan(DamageType))
                 PlayTeammateHitSound(Damage);
@@ -915,7 +917,12 @@ simulated function ReceiveStats(class<DamageType> DamageType, int Damage, pawn I
     }
 }
 
-simulated function GroupDamageSound(class<DamageType> DamageType, int Damage, bool bEnemy)
+simulated function ClientGroupDamageSound(int Damage, bool bEnemy)
+{
+    GroupDamageSound(Damage, bEnemy);
+}
+
+simulated function GroupDamageSound(int Damage, bool bEnemy)
 {
     bWaitingOnGrouping=True;
     bWaitingEnemy = bEnemy;

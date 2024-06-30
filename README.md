@@ -9,6 +9,12 @@ V6
 - Fix bug with bright skins when switching teams
 - new feature 'Limit taunts', limit the number of voice taunts allowed (default off)
 - cosmetic UI updates
+- fix log spamming 'accessed None 'Game''
+- use utcomp 1.7a netcode for flak
+- add utcompomni ONS scoreboard
+- add color names on HUD setting
+- fix flak hitsound on powernodes
+
 
 V5
 - Really fix damage indicators
