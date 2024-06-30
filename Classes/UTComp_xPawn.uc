@@ -401,7 +401,7 @@ simulated function Tick(float DeltaTime)
 
     super.Tick(DeltaTime);
     
-    if(Role == ROLE_Authority)
+    if(Role == ROLE_Authority && Level != None && Level.Game != None)
         InSpawnProtection = Level.TimeSeconds - SpawnTime < DeathMatch(Level.Game).SpawnProtectionTime;
 
     if(Level.NetMode==NM_DedicatedServer)
