@@ -10,11 +10,11 @@ V6
 - new feature 'Limit taunts', limit the number of voice taunts allowed (default off)
 - cosmetic UI updates
 - fix log spamming 'accessed None 'Game''
-- use utcomp 1.7a netcode for flak
 - add utcompomni ONS scoreboard
 - add color names on HUD setting
+- use utcomp 1.7a netcode for flak
 - fix flak hitsound on powernodes
-
+- fix flak hitsound for spectators
 
 V5
 - Really fix damage indicators
@@ -33,7 +33,6 @@ V4
 - add config bChargedWeaponsNoSpawnProtection to disable spawn protection when charging rox, bio
 - fix flak primary/secondary visual showing too many/wrong shards
 
-
 V3 
 - Fix 'Use UTComp style gliding movement' logic, was backwards
 - Fix damage indicators for vehicles
@@ -48,7 +47,6 @@ V3
 - Add MaxSavedMoves config to webadmin
 
 V2
-
 - add kokuei's SSR fixes
 - add spawn protected bright skin option for teammates
 - update default damage indicator from disabled to centered
@@ -58,7 +56,6 @@ V2
 - fix 'use' not working (enter vehicle, powernode warp, etc)
 
 V1
-
 - add spawn protected bright skin option
 - fix grouped hit sounds for flak
 - add server control for colored weapon config
