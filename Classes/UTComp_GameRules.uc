@@ -20,10 +20,8 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
         if(UTCompMutator.EnableHitSoundsMode>0)
         {
             if(BS_xPlayer(instigatedBy.Controller) != None)
-            {
                 BS_xPlayer(InstigatedBy.Controller).ReceiveHit(DamageType, Damage, Injured, instigatedBy);
-                IsGroupedDamageType = BS_xPlayer(instigatedBy.Controller).IsGroupedDamageType(DamageType);
-            }
+
 
             if(InstigatedBy==Injured)
                 HitSoundType=0;
@@ -31,11 +29,13 @@ function int NetDamage( int OriginalDamage, int Damage, pawn injured, pawn insti
                 HitSoundType=1;
             else
                 HitSoundType=2;
+
             for(C=Level.ControllerList; C!=None; C=C.NextController)
             {
                 if(BS_xPlayer(C)!=None && C.PlayerReplicationInfo!=None && (C.PlayerReplicationInfo.bOnlySpectator || C.PlayerReplicationInfo.bOutOfLives) && PlayerController(C).ViewTarget == InstigatedBy)
                 {
                     BS_xPlayer(C).DamageIndicatorHit(Damage, injured, instigatedBy);
+                    IsGroupedDamageType = BS_xPlayer(C).IsGroupedDamageType(DamageType);
                     if(IsGroupedDamageType)
                         BS_xPlayer(C).ClientGroupDamageSound(Damage, HitSoundType <= 1);
                     else
