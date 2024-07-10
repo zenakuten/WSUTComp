@@ -811,7 +811,8 @@ simulated function bool IsGroupedDamageType(class<DamageType> DamageType)
     return DamageType == class'DamTypeFlakChunk' 
         || DamageType == class'DamTypeFlakShell' 
         || DamageType == class'DamTypeRocket'
-        || DamageType == class'DamTypeRocketHoming';
+        || DamageType == class'DamTypeRocketHoming'
+        || DamageType == class'DamTypeSniperShot';
 }
 
 // both stat/hitsound
