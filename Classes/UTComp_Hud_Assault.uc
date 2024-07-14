@@ -261,6 +261,11 @@ simulated function ShowVersusIcon(Canvas C)
 		Super.ShowVersusIcon(C);
 }
 
+simulated function DrawSpectatingHud (Canvas C)
+{
+	Super.DrawSpectatingHud(C);
+    DrawDamageIndicators(C);
+}
 
 DefaultProperties
 {

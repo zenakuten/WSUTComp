@@ -718,6 +718,12 @@ simulated function ShowVersusIcon(Canvas C)
 		Super.ShowVersusIcon(C);
 }
 
+simulated function DrawSpectatingHud (Canvas C)
+{
+	Super.DrawSpectatingHud(C);
+    DrawDamageIndicators(C);
+}
+
 defaultproperties
 {
     VehicleData(0)=(Name="Minotaur",RadarColor=(R=255,G=255,B=255,A=255))

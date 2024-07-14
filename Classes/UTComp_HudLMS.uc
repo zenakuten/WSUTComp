@@ -32,6 +32,7 @@ simulated function DrawSpectatingHud (Canvas C)
 {
 	Super.DrawSpectatingHud(c);
 	DrawTimer(C);
+    DrawDamageIndicators(C);
 }
 
 simulated function UpdatePrecacheMaterials()
