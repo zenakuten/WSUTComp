@@ -43,6 +43,7 @@ var float LastVInfoUpdate;
 #include Classes\Include\Team\Onslaught\_Internal\ShowTeamScorePassA.uci
 #include Classes\Include\Team\_Internal\ShowVersusIcon.uci
 #include Classes\Include\_DrawDamageIndicators.uci
+#include Classes\Include\_DrawWeaponsForSpec.uci
 
 #include Classes\Include\_HudCommon.p.uci
 
