@@ -15,7 +15,7 @@ simulated function DrawWeaponForSpec(Canvas C)
         && HUDSettings.SpectatorsWeaponHand >= -1.0 
         && HUDSettings.SpectatorsWeaponHand < 2.0 
         && PlayerOwner.PlayerReplicationInfo != None 
-        && PlayerOwner.PlayerReplicationInfo.bOnlySpectator
+        && (PlayerOwner.PlayerReplicationInfo.bOnlySpectator || PlayerOwner.IsInState('Spectating'))
         && !PlayerOwner.bBehindView)
     {
         if(xPawn(PlayerOwner.ViewTarget) != None 
