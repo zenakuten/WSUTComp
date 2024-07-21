@@ -1572,6 +1572,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bEnableEnhancedNetcodeVoting", "Allow players to vote on enhanced netcode setting", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableMapVoting", "Allow players to vote for map changes", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "WarmupTime", "Warmup Time",1, 1, "Text","0;0:1800",,False,False);
+    PlayInfo.AddSetting("UTComp Settings", "EnableWarmupWeaponsMode", "0) none 1) utcomp 2) tam 3) ons+tam",1, 1, "Text","0;0:3",,False,False);
+
     PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", 1, 1, "Text", "0;0:1800",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", 1, 1,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", 1, 1,"Check");
@@ -1617,6 +1619,7 @@ static event string GetDescriptionText(string PropName)
         case "bEnableWarmupVoting": return "Check this to enable voting for Warmup.";
         case "bEnableMapVoting": return "Check this to enable voting for Maps.";
         case "WarmupTime": return "Time for warmup. Set this to 0 for unlimited, otherwise it is the time in seconds.";
+        case "EnableWarmupWeaponsMode": return "Warmup weapon mode: 0) none 1) utcomp 2) tam 3) ons+tam";
         case "MinNetSpeed": return "Minimum NetSpeed for clients on this server";
         case "MaxNetSpeed": return "Maximum NetSpeed for clients on this server";
         case "SuicideInterval": return "Minimum time between two suicides";
