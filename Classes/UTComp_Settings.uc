@@ -88,6 +88,7 @@ var config bool bOverlayEnabled;
 var config bool bPowerupOverlayEnabled;
 var config bool bOverlayDrawIcons;
 var config bool bViewSmoothing;
+var config bool bHeadshotSound;
 
 
 var UTComp_Settings instance;
@@ -186,6 +187,7 @@ defaultproperties
     bOverlayDrawIcons=true
     bViewSmoothing=true
     bEnableColoredNamesOnHUD=true
+    bHeadshotSound=true
 
     instance=none
 }

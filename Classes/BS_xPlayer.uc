@@ -148,7 +148,7 @@ var bool bLimitTaunts;
 replication
 {
     reliable if(Role==Role_Authority)
-        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound;
+        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, ClientDelayedSound;
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
@@ -4619,9 +4619,20 @@ function bool AllowVoiceMessage(name MessageType)
     return retval;
 }
 
+function ClientDelayedSound(Sound snd, float delay)
+{
+    local DelayedSound dsnd;
+    dsnd = spawn(class'DelayedSound');
+    if(dsnd != None)
+    {
+        dsnd.PC = self;
+        dsnd.SoundToPlay = snd;
+        dsnd.SetTimer(delay, false);
+    }
+}
+
 defaultproperties
 {
-
      UTCompMenuClass="WSUTComp.UTComp_Menu_OpenedMenu"
      UTCompVotingMenuClass="WSUTComp.UTComp_Menu_VoteInProgress"
      redmessagecolor=(B=64,G=64,R=255,A=255)

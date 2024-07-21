@@ -7,6 +7,7 @@ var automated GUISlider sl_Pitch;
 
 var automated wsCheckBox ch_CPMAStyle;
 var automated wsCheckBox ch_EnableHitSounds;
+var automated wsCheckBox ch_EnableHeadshotSound;
 
 var automated wsGUIComboBox co_EnemySound;
 var automated wsGUIComboBox co_FriendlySound;
@@ -26,6 +27,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
 
     ch_CPMAStyle.Checked(Settings.bCPMAStyleHitsounds);
     ch_EnableHitSounds.Checked(Settings.bEnableHitSounds);
+    ch_EnableHeadshotSound.Checked(Settings.bHeadshotSound);
 
     co_EnemySound.AddItem((Settings.EnemySound));
     co_FriendlySound.AddItem((Settings.FriendlySound));
@@ -75,6 +77,7 @@ function InternalOnChange( GUIComponent C )
         case co_EnemySound:  Settings.EnemySound=co_EnemySound.GetText(); break;
         case co_FriendlySound:  Settings.FriendlySound=co_FriendlySound.GetText(); break;
         case ch_CPMAStyle:   Settings.bCPMAStyleHitSounds=ch_CPMAStyle.IsChecked(); break;
+        case ch_EnableHeadshotSound: Settings.bHeadshotSound=ch_EnableHeadshotSound.IsChecked(); break;
     }
     class'BS_xPlayer'.Static.StaticSaveConfig();
     SaveSettings();
@@ -197,4 +200,12 @@ defaultproperties
      End Object
      l_FriendlySound=GUILabel'UTComp_Menu_HitSounds.FriendlySoundLabel'
 
+     Begin Object Class=wsCheckBox Name=HeadshottedSound
+         Caption="Play sound when you are headshotted"
+         OnCreateComponent=HeadshottedSound.InternalOnCreateComponent
+         WinTop=0.760000
+         WinLeft=0.250000
+         OnChange=UTComp_Menu_HitSounds.InternalOnChange
+     End Object
+     ch_EnableHeadshotSound=wsCheckBox'UTComp_Menu_HitSounds.HeadshottedSound'
 }

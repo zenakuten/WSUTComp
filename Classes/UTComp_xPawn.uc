@@ -2,7 +2,7 @@
 class UTComp_xPawn extends ModernPawn;
 
 #exec texture import File=textures\purpmark.dds Name=PurpleMarker
-
+#exec AUDIO IMPORT FILE=Sounds\headshotted.wav     GROUP=Sounds
 
 var array<Material> SavedSkins;
 var bool bSkinsSaved;
@@ -34,6 +34,7 @@ var UTComp_HUDSettings HUDSettings;
 
 var bool InSpawnProtection;
 var bool OldInSpawnProtection;
+var sound HeadshotSound;
 
 replication
 {
@@ -1113,24 +1114,39 @@ event UpdateEyeHeight( float DeltaTime )
     Controller.AdjustView(DeltaTime);
 }
 
+function bool IsHeadshotDamageType(class<DamageType> damageType)
+{
+    return DamageType == class'DamTypeSniperHeadShot' || DamageType == class'DamTypeClassicHeadShot';
+}
+
+simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType)
+{
+    super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, damageType);
+    if (IsHeadshotDamageType(damageType) && BS_xPlayer(Controller) != None)
+    {
+        BS_xPlayer(Controller).ClientDelayedSound(HeadshotSound, 0.15);
+    }
+}
+
 defaultproperties
 {
-     bAlwaysRelevant=True
-     BrightSkinColors(0)=(A=255)
-     BrightSkinColors(1)=(R=200,A=255)
-     BrightSkinColors(2)=(B=200,G=64,R=50,A=255)
-     BrightSkinColors(3)=(B=200,G=64,R=200,A=255)
-     BrightSkinColors(4)=(A=255)
-     BrightSkinColors(5)=(R=200,A=255)
-     BrightSkinColors(6)=(B=200,G=64,R=50,A=255)
-     BrightSkinColors(7)=(B=200,G=64,R=200,A=255)
-     ShieldColor=(G=65,R=105)
-     LinkColor=(G=100)
-     shockcolor=(B=80,R=80)
-     lgcolor=(B=80,G=40,R=40)
-     beffectscleared=True
+    bAlwaysRelevant=True
+    BrightSkinColors(0)=(A=255)
+    BrightSkinColors(1)=(R=200,A=255)
+    BrightSkinColors(2)=(B=200,G=64,R=50,A=255)
+    BrightSkinColors(3)=(B=200,G=64,R=200,A=255)
+    BrightSkinColors(4)=(A=255)
+    BrightSkinColors(5)=(R=200,A=255)
+    BrightSkinColors(6)=(B=200,G=64,R=50,A=255)
+    BrightSkinColors(7)=(B=200,G=64,R=200,A=255)
+    ShieldColor=(G=65,R=105)
+    LinkColor=(G=100)
+    shockcolor=(B=80,R=80)
+    lgcolor=(B=80,G=40,R=40)
+    beffectscleared=True
 
-     MultiDodgesRemaining=0
-     OldPawnTeam=255
-     OldLocalPCTeam=255
+    MultiDodgesRemaining=0
+    OldPawnTeam=255
+    OldLocalPCTeam=255
+    HeadshotSound=Sound'Sounds.headshotted'
 }
