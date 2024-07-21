@@ -35,6 +35,7 @@ var UTComp_HUDSettings HUDSettings;
 var bool InSpawnProtection;
 var bool OldInSpawnProtection;
 var sound HeadshotSound;
+var float lastSkinUpdateTime;
 
 replication
 {
@@ -442,6 +443,11 @@ simulated function bool ShouldUpdateSkin()
     local bool shouldUpdate;
     local bool GameEnded;
     local bool spawnProtectionChanged;
+
+    if((Level.TimeSeconds - lastSkinUpdateTime) < 0.5) 
+        return false;
+
+    lastSkinUpdateTime = Level.TimeSeconds;
 
    if(LocalPC==None)
        LocalPC=Level.GetLocalPlayerController();
@@ -1124,7 +1130,7 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
     super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, damageType);
     if (IsHeadshotDamageType(damageType) && BS_xPlayer(Controller) != None)
     {
-        BS_xPlayer(Controller).ClientDelayedSound(HeadshotSound, 0.15);
+        BS_xPlayer(Controller).ClientDelayedSound(HeadshotSound, 0.15, 2.0);
     }
 }
 

@@ -4619,7 +4619,7 @@ function bool AllowVoiceMessage(name MessageType)
     return retval;
 }
 
-function ClientDelayedSound(Sound snd, float delay)
+function ClientDelayedSound(Sound snd, float delay, float atten)
 {
     local DelayedSound dsnd;
     dsnd = spawn(class'DelayedSound');
@@ -4627,6 +4627,7 @@ function ClientDelayedSound(Sound snd, float delay)
     {
         dsnd.PC = self;
         dsnd.SoundToPlay = snd;
+        dsnd.Atten = atten;
         dsnd.SetTimer(delay, false);
     }
 }
