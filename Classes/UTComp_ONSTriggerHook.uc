@@ -25,7 +25,7 @@ function Trigger(Actor Other, Pawn EventInstigator)
 		if (GRIMaster == none && Level.GRI != none)
 			GRIMaster = Level.GRI;
 
-		// We have recieved a spawn notification from a vehicle factory, pass the radar information for this vehicle on to players on the relevant team
+		// We have received a spawn notification from a vehicle factory, pass the radar information for this vehicle on to players on the relevant team
 		if (GRIMaster != none)
 			for (i=0; i<GRIMaster.PRIArray.Length; i++)
 				if (UTComp_ONSPlayerReplicationInfo(GRIMaster.PRIArray[i]) != none && UTComp_ONSPlayerReplicationInfo(GRIMaster.PRIArray[i]).Team != none

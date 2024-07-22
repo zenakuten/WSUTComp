@@ -1127,11 +1127,12 @@ function bool IsHeadshotDamageType(class<DamageType> damageType)
 
 simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType)
 {
-    super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, damageType);
     if (IsHeadshotDamageType(damageType) && BS_xPlayer(Controller) != None)
     {
-        BS_xPlayer(Controller).ClientDelayedSound(HeadshotSound, 0.15, 2.0);
+        //BS_xPlayer(Controller).ClientDelayedSound(HeadshotSound, 0.15, 2.0);
+        BS_xPlayer(Controller).ClientPlaySound(HeadshotSound, true, 2.0);
     }
+    super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, damageType);
 }
 
 defaultproperties

@@ -148,7 +148,8 @@ var bool bLimitTaunts;
 replication
 {
     reliable if(Role==Role_Authority)
-        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, ClientDelayedSound;
+        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, 
+        ClientDelayedSound, ClientReceiveAward;
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
@@ -4631,6 +4632,24 @@ function ClientDelayedSound(Sound snd, float delay, float atten)
         dsnd.SetTimer(delay, false);
     }
 }
+
+function ClientReceiveAward(Sound awardSound, float delay, float atten)
+{
+    local DelayedSound dsnd;
+
+    if(Settings.bEnableAwards)
+    {
+        dsnd = spawn(class'DelayedSound');
+        if(dsnd != None)
+        {
+            dsnd.PC = self;
+            dsnd.SoundToPlay = awardSound;
+            dsnd.Atten = atten;
+            dsnd.SetTimer(delay, false);
+        }
+    }
+}
+
 
 defaultproperties
 {

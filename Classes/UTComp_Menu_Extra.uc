@@ -6,6 +6,7 @@ var automated wsComboBox co_DamageSelect;
 var automated GUILabel lb_DamageSelect;
 var automated wsCheckBox ch_UseSpectatorsWeaponHand;
 var automated wsComboBox co_SpectatorsWeaponHand;
+var automated wsCheckBox ch_EnableAwards;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -34,6 +35,8 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
 	co_SpectatorsWeaponHand.AddItem("Hidden");
 	co_SpectatorsWeaponHand.ReadOnly(True);
 	co_SpectatorsWeaponHand.SetIndex(HUDSettings.SpectatorsWeaponHand + 1);
+
+    ch_EnableAwards.Checked(Settings.bEnableAwards);
 }
 
 function InternalOnChange( GUIComponent C )
@@ -48,8 +51,12 @@ function InternalOnChange( GUIComponent C )
 
         case co_SpectatorsWeaponHand: HUDSettings.SpectatorsWeaponHand=co_SpectatorsWeaponHand.GetIndex() - 1; 
             break;
+
+        case ch_EnableAwards: Settings.bEnableAwards=ch_EnableAwards.IsChecked(); 
+            break;
     }
 
+    SaveSettings();
     SaveHUDSettings();
 }
 
@@ -86,4 +93,16 @@ defaultproperties
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
     co_SpectatorsWeaponHand=wsComboBox'UTComp_Menu_Extra.SpectatorWeaponHand'
+
+    Begin Object Class=wsCheckBox Name=EnableAwardsCheck
+        Caption="Enable awards"
+        Hint="Play sound for air rocket, impressive shock combo"
+        OnCreateComponent=EnableAwardsCheck.InternalOnCreateComponent
+        WinWidth=0.500000
+        WinHeight=0.030000
+        WinLeft=0.250000
+        WinTop=0.48
+        OnChange=UTComp_Menu_Extra.InternalOnChange
+    End Object
+    ch_EnableAwards=wsCheckBox'UTComp_Menu_Extra.EnableAwardsCheck'
 }
