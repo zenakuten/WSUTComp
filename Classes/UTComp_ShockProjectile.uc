@@ -134,9 +134,9 @@ function SuperExplosion()
         if(BS_xPlayer(Instigator.Controller) != None)
         {
             if(bMostImpressive)
-                BS_xPlayer(Instigator.Controller).ClientReceiveAward(MostImpressiveSound,0.5, 1.0);
+                BS_xPlayer(Instigator.Controller).ClientReceiveAward(MostImpressiveSound,0.5, 2.0);
             else if(bIsImpressive)
-                BS_xPlayer(Instigator.Controller).ClientReceiveAward(ImpressiveSound,0.5, 1.0);
+                BS_xPlayer(Instigator.Controller).ClientReceiveAward(ImpressiveSound,0.5, 2.0);
         }
     }
 

@@ -190,7 +190,7 @@ function BlowUp(vector HitLocation)
     {    
         if(BS_xPlayer(Instigator.Controller) != None)
         {
-            BS_xPlayer(Instigator.Controller).ClientReceiveAward(AirRocketSound,0.5, 1.0);
+            BS_xPlayer(Instigator.Controller).ClientReceiveAward(AirRocketSound,0.5, 2.0);
         }
     }
 }
