@@ -15,6 +15,7 @@ V6
 - use utcomp 1.7a netcode for flak
 - fix flak hitsound on powernodes
 - fix flak hitsound for spectators
+- add award sounds for air rocket, impressive combo
 
 V5
 - Really fix damage indicators
