@@ -14,7 +14,7 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 	local actor Victims;
 	local float damageScale, dist;
 	local vector dir;
-    local bool bKilledPlayer, bWasEmptyState;
+    local bool bKilledPlayer;
 
 	if ( bHurtEntry )
 		return false;
@@ -34,7 +34,6 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 				Victims.SetDelayedDamageInstigatorController( InstigatorController );
 			if ( Victims == LastTouched )
 				LastTouched = None;
-            bWasEmptyState = Victims.IsInState('');
 			Victims.TakeDamage
 			(
 				damageScale * DamageAmount,
@@ -46,7 +45,7 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 			if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
-            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && bWasEmptyState && Victims != Instigator)
+            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && Victims != Instigator)
                 bKilledPlayer = true;
 
 		}
@@ -62,7 +61,6 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 		if ( Instigator == None || Instigator.Controller == None )
 			Victims.SetDelayedDamageInstigatorController(InstigatorController);
 
-        bWasEmptyState = Victims.IsInState('');
 		Victims.TakeDamage
 		(
 			damageScale * DamageAmount,
@@ -74,7 +72,7 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 		if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
-        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && bWasEmptyState && Victims != Instigator)
+        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && Victims != Instigator)
             bKilledPlayer = true;
 	}
 
@@ -175,4 +173,6 @@ event TakeDamage( int Damage, Pawn EventInstigator, vector HitLocation, vector M
 defaultproperties
 {
     ComboRadiusDamageType=class'DamTypeShockCombo'
+     ImpressiveSound=Sound'Sounds.Impressive'
+     MostImpressiveSound=Sound'Sounds.MostImpressive'    
 }

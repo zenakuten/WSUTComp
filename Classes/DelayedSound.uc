@@ -11,8 +11,8 @@ function Timer()
         if(PC.ViewTarget != None)
             PC.ClientPlaySound(SoundToPlay, true, Atten);
         else
-            PC.PlayOwnedSound(SoundToPlay, SLOT_Pain, Atten,,,,false);
-    }
+            PC.PlayOwnedSound(SoundToPlay, SLOT_Pain, Atten,,,,false);    }
+
 }
 
 defaultproperties

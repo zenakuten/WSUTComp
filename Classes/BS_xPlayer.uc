@@ -4620,7 +4620,7 @@ function bool AllowVoiceMessage(name MessageType)
     return retval;
 }
 
-function ClientDelayedSound(Sound snd, float delay, float atten)
+simulated function ClientDelayedSound(Sound snd, float delay, float atten)
 {
     local DelayedSound dsnd;
     dsnd = spawn(class'DelayedSound');
@@ -4633,7 +4633,7 @@ function ClientDelayedSound(Sound snd, float delay, float atten)
     }
 }
 
-function ClientReceiveAward(Sound awardSound, float delay, float atten)
+simulated function ClientReceiveAward(Sound awardSound, float delay, float atten)
 {
     local DelayedSound dsnd;
 
