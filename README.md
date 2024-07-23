@@ -5,6 +5,12 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V7
+- hit sounds/indicators for spectators spectating a vehicle
+- hit sounds/indicators for spectators on node damage
+- Add award sounds for 'air rocket', 'impressive combo'
+- Add sound when you get headshotted 
+
 V6
 - Fix bug with bright skins when switching teams
 - new feature 'Limit taunts', limit the number of voice taunts allowed (default off)
