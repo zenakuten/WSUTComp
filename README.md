@@ -5,6 +5,11 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V8
+- Fix headshotted config not working
+- Fix brightskin on dead body
+- Add 'fast ghost' option to make dead turn to ghost immediately
+
 V7
 - hit sounds/indicators for spectators spectating a vehicle
 - hit sounds/indicators for spectators on node damage
