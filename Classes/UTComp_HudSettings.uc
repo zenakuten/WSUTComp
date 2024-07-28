@@ -22,7 +22,6 @@ var config bool bMatchHudColor;
 var SpecialCrosshair TempxHair;
 
 var config bool bEnableEmoticons;
-var config float SpectatorsWeaponHand;
 
 defaultproperties
 {
@@ -30,5 +29,4 @@ defaultproperties
     bEnableWidescreenFix=False
     DamageIndicatorType=2
     bEnableEmoticons=True
-    SpectatorsWeaponHand=2.0
 }

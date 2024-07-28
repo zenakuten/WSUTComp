@@ -16,7 +16,6 @@ var UTComp_HUDSettings HUDSettings;
 #include Classes\Include\_Internal\DrawWeaponBar.uci
 #include Classes\Include\_Internal\UpdateRankAndSpread.uci
 #include Classes\Include\_DrawDamageIndicators.uci
-#include Classes\Include\_DrawWeaponsForSpec.uci
 
 #include Classes\Include\_HudCommon.p.uci
 
