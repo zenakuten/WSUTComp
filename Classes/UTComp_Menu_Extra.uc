@@ -5,6 +5,7 @@ var automated wsCheckBox ch_EnableWidescreenFix;
 var automated wsComboBox co_DamageSelect;
 var automated GUILabel lb_DamageSelect;
 var automated wsCheckBox ch_EnableAwards;
+var automated wsCheckBox ch_FastGhost;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -28,6 +29,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     }
 
     ch_EnableAwards.Checked(Settings.bEnableAwards);
+    ch_FastGhost.Checked(Settings.bFastGhost);
 }
 
 function InternalOnChange( GUIComponent C )
@@ -41,6 +43,9 @@ function InternalOnChange( GUIComponent C )
 			break;
 
         case ch_EnableAwards: Settings.bEnableAwards=ch_EnableAwards.IsChecked(); 
+            break;
+
+        case ch_FastGhost: Settings.bFastGhost=ch_FastGhost.IsChecked(); 
             break;
     }
 
@@ -83,4 +88,16 @@ defaultproperties
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
     ch_EnableAwards=wsCheckBox'UTComp_Menu_Extra.EnableAwardsCheck'
+
+    Begin Object Class=wsCheckBox Name=FastGhostCheck
+        Caption="Fast ghost"
+        Hint="Make dead players turn to ghost immediately"
+        OnCreateComponent=FastGhostCheck.InternalOnCreateComponent
+        WinWidth=0.500000
+        WinHeight=0.030000
+        WinLeft=0.250000
+        WinTop=0.48
+        OnChange=UTComp_Menu_Extra.InternalOnChange
+    End Object
+    ch_FastGhost=wsCheckBox'UTComp_Menu_Extra.FastGhostCheck'
 }

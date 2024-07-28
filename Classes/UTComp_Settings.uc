@@ -90,6 +90,7 @@ var config bool bOverlayDrawIcons;
 var config bool bViewSmoothing;
 var config bool bHeadshotSound;
 var config bool bEnableAwards;
+var config bool bFastGhost;
 
 
 var UTComp_Settings instance;
@@ -190,6 +191,7 @@ defaultproperties
     bEnableColoredNamesOnHUD=true
     bHeadshotSound=true
     bEnableAwards=true
+    bFastGhost=false
 
     instance=none
 }

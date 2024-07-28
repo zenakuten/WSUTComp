@@ -442,6 +442,9 @@ simulated function bool ShouldUpdateSkin()
     local bool GameEnded;
     local bool spawnProtectionChanged;
 
+    if(IsInState('Dying') || Controller != None && Controller.IsInState('Dead'))
+        return false;
+
     if((Level.TimeSeconds - lastSkinUpdateTime) < 0.5) 
         return false;
 
@@ -1019,13 +1022,18 @@ simulated function color CapColor(color ColorToCap, optional int furthercap)
    return ColorToCap;
 }
 
-state dying
+state Dying
 {
     simulated function BeginState()
     {
 	    Super.BeginState();
      	AmbientSound = None;
     	DarkSkinMe();
+        if(Settings.bFastGhost)
+        {
+            LifeSpan=3.5;
+            StartDeRes();
+        }
     }
     simulated function DarkSkinMe()
     {
