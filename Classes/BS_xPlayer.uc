@@ -18,6 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 class BS_xPlayer extends xPlayer;
 
+#exec AUDIO IMPORT FILE=Sounds\headshotted.wav     GROUP=Sounds
+
 var float LastHitSoundTime;
 
 var bool bClientInitialized;
@@ -144,12 +146,13 @@ var float LastSavedMovesWarning;
 var int TauntCount;
 var bool bLimitTaunts;
 
+var sound HeadshotSound;
 
 replication
 {
     reliable if(Role==Role_Authority)
         ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, 
-        ClientDelayedSound, ClientReceiveAward;
+        ClientDelayedSound, ClientReceiveAward, ClientHeadshotted;
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
@@ -4633,6 +4636,12 @@ simulated function ClientDelayedSound(Sound snd, float delay, float atten)
     }
 }
 
+simulated function ClientHeadshotted()
+{
+    if(Settings.bHeadshotSound)
+        ClientPlaySound(HeadshotSound, true, 1.0);
+}
+
 simulated function ClientReceiveAward(Sound awardSound, float delay, float atten)
 {
     local DelayedSound dsnd;
@@ -4715,6 +4724,7 @@ defaultproperties
 
      LoadedEnemySound=sound'Sounds.HitSound'
      LoadedFriendlySound=sound'Sounds.HitSoundFriendly'
+     HeadshotSound=Sound'Sounds.headshotted'
 
      PreferredExitPoint=-1
      bDidWhitelistCheck=False

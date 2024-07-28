@@ -2,7 +2,6 @@
 class UTComp_xPawn extends ModernPawn;
 
 #exec texture import File=textures\purpmark.dds Name=PurpleMarker
-#exec AUDIO IMPORT FILE=Sounds\headshotted.wav     GROUP=Sounds
 
 var array<Material> SavedSkins;
 var bool bSkinsSaved;
@@ -34,7 +33,6 @@ var UTComp_HUDSettings HUDSettings;
 
 var bool InSpawnProtection;
 var bool OldInSpawnProtection;
-var sound HeadshotSound;
 var float lastSkinUpdateTime;
 
 replication
@@ -1129,8 +1127,7 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
 {
     if (IsHeadshotDamageType(damageType) && BS_xPlayer(Controller) != None)
     {
-        //BS_xPlayer(Controller).ClientDelayedSound(HeadshotSound, 0.15, 2.0);
-        BS_xPlayer(Controller).ClientPlaySound(HeadshotSound, true, 2.0);
+        BS_xPlayer(Controller).ClientHeadshotted();
     }
     super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, damageType);
 }
@@ -1155,5 +1152,4 @@ defaultproperties
     MultiDodgesRemaining=0
     OldPawnTeam=255
     OldLocalPCTeam=255
-    HeadshotSound=Sound'Sounds.headshotted'
 }
