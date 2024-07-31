@@ -9,6 +9,7 @@ V8
 - Fix headshotted config not working
 - Fix brightskin on dead body
 - Add 'fast ghost' option to make dead turn to ghost immediately
+- Add 'color ghost' option to allow configure ghost colors
 
 V7
 - hit sounds/indicators for spectators spectating a vehicle
