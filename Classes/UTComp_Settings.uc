@@ -91,14 +91,15 @@ var config bool bViewSmoothing;
 var config bool bHeadshotSound;
 var config bool bEnableAwards;
 var config bool bFastGhost;
-
+var config bool bColorGhost;
+var config color DeResColor;
+var config color DeResFXColor;
 
 var UTComp_Settings instance;
 
 function CheckSettings() {
     local string PackageName;
     local int CheckLen;
-
 
     PackageName = string(self.Class);
     PackageName = Left(PackageName, InStr(PackageName, "."));
@@ -192,6 +193,9 @@ defaultproperties
     bHeadshotSound=true
     bEnableAwards=true
     bFastGhost=false
+    bColorGhost=false
+    DeResColor=(R=00,G=70,B=255,A=255)
+    DeResFXColor=(R=00,G=70,B=255,A=255)
 
     instance=none
 }

@@ -2,6 +2,7 @@
 class UTComp_xPawn extends ModernPawn;
 
 #exec texture import File=textures\purpmark.dds Name=PurpleMarker
+#exec OBJ LOAD FILE=textures\WSDeRez.utx PACKAGE=WSUTComp
 
 var array<Material> SavedSkins;
 var bool bSkinsSaved;
@@ -34,6 +35,9 @@ var UTComp_HUDSettings HUDSettings;
 var bool InSpawnProtection;
 var bool OldInSpawnProtection;
 var float lastSkinUpdateTime;
+var Material DeResMatColored0, DeResMatColored1;
+var ColorModifier DeResModifier0;
+var ColorModifier DeResModifier1;
 
 replication
 {
@@ -1050,6 +1054,119 @@ state Dying
     }
 }
 
+simulated function StartDeRes()
+{
+	local KarmaParamsSkel skelParams;
+	local int i;
+
+    if( Level.NetMode == NM_DedicatedServer )
+        return;
+
+	AmbientGlow=254;
+	MaxLights=0;
+
+	DeResFX = Spawn(class'DeResPart', self, , Location);
+	if ( DeResFX != None )
+	{
+		DeResFX.Emitters[0].SkeletalMeshActor = self;
+		DeResFX.SetBase(self);
+        if(Settings.bColorGhost)
+        {
+            //DeResFX.Emitters[0].Opacity=0.50;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[0].Color.R = Settings.DeResFXColor.R;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[0].Color.G = Settings.DeResFXColor.G;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[0].Color.B = Settings.DeResFXColor.B;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[0].Color.A = Settings.DeResFXColor.A;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[1].Color.R = Settings.DeResFXColor.R;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[1].Color.G = Settings.DeResFXColor.G;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[1].Color.B = Settings.DeResFXColor.B;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[1].Color.A = Settings.DeResFXColor.A;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[2].Color.R = Settings.DeResFXColor.R;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[2].Color.G = Settings.DeResFXColor.G;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[2].Color.B = Settings.DeResFXColor.B;
+            SpriteEmitter(DeResFX.Emitters[0]).ColorScale[2].Color.A = Settings.DeResFXColor.A;        
+        }
+	}
+
+    if(Settings.bColorGhost)
+    {
+        DeResModifier0 = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
+        DeResModifier0.Material = DeResMatColored0;
+        DeResModifier0.AlphaBlend = true;
+        DeResModifier0.RenderTwoSided = true;
+        DeResModifier0.Color.R = Settings.DeResColor.R;
+        DeResModifier0.Color.G = Settings.DeResColor.G;
+        DeResModifier0.Color.B = Settings.DeResColor.B;
+        DeResModifier0.Color.A = Settings.DeResColor.A;
+        Skins[0] = DeResModifier0;
+
+        DeResModifier1 = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
+        DeResModifier1.Material = DeResMatColored1;
+        DeResModifier1.AlphaBlend = true;
+        DeResModifier1.RenderTwoSided = true;
+        DeResModifier1.Color.R = Settings.DeResColor.R;
+        DeResModifier1.Color.G = Settings.DeResColor.G;
+        DeResModifier1.Color.B = Settings.DeResColor.B;
+        DeResModifier1.Color.A = Settings.DeResColor.A;
+        Skins[1] = DeResModifier1;
+    }
+    else
+    {
+        Skins[0] = DeResMat0;
+        Skins[1] = DeResMat1;
+    }
+
+	if ( Skins.Length > 2 )
+	{
+		for ( i=2; i<Skins.Length; i++ )
+        {
+            if(Settings.bColorGhost)
+                Skins[i] = DeResModifier0;
+            else
+                Skins[i] = DeResMat0;
+        }
+	}
+
+    if( Physics == PHYS_KarmaRagdoll )
+    {
+		// Attach bone lifter to raise body
+        KAddBoneLifter('bip01 Spine', DeResLiftVel, DeResLateralFriction, DeResLiftSoftness);
+        KAddBoneLifter('bip01 Spine2', DeResLiftVel, DeResLateralFriction, DeResLiftSoftness);
+
+		// Turn off gravity while de-res-ing
+		KSetActorGravScale(DeResGravScale);
+
+        // Turn off collision with the world for the ragdoll.
+        KSetBlockKarma(false);
+
+        // Turn off convulsions during de-res
+        skelParams = KarmaParamsSkel(KParams);
+		skelParams.bKDoConvulsions = false;
+    }
+
+    AmbientSound = Sound'GeneralAmbience.Texture19';
+    SoundRadius = 40.0;
+
+	// Turn off collision when we de-res (avoids rockets etc. hitting corpse!)
+	SetCollision(false, false, false);
+
+	// Remove/disallow projectors
+	Projectors.Remove(0, Projectors.Length);
+	bAcceptsProjectors = false;
+
+	// Remove shadow
+	if(PlayerShadow != None)
+		PlayerShadow.bShadowActive = false;
+
+	// Remove flames
+	RemoveFlamingEffects();
+
+	// Turn off any overlays
+	SetOverlayMaterial(None, 0.0f, true);
+
+    bDeRes = true;
+}
+
 simulated function bool ShouldUseModel(string S)
 {
     local int i;
@@ -1140,6 +1257,16 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
     super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, damageType);
 }
 
+simulated function Destroyed()
+{
+    if(DeResModifier0 != None)
+        Level.ObjectPool.FreeObject(DeResModifier0);
+    if(DeResModifier1 != None)
+        Level.ObjectPool.FreeObject(DeResModifier1);
+
+    super.Destroyed();
+}
+
 defaultproperties
 {
     bAlwaysRelevant=True
@@ -1160,4 +1287,7 @@ defaultproperties
     MultiDodgesRemaining=0
     OldPawnTeam=255
     OldLocalPCTeam=255
+
+    DeResMatColored0=FinalBlend'WSUTComp.Shaders.DeRezFinalBody'
+    DeResMatColored1=FinalBlend'WSUTComp.Shaders.DeRezFinalHead'
 }
