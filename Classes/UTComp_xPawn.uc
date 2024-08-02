@@ -1257,6 +1257,38 @@ simulated function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation
     super.TakeDamage(Damage, InstigatedBy, Hitlocation, Momentum, damageType);
 }
 
+// override to fix None access
+function ServerChangedWeapon(Weapon OldWeapon, Weapon NewWeapon)
+{
+	local float InvisTime;
+
+	if ( bInvis )
+	{
+	    if ( (OldWeapon != None) && (OldWeapon.OverlayMaterial == InvisMaterial) )
+		    InvisTime = OldWeapon.ClientOverlayCounter;
+	    else
+		    InvisTime = 20000;
+	}
+    if (HasUDamage() || bInvis)
+        SetWeaponOverlay(None, 0.f, true);
+
+    super(UnrealPawn).ServerChangedWeapon(OldWeapon, NewWeapon);
+
+    if (bInvis)
+        SetWeaponOverlay(InvisMaterial, InvisTime, true);
+    else if (HasUDamage())
+        SetWeaponOverlay(UDamageWeaponMaterial, UDamageTime - Level.TimeSeconds, false);
+
+    // check for none here
+    if(Weapon != None)
+    {
+        if (bBerserk)
+            Weapon.StartBerserk();
+        else if ( Weapon.bBerserk )
+            Weapon.StopBerserk();
+    }
+}
+
 simulated function Destroyed()
 {
     if(DeResModifier0 != None)
