@@ -16,6 +16,10 @@ function Trigger(Actor Other, Pawn EventInstigator)
             {
                 player.DamageIndicatorHit(N.AccumulatedDamage, N, EventInstigator);
                 player.ClientGroupDamageSound(N.AccumulatedDamage, true);
+                if(UTComp_ONSPlayerReplicationInfo(player.PlayerReplicationInfo) != None)
+                {
+                    UTComp_ONSPlayerReplicationInfo(player.PlayerReplicationInfo).NodeDamagePoints += (float(N.AccumulatedDamage) / N.DamageCapacity * N.Score);
+                }
             }
         }
 

@@ -214,6 +214,7 @@ function PreBeginPlay()
     SetupWhitelist();
     SetupEmoticons();
     SetupInstagib();
+    InitStatsOverride();
 
     super.PreBeginPlay();
     if (bDebugLogging) log("Finished PreBeginPlay...",'MutUTComp');
@@ -1751,6 +1752,20 @@ function Reset()
 // provide hook for derived classes
 function WarmupEnded()
 {
+}
+
+// use special gamestats for ons gametype 
+// to record node stuff for scoreboard
+function InitStatsOverride()
+{
+    local string GameStatsClass;
+
+    if(Level.Game.IsA('ONSOnslaughtGame'))
+    {
+        GameStatsClass = string(class'UTComp_GameStats');
+        log("overriding stats class, using "$GameStatsClass);
+        Level.Game.GameStatsClass = GameStatsClass;
+    }
 }
 
 defaultproperties

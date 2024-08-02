@@ -115,9 +115,10 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     local string AdminString;
     local float oldClipX;
     local float StartY;
-    local ONSPlayerReplicationInfo ONSPRI;
+    local float pointScale;
+    local UTComp_ONSPlayerReplicationInfo ONSPRI;
     
-    ONSPRI = ONSPlayerReplicationInfo(PRI);
+    ONSPRI = UTComp_ONSPlayerReplicationInfo(PRI);
     
     StartY = 0.110;
     
@@ -224,16 +225,37 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.DrawText("P/L :"$PRI.PacketLoss);
     }
 
-// To Do Get some Node stats, but how?  Dont seem to be stored anywhere in PRI.
-/*
-    if (ONSPRI != None) {
-    C.SetPos(C.ClipX*0.148+XOffset, (C.ClipY*(StartY-0.005))+YOffset);
-    C.DrawText("NBlt:"@ONSPRI.FlagTouches);
+    // snarf fix for PPH issue, maybe?
+	if ( ((FPHTime == 0) || (!UnrealPlayer(Owner).bDisplayLoser && !UnrealPlayer(Owner).bDisplayWinner))
+		&& (GRI.ElapsedTime > 0) )
+		FPHTime = GRI.ElapsedTime;
 
-    C.SetPos(C.ClipX*0.148+XOffset, (C.ClipY*(StartY+0.013))+YOffset);
-    C.DrawText("NDst:"@ONSPRI.FlagReturns);
+    // add ons specific stats
+    if (ONSPRI != None) 
+    {
+        C.Font = GetSmallerFontFor(C, 6);
+
+        //if(ONSPRI.Team.TeamIndex == OwnerPRI.Team.TeamIndex || (Level.GRI != None && Level.GRI.bGameEnded))
+        //{
+            if(ONSPRI.NodeDamagePoints >= 100)
+                pointScale=0.2;
+            C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY-0.003))+YOffset);
+            C.DrawText("Node Dmg Pts:"@ONSPRI.NodeDamagePoints);
+
+            if(ONSPRI.NodeHealPoints >= 100)
+                pointScale=0.2;
+            C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY+0.009))+YOffset);
+            C.DrawText("Node Heal Pts:"@ONSPRI.NodeHealPoints);
+
+            C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.021))+YOffset);
+            C.DrawText("ND:"@ONSPRI.NodesDestroyed@" NDC:"@ONSPRI.NodesDestroyedConstructing);
+
+            C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.031))+YOffset);
+            C.DrawText("NC:"@ONSPRI.NodesConstructed@"  CD:"@ONSPRI.CoresDestroyed);
+        //}
+
+        C.Font = SmallerFont;
     }
-*/			
     // put PPH on the bottom line next to Time in Game
     C.SetPos(C.ClipX*0.148+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
     C.DrawText(FPH@Clamp(3600*PRI.Score/FMax(1,FPHTime - PRI.StartTime),-999,9999),true);

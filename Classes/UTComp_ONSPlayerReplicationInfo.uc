@@ -32,6 +32,14 @@ var MutUTComp MutatorOwner;
 // To stop recursive calls of FindPlayerStart
 var bool bLookingForStart;
 
+// for scoreboard
+var float NodeDamagePoints;
+var float NodeHealPoints;
+var int NodesConstructed;
+var int NodesDestroyed;
+var int NodesDestroyedConstructing;
+var int CoresDestroyed;
+
 replication
 {
 	reliable if (bNetDirty && Role == ROLE_Authority)
@@ -40,6 +48,8 @@ replication
 	reliable if (Role == ROLE_Authority)
 		ClientUpdateFactoryList, ClientUpdateFactoryListTeam, ClientUpdateFactoryClass;
 
+	reliable if (Role == ROLE_Authority)
+		NodeDamagePoints, NodeHealPoints, NodesConstructed, NodesDestroyed, NodesDestroyedConstructing, CoresDestroyed;
 
 	reliable if (Role < ROLE_Authority)
 		ONSPlusTeleportTo, ONSPlusSetStartCore, RequestVehicleInfoUpdate;
@@ -699,4 +709,14 @@ simulated function ClientPrepareToReceivePowerLinks()
     {
         BS_XPlayer(PC).SetInitialNetSpeed();
     }
+}
+
+function AddHealBonus(float Bonus)
+{
+    super.AddHealBonus(Bonus);
+    NodeHealPoints += Bonus;
+}
+
+defaultproperties
+{
 }
