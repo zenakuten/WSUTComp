@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V9
+- Fix custom stats like OLStats not working for ONS game type
+
 V8
 - Fix headshotted config not working
 - Fix brightskin on dead body
