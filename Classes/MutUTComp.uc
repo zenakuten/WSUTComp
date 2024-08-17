@@ -1,5 +1,4 @@
-class MutUTComp extends Mutator
-    CacheExempt;
+class MutUTComp extends Mutator;
 
 // #exec OBJ LOAD FILE="Textures\minimegatex.utx" PACKAGE=WSUTComp
 #exec OBJ LOAD FILE="Textures\minimegatex.utx"
@@ -117,6 +116,7 @@ var config bool bNoTeamBoosting;
 var config bool bNoTeamBoostingVehicles;
 
 var config bool bChargedWeaponsNoSpawnProtection;
+var config bool bUseUTCompStats;
 
 var bool bEnableScoreboard;  
 var bool bDemoStarted;
@@ -198,6 +198,8 @@ var bool bDefaultWeaponsChanged;
 
 var UTComp_ONSGameRules ONSGameRules;
 var UTComp_Whitelist Whitelist;
+
+var string OriginalStatsClass;
 
 function PreBeginPlay()
 {
@@ -1760,10 +1762,11 @@ function InitStatsOverride()
 {
     local string GameStatsClass;
 
-    if(Level.Game.IsA('ONSOnslaughtGame'))
+    if(Level.Game.IsA('ONSOnslaughtGame') && bUseUTCompStats)
     {
         GameStatsClass = string(class'UTComp_GameStats');
         log("overriding stats class, using "$GameStatsClass);
+        OriginalStatsClass = Level.Game.GameStatsClass;
         Level.Game.GameStatsClass = GameStatsClass;
     }
 }
@@ -1832,7 +1835,7 @@ defaultproperties
      FriendlyName="Wicked Sick UTComp"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V8"
+     FriendlyVersionNumber="V9"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
@@ -2019,4 +2022,6 @@ defaultproperties
 
      bLimitTaunts=false
      TauntCount=10
+
+     bUseUTCompStats=true
 }

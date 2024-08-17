@@ -240,12 +240,12 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
             if(ONSPRI.NodeDamagePoints >= 100)
                 pointScale=0.2;
             C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY-0.003))+YOffset);
-            C.DrawText("Node Dmg Pts:"@ONSPRI.NodeDamagePoints);
+            C.DrawText("Node Dmg Pts:"@int(ONSPRI.NodeDamagePoints));
 
             if(ONSPRI.NodeHealPoints >= 100)
                 pointScale=0.2;
             C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY+0.009))+YOffset);
-            C.DrawText("Node Heal Pts:"@ONSPRI.NodeHealPoints);
+            C.DrawText("Node Heal Pts:"@int(ONSPRI.NodeHealPoints));
 
             C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.021))+YOffset);
             C.DrawText("ND:"@ONSPRI.NodesDestroyed@" NDC:"@ONSPRI.NodesDestroyedConstructing);
