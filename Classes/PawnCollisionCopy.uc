@@ -280,6 +280,7 @@ function PawnCollisionCopy RemovePawnFromList(Pawn Other, PawnCollisionCopy Head
             return Head;
         }
 
+        Previous = Current;
         Current = Current.Next;
     }
 

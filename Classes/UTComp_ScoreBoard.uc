@@ -3,6 +3,7 @@
 class UTComp_ScoreBoard extends UTComp_ScoreBoardDM;
 #exec texture Import File=textures\UTCompLogo.TGA Name=UTCompLogo Mips=Off Alpha=1
 #exec texture Import File=textures\ScoreboardText.TGA Name=ScoreboardText Mips=Off Alpha=1
+#exec texture Import File=textures\ScoreboardTextKills.TGA Name=ScoreboardTextKills Mips=Off Alpha=1
 
 var font MainFont, NotReducedFont, sortareducedfont, ReducedFont, SoTiny;
 
@@ -183,10 +184,11 @@ simulated function DrawTeamInfoBox(Canvas C,float StartX, float StartY,int TeamN
     C.SetPos((C.ClipX *StartX + C.ClipX*0.086),C.ClipY*StartY);
     C.DrawTileStretched(material'Engine.BlackTexture',1,NewBoxYscale);
 
-    //C.SetPos( C.ClipX *StartX-(C.ClipX*0.015), C.ClipY*StartY -(C.ClipY*0.015));
     C.SetPos( C.ClipX *StartX-(C.ClipX*0.0015), C.ClipY*StartY -(C.ClipY*0.0015));
- //   C.DrawTile(material'ScoreboardText',(256*1.0)*Scale,(64*1.0)*Scale,0,0,128,32);
-    C.DrawTile(material'ScoreboardText',(128*1.0)*Scale,(32*1.0)*Scale,0,0,128,32);
+    if(BS_xPlayer(Owner) != None && BS_xPlayer(Owner).HUDSettings != None && BS_xPlayer(Owner).Settings.bShowKillsOnScoreboard)
+        C.DrawTile(material'ScoreboardTextKills',(128*1.0)*Scale,(32*1.0)*Scale,0,0,128,32);
+    else
+        C.DrawTile(material'ScoreboardText',(128*1.0)*Scale,(32*1.0)*Scale,0,0,128,32);
 
 }
 
@@ -485,7 +487,11 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.Font=ReducedFont;
     C.SetPos(C.ClipX*0.070+XOffset, (C.ClipY*(StartY+0.020))+YOffset);
     C.SetDrawColor(0,200,255,255);
-    tmpEff = (uPRI.RealKills-PRI.Deaths);
+    if(BS_xPlayer(Owner) != None && BS_xPlayer(Owner).Settings != None && BS_xPlayer(Owner).Settings.bShowKillsOnScoreboard)
+        tmpEff = (uPRI.RealKills);
+    else
+        tmpEff = (uPRI.RealKills-PRI.Deaths);
+
     C.DrawText(int(tmpEff));
 
     C.Font = SmallerFont;

@@ -207,7 +207,11 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.Font=ReducedFont;
     C.SetPos(C.ClipX*0.070+XOffset, (C.ClipY*(StartY+0.020))+YOffset);
     C.SetDrawColor(0,200,255,255);
-    tmpEff = (uPRI.RealKills-PRI.Deaths);
+    if(BS_xPlayer(Owner) != None && BS_xPlayer(Owner).Settings != None && BS_xPlayer(Owner).Settings.bShowKillsOnScoreboard)
+        tmpEff = (uPRI.RealKills);
+    else
+        tmpEff = (uPRI.RealKills-PRI.Deaths);
+
     C.DrawText(int(tmpEff));
 
     C.Font = SmallerFont;
@@ -235,33 +239,23 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     {
         C.Font = GetSmallerFontFor(C, 6);
 
-        //if(ONSPRI.Team.TeamIndex == OwnerPRI.Team.TeamIndex || (Level.GRI != None && Level.GRI.bGameEnded))
-        //{
-            if(ONSPRI.NodeDamagePoints >= 100)
-                pointScale=0.2;
-            C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY-0.003))+YOffset);
-            C.DrawText("Node Dmg Pts:"@int(ONSPRI.NodeDamagePoints));
+        C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY-0.003))+YOffset);
+        C.DrawText("Node Dmg Pts:"@int(ONSPRI.NodeDamagePoints));
 
-            if(ONSPRI.NodeHealPoints >= 100)
-                pointScale=0.2;
-            C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY+0.009))+YOffset);
-            C.DrawText("Node Heal Pts:"@int(ONSPRI.NodeHealPoints));
+        C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY+0.009))+YOffset);
+        C.DrawText("Node Heal Pts:"@int(ONSPRI.NodeHealPoints));
 
-            C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.021))+YOffset);
-            C.DrawText("ND:"@ONSPRI.NodesDestroyed@" NDC:"@ONSPRI.NodesDestroyedConstructing);
+        C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.021))+YOffset);
+        C.DrawText("ND:"@ONSPRI.NodesDestroyed@" NDC:"@ONSPRI.NodesDestroyedConstructing);
 
-            C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.031))+YOffset);
-            C.DrawText("NC:"@ONSPRI.NodesConstructed@"  CD:"@ONSPRI.CoresDestroyed);
-        //}
+        C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.031))+YOffset);
+        C.DrawText("NC:"@ONSPRI.NodesConstructed@"  CD:"@ONSPRI.CoresDestroyed);
 
         C.Font = SmallerFont;
     }
     // put PPH on the bottom line next to Time in Game
     C.SetPos(C.ClipX*0.148+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
     C.DrawText(FPH@Clamp(3600*PRI.Score/FMax(1,FPHTime - PRI.StartTime),-999,9999),true);
-
-
-
 
     C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
 

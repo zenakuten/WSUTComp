@@ -4,6 +4,7 @@ class utcomp_ScoreBoardDM extends ScoreBoardDeathMatch;
 
 var font SmallerFont;
 var UTComp_ServerReplicationInfo RepInfo;
+var string KillsText;
 
 function DrawNetInfo(Canvas Canvas,int FontReduction,int HeaderOffsetY,int PlayerBoxSizeY,int BoxSpaceY,int BoxTextOffsetY,int OwnerOffset,int PlayerCount, int NetXPos)
 {
@@ -521,10 +522,20 @@ simulated event UpdateScoreBoard(Canvas Canvas)
 	if ( Level.NetMode == NM_Standalone )
 		return;
 
-	Canvas.StrLen(NetText, NetXL, YL);
-	Canvas.DrawColor = HUDClass.default.WhiteColor;
-	Canvas.SetPos(NetXPos + 0.5*NetXL, TitleYPos);
-	Canvas.DrawText(NetText,true);
+    if(BS_xPlayer(Owner) != None && BS_xPlayer(Owner).Settings != None && BS_xPlayer(Owner).Settings.bShowKillsOnScoreboard)
+    {
+        Canvas.StrLen(KillsText, NetXL, YL);
+        Canvas.DrawColor = HUDClass.default.WhiteColor;
+        Canvas.SetPos(NetXPos + 0.5*NetXL, TitleYPos);
+        Canvas.DrawText(KillsText,true);
+    }
+    else
+    {
+        Canvas.StrLen(NetText, NetXL, YL);
+        Canvas.DrawColor = HUDClass.default.WhiteColor;
+        Canvas.SetPos(NetXPos + 0.5*NetXL, TitleYPos);
+        Canvas.DrawText(NetText,true);
+    }
 
     for ( i=0; i<GRI.PRIArray.Length; i++ )
     {
@@ -1245,4 +1256,5 @@ simulated function NextStats()
 
 defaultproperties
 {
+    KillsText="KILLS"
 }

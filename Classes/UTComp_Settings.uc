@@ -23,6 +23,7 @@ var config bool bCPMAStyleHitsounds;
 var config float CPMAPitchModifier;
 var config float SavedSpectateSpeed;
 var config bool bUseDefaultScoreBoard;
+var config bool bShowKillsOnScoreboard;
 var config bool bShowSelfInTeamOverlay;
 var config bool bEnableEnhancedNetCode;
 var config bool bEnableColoredNamesOnEnemies;
@@ -196,6 +197,7 @@ defaultproperties
     bColorGhost=false
     DeResColor=(R=00,G=70,B=255,A=255)
     DeResFXColor=(R=00,G=70,B=255,A=255)
+    bShowKillsOnScoreboard=True
 
     instance=none
 }

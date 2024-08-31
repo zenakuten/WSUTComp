@@ -3,13 +3,12 @@
 class UTComp_Menu_Miscellaneous extends UTComp_Menu_MainMenu;
 
 var automated GUILabel l_ScoreboardTitle;
-var automated GUILabel l_InfoTitle;
 var automated GUILabel l_GenericTitle;
 var automated GUILabel l_CrossScale;
 var automated GUILabel l_NewNet;
 
-
 var automated wsCheckBox ch_UseScoreBoard;
+var automated wsCheckBox ch_ShowKills;
 var automated wsCheckBox ch_WepStats;
 var automated wsCheckBox ch_PickupStats;
 var automated wsCheckBox ch_FootSteps;
@@ -31,6 +30,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
         break;
 
     ch_UseScoreboard.Checked(!Settings.bUseDefaultScoreboard);
+    ch_ShowKills.Checked(Settings.bShowKillsOnScoreboard);
     ch_WepStats.Checked(class'UTComp_Scoreboard'.default.bDrawStats);
     ch_PickupStats.Checked(class'UTComp_Scoreboard'.default.bDrawPickups);
     ch_FootSteps.Checked(class'UTComp_xPawn'.default.bPlayOwnFootSteps);
@@ -59,6 +59,7 @@ function InternalOnChange( GUIComponent C )
                 ch_PickupStats.Checked(class'UTComp_Scoreboard'.default.bDrawPickups);
             }
             break;
+        case ch_ShowKills: Settings.bShowKillsOnScoreboard=ch_ShowKills.IsChecked(); break;
         case ch_WepStats:  class'UTComp_Scoreboard'.default.bDrawStats=ch_WepStats.IsChecked();
                            BS_xPlayer(PlayerOwner()).SetBStats(class'UTComp_Scoreboard'.default.bDrawStats);break;
         case ch_PickupStats:  class'UTComp_Scoreboard'.default.bDrawPickups=ch_PickupStats.IsChecked(); break;
@@ -142,15 +143,16 @@ defaultproperties
     End Object
     ch_PickupStats=wsCheckBox'UTComp_Menu_Miscellaneous.PickupCheck'
 
-    Begin Object Class=GUILabel Name=InfoLabel
-        Caption="--------Adrenaline Combos--------"
-        TextColor=(B=255,G=255,R=0)
-        WinWidth=1.000000
-        WinHeight=0.060000
+    Begin Object Class=wsCheckBox Name=KillsCheck
+        Caption="Show kills on scoreboard."
+        OnCreateComponent=KillsCheck.InternalOnCreateComponent
+        WinWidth=0.500000
+        WinHeight=0.030000
         WinLeft=0.250000
         WinTop=0.450000
+        OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
-    l_InfoTitle=GUILabel'UTComp_Menu_Miscellaneous.InfoLabel'
+    ch_ShowKills=wsCheckBox'UTComp_Menu_Miscellaneous.KillsCheck'
 
     Begin Object Class=GUIButton Name=AdrenButton
         Caption="Disable Adrenaline Combos"

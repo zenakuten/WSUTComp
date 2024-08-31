@@ -2,9 +2,6 @@
 
 class UTComp_ScoreBoardCTF extends UTComp_ScoreBoard;
 
-#exec texture Import File=textures\UTCompLogo.TGA Name=UTCompLogo Mips=Off Alpha=1
-#exec texture Import File=textures\ScoreboardText.TGA Name=ScoreboardText Mips=Off Alpha=1
-
 //font names and objects
 var Font FontArrayFonts[9];
 var localized string FontArrayNames[9];
