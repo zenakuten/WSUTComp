@@ -63,6 +63,17 @@ function Projectile SpawnProjectile(Vector Start, Rotator Dir)
     return Rocket;
 }
 
+
+simulated function bool PutDown()
+{
+    // fix for when you switch weapons while charging rox but before they fire
+    // causing switch to fail
+    if(Level.TimeSeconds < FireMode[1].NextFireTime && FireMode[1].Load == 1)
+        ImmediateStopFire();
+
+    return super.PutDown();
+}
+
 DefaultProperties
 {
     PickupClass=Class'UTComp_RocketLauncherPickup'
