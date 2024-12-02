@@ -7,8 +7,9 @@ Release Notes
 
 V10
 - Fix ONS node score offset when score >= 100
-- Add option to show kills on UTComp scoreboard
+- Add option to show kills instead of net on UTComp scoreboard
 - Fix bug when switching weapons while rocket launcher alt fire is active
+- Fix bug where custom hitsounds didn't load correctly
 
 V9
 - Fix custom stats like OLStats not working for ONS game type

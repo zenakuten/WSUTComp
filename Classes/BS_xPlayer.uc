@@ -30,6 +30,7 @@ var bool bWantsStats;
 var bool oldbShowScoreBoard;
 
 var sound LoadedEnemySound, LoadedFriendlySound;
+var sound DefaultEnemySound, DefaultFriendlySound;
 
 var UTComp_Warmup uWarmup;
 var UTComp_ServerReplicationInfo RepInfo;
@@ -256,7 +257,6 @@ simulated function PostBeginPlay()
 
     if (Settings == none) {
         Settings = new(none, "ClientSettings") class'UTComp_Settings';
-        Settings.CheckSettings();
     }
 
     foreach AllObjects(class'UTComp_HUDSettings', HUDSettings)
@@ -1457,7 +1457,13 @@ simulated function PlayEnemyHitSound(int Damage)
         HitSoundPitch = Settings.CPMAPitchModifier * 30.0 / Damage;
 
     if (LoadedEnemySound == none)
+    {
         LoadedEnemySound = Sound(DynamicLoadObject(Settings.EnemySound, class'Sound', True));
+        if(LoadedEnemySound == none)
+        {
+            LoadedEnemySound = DefaultEnemySound;
+        }
+    }
 
     if (ViewTarget != None)
         ViewTarget.PlaySound(LoadedEnemySound,,Settings.HitSoundVolume,,,HitSoundPitch);
@@ -1477,7 +1483,13 @@ simulated function PlayTeammateHitSound(int Damage)
         HitSoundPitch = Settings.CPMAPitchModifier * 30.0 / Damage;
 
     if (LoadedFriendlySound == none)
+    {
         LoadedFriendlySound = Sound(DynamicLoadObject(Settings.FriendlySound, class'Sound', True));
+        if(LoadedFriendlySound == none)
+        {
+            LoadedFriendlySound = DefaultFriendlySound;
+        }
+    }
 
     if (ViewTarget != None)
         ViewTarget.PlaySound(LoadedFriendlySound,,Settings.HitSoundVolume,,,HitSoundPitch);
@@ -4722,8 +4734,8 @@ defaultproperties
 
      LastWeaponEffectSent=-1
 
-     LoadedEnemySound=sound'Sounds.HitSound'
-     LoadedFriendlySound=sound'Sounds.HitSoundFriendly'
+     DefaultEnemySound=sound'Sounds.HitSound'
+     DefaultFriendlySound=sound'Sounds.HitSoundFriendly'
      HeadshotSound=Sound'Sounds.headshotted'
 
      PreferredExitPoint=-1

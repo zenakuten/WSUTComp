@@ -98,23 +98,6 @@ var config color DeResFXColor;
 
 var UTComp_Settings instance;
 
-function CheckSettings() {
-    local string PackageName;
-    local int CheckLen;
-
-    PackageName = string(self.Class);
-    PackageName = Left(PackageName, InStr(PackageName, "."));
-    CheckLen = Len(PackageName);
-
-    if (Left(FriendlySound, CheckLen) ~= PackageName)
-        FriendlySound = PackageName$Mid(FriendlySound, InStr(FriendlySound, "."));
-    if (Left(EnemySound, CheckLen) ~= PackageName)
-        EnemySound = PackageName$Mid(EnemySound, InStr(EnemySound, "."));
-
-    //SaveConfig();
-    Save();
-}
-
 function Save()
 {
     SaveConfig();
