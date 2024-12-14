@@ -11,6 +11,7 @@ V10
 - Fix bug when switching weapons while rocket launcher alt fire is active
 - Fix bug where custom hitsounds didn't load correctly
 - Fix bug where shock beam doesn't always render
+- Fix bug in ONS minimap where vehicle dots had wrong color/info in randomizers
 
 V9
 - Fix custom stats like OLStats not working for ONS game type

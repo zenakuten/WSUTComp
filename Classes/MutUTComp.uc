@@ -1728,6 +1728,7 @@ function string GetInventoryClassOverride(string InventoryClassName)
 function Reset()
 {
     local Controller C;
+    local UTComp_ONSPlayerReplicationInfo ONSInfo;
 
     // remove all Timestamp_pawn from clients
     for(C = Level.ControllerList;C != None;C = C.NextController)
@@ -1748,6 +1749,13 @@ function Reset()
 
         countercontroller.Destroy();
         countercontroller = None;
+    }
+
+    // fix for vehicle list not updating between rounds on ONS randomizers
+    foreach DynamicActors(class'UTComp_ONSPlayerReplicationInfo', ONSInfo)
+    {
+        if(ONSInfo != None)
+            ONSInfo.ServerVSpawnList.Length = 0;
     }
 }
 
