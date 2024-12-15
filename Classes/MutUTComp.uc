@@ -1336,7 +1336,8 @@ function ServerTraveling(string URL, bool bItems)
 function ParseURL(string Url)
 {
    local string Skinz0r, Sounds, overlay, powerupsOverlay, warmup, dd, TimedOver
-   , TimedOverLength, grenadesonspawn, enableenhancednetcode, suicideIntervalString;
+   , TimedOverLength, grenadesonspawn, enableenhancednetcode, suicideIntervalString
+   , fws;
    local array<string> Parts;
    local int i;
 
@@ -1369,6 +1370,8 @@ function ParseURL(string Url)
                EnableEnhancedNetcode=Right(Parts[i], Len(Parts[i])-Len("EnableEnhancedNetcode")-1);
            if (Left(Parts[i], Len("SuicideInterval")) ~= "SuicideInterval")
                suicideIntervalString = Right(Parts[i], Len(Parts[i])-Len("SuicideInterval")-1);
+           if (Left(Parts[i], Len("fws")) ~= "fws")
+               suicideIntervalString = Right(Parts[i], Len(Parts[i])-Len("fws")-1);
        }
    }
    if(Skinz0r !="" && int(Skinz0r)<4 && int(Skinz0r)>0)
@@ -1400,6 +1403,11 @@ function ParseURL(string Url)
    {
        default.bEnableDoubleDamage=(DD~="True");
        bEnableDoubleDamage = default.bEnableDoubleDamage;
+   }
+   if(fws !="" && (fws~="False" || fws~="True"))
+   {
+       default.bFastWeaponSwitch=(fws~="True");
+       bFastWeaponSwitch = default.bFastWeaponSwitch;
    }
  
    if(TimedOverLength !="" && int(TimedOverLength)>=0)
