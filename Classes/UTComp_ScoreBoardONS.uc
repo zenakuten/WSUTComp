@@ -201,16 +201,19 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     C.DrawText(int(PRI.Deaths));
 
     // Player Effeciency
-    if(uPRI.RealKills-PRI.Deaths >99)
+    if(uPRI != None && uPRI.RealKills-PRI.Deaths >99)
         C.Font = SmallerFont;
     else
         C.Font=ReducedFont;
     C.SetPos(C.ClipX*0.070+XOffset, (C.ClipY*(StartY+0.020))+YOffset);
     C.SetDrawColor(0,200,255,255);
-    if(BS_xPlayer(Owner) != None && BS_xPlayer(Owner).Settings != None && BS_xPlayer(Owner).Settings.bShowKillsOnScoreboard)
-        tmpEff = (uPRI.RealKills);
-    else
-        tmpEff = (uPRI.RealKills-PRI.Deaths);
+    if(uPRI != None)
+    {
+        if(BS_xPlayer(Owner) != None && BS_xPlayer(Owner).Settings != None && BS_xPlayer(Owner).Settings.bShowKillsOnScoreboard)
+            tmpEff = (uPRI.RealKills);
+        else
+            tmpEff = (uPRI.RealKills-PRI.Deaths);
+    }
 
     C.DrawText(int(tmpEff));
 
@@ -264,10 +267,13 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
            break;
     if(uWarmup!=None && uWarmup.bInWarmup)
     {
-       if(!uPRI.bIsReady)
-          C.DrawText("Not Ready");
-       else
-          C.DrawText("Ready");
+        if(uPRI != None)
+        {
+            if(!uPRI.bIsReady)
+                C.DrawText("Not Ready");
+            else
+                C.DrawText("Ready");
+        }
     }
     else if(PRI.bReadyToPlay && !GRI.bMatchHasBegun)
         C.DrawText("Ready");

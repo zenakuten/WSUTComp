@@ -357,7 +357,7 @@ simulated function DoClientTrace(Vector Start, Rotator Dir)
             else if ( !Other.bWorldGeometry )
             {
 				// Update hit effect except for pawns (blood) other than vehicles.
-               	if ( Other.IsA('Vehicle') || (!Other.IsA('Pawn') && !Other.IsA('HitScanBlockingVolume')) )
+               	if (WeaponAttachment(Weapon.ThirdPersonActor) != None && (Other.IsA('Vehicle') || (!Other.IsA('Pawn') && !Other.IsA('HitScanBlockingVolume'))))
 					WeaponAttachment(Weapon.ThirdPersonActor).UpdateHit(Other, HitLocation, HitNormal);
 
                 HitNormal = Vect(0,0,0);
@@ -369,7 +369,8 @@ simulated function DoClientTrace(Vector Start, Rotator Dir)
         {
             HitLocation = End;
             HitNormal = Vect(0,0,0);
-			WeaponAttachment(Weapon.ThirdPersonActor).UpdateHit(Other,HitLocation,HitNormal);
+            if(WeaponAttachment(Weapon.ThirdPersonActor) != None)
+                WeaponAttachment(Weapon.ThirdPersonActor).UpdateHit(Other,HitLocation,HitNormal);
         }
 
         SpawnClientBeamEffect(Start, Dir, HitLocation, HitNormal, ReflectNum);
