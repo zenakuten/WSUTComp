@@ -12,6 +12,8 @@ V10
 - Fix bug where custom hitsounds didn't load correctly
 - Fix bug where shock beam doesn't always render
 - Fix bug in ONS minimap where vehicle dots had wrong color/info in randomizers
+- Move server configuration to its own file
+- Fix some log spamming bugs
 
 V9
 - Fix custom stats like OLStats not working for ONS game type
