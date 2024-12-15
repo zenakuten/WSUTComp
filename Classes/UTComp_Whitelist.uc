@@ -1,5 +1,5 @@
 class UTComp_Whitelist extends Object 
-    config(UTComp_Whitelist) 
+    config(WSUTComp_Whitelist) 
     PerObjectConfig;
 
 // list of playerIdHashes allowed in
