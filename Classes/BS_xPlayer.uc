@@ -2291,7 +2291,17 @@ simulated function ResetEpicStats()
 {
     local TeamPlayerReplicationInfo tPRI;
     local int i;
-    if (PlayerReplicationInfo != None && TeamPlayerReplicationInfo(PlayerReplicationInfo)!= None)
+
+    if(PlayerReplicationInfo != None)
+    {
+        PlayerReplicationInfo.Score = 0;
+        PlayerReplicationInfo.Deaths = 0;
+        PlayerReplicationInfo.GoalsScored = 0;
+        PlayerReplicationInfo.Kills = 0;
+        PlayerReplicationInfo.StartTime = 0;
+    }
+
+    if (TeamPlayerReplicationInfo(PlayerReplicationInfo) != None)
     {
         tPRI=Teamplayerreplicationinfo(PlayerReplicationInfo);
         tPRI.bFirstBlood=False;
@@ -2308,6 +2318,7 @@ simulated function ResetEpicStats()
         tPRI.headcount=0;
         tPRI.ranovercount=0;
         tPRI.DaredevilPoints=0;
+        tPRI.Suicides=0;
         for(i=0; i<=4; i++)
             tPRI.Combos[i]=0;
         for ( i = tPRI.VehicleStatsArray.Length - 1; i >= 0; i-- )

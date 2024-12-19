@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V11
+- Fix some stats carrying over from warmup
+
 V10
 - Fix ONS node score offset when score >= 100
 - Add option to show kills instead of net on UTComp scoreboard
