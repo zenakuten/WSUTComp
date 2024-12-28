@@ -384,7 +384,7 @@ function RemoveOutdatedHistory()
 defaultproperties
 {
     RemoteRole=ROLE_NONE
-    Physics==PHYS_NONE
+    Physics=PHYS_NONE
 
     //Dont collide with ANYTHING but the traces if we can avoid it
     bCollideActors=false

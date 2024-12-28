@@ -22,7 +22,11 @@ var int PreIsolated;
 // var float DamageScoreQuota;
 var float IsolateBonusPctPerNode;
 
+// uhg
+var bool bHookedNodes;
+
 delegate NotifyUpdateLinkStateHook(ONSPowerCore Node);
+
 
 // Nasty hacks to monitor when a node is destroyed (for the bonus score you get when isolating nodes), also added code for the enhanced radar map
 function OPInitialise()
@@ -74,10 +78,13 @@ function OPInitialise()
                     //MutatorOwner.SpawnCollisionCopy(n);
                 }
 
-				NotifyUpdateLinkStateHook = ONSPowerNode(n).UpdateLinkState;
+                if(!bHookedNodes)
+                {
+                    NotifyUpdateLinkStateHook = ONSPowerNode(n).UpdateLinkState;
 
-				// Hook the nodes NotifyUpdateLinks delegate
-				ONSPowerNode(n).UpdateLinkState = UpdateLinkStateHook;
+                    // Hook the nodes NotifyUpdateLinks delegate
+                    ONSPowerNode(n).UpdateLinkState = UpdateLinkStateHook;
+                }
 
 
 				// Give the node an event name if it doesn't already have one
@@ -114,6 +121,8 @@ function OPInitialise()
                 ONSPowerCore(n).Score = MutatorOwner.RepInfo.PowerCoreScore;
             }
 		}
+
+        bHookedNodes=true;
 	}
 
 	// Setup the vehicle factory monitors

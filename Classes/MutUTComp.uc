@@ -1739,6 +1739,7 @@ function Reset()
 {
     local Controller C;
     local UTComp_ONSPlayerReplicationInfo ONSInfo;
+    local int i;
 
     // remove all Timestamp_pawn from clients
     for(C = Level.ControllerList;C != None;C = C.NextController)
@@ -1764,8 +1765,49 @@ function Reset()
     // fix for vehicle list not updating between rounds on ONS randomizers
     foreach DynamicActors(class'UTComp_ONSPlayerReplicationInfo', ONSInfo)
     {
+        //reset server values
         if(ONSInfo != None)
+        {
             ONSInfo.ServerVSpawnList.Length = 0;
+            ONSInfo.ClientVSpawnList.Length = 0;
+        }
+
+        //reset client values
+        ONSInfo.ClientResetLists();
+    }
+
+    // this all needs reset for randomizers that change all the nodes around
+    if(ONSGameRules != none)
+    {
+        // clear out all node monitors
+        for(i=0;i<ONSGameRules.NodeMonitors.Length;i++)
+        {
+            if(ONSGameRules.NodeMonitors[i] != None)
+            {
+                ONSGameRules.NodeMonitors[i].Master = None;
+                ONSGameRules.NodeMonitors[i].Tag = '';
+                ONSGameRules.NodeMonitors[i].Destroy();
+                ONSGameRules.NodeMonitors[i] = None;
+            }
+        }        
+        ONSGameRules.NodeMonitors.Length = 0;
+
+        //clear out all vehicle spawn monitors
+        for(i=0;i<ONSGameRules.VehicleSpawnMonitors.Length;i++)
+        {
+            if(ONSGameRules.VehicleSpawnMonitors[i] != None)
+            {
+                ONSGameRules.VehicleSpawnMonitors[i].GRIMaster = None;
+                ONSGameRules.VehicleSpawnMonitors[i].Tag = '';
+                ONSGameRules.VehicleSpawnMonitors[i].Destroy();
+                ONSGameRules.VehicleSpawnMonitors[i] = None;
+            }
+        }
+        ONSGameRules.VehicleSpawnMonitors.Length = 0;
+
+        // re-initialize ons game rules
+        ONSGameRules.OPInitialise();
+
     }
 }
 

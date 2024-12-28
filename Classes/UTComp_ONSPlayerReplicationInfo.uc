@@ -53,6 +53,9 @@ replication
 
 	reliable if (Role < ROLE_Authority)
 		ONSPlusTeleportTo, ONSPlusSetStartCore, RequestVehicleInfoUpdate;
+
+    reliable if(Role == ROLE_Authority)
+        ClientResetLists;
 }
 
 function SetStartCore(ONSPowerCore Core, bool bTemporary)
@@ -246,7 +249,7 @@ function array<NavigationPoint> ONSPlusFindPlayerStart(optional bool bSkipRules,
 	if (SelectedPC != none)
 	{
 		// Check if the spawnpoint is invalid
-		if (!ONSPlusValidSpawnPoint(SelectedPC))
+		if (!ONSPlusValidSpawnPoint(SelectedPC, True))
 		{
 			// If it's a vehicle factory then set the spawnpoint to the owning core, otherwise set it to none
 			if (ONSVehicleFactory(SelectedPC) != none)
@@ -715,6 +718,12 @@ function AddHealBonus(float Bonus)
 {
     super.AddHealBonus(Bonus);
     NodeHealPoints += Bonus;
+}
+
+simulated function ClientResetLists()
+{
+    ServerVSpawnList.Length = 0;
+    ClientVSpawnList.Length = 0;
 }
 
 defaultproperties
