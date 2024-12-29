@@ -6,6 +6,8 @@ var automated GUIVertScrollBar ScrollBar;
 var EmoticonsReplicationInfo ERI;
 var int Offset;
 var automated wsCheckBox ch_EnableEmoticons;
+var automated GUIEditBox eb_Message;
+var automated GUILabel lbl_Say;
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -82,6 +84,79 @@ function InternalOnChange( GUIComponent C )
     SaveHUDSettings();
 }
 
+function bool InternalOnEmoteClick(GUIComponent C)
+{
+    local int Index;
+    local string smileyCmd;
+
+    Index=CalcIndex();
+    if(Index >= 0)
+    {
+        smileyCmd=ERI.Smileys[Index].Event;
+        eb_Message.TextStr = eb_Message.TextStr$smileyCmd;
+        eb_Message.CaretPos = len(eb_Message.TextStr);
+    }
+
+    return true;
+}
+
+function int CalcIndex()
+{
+	local float y;
+    local int item;
+	
+	y = PageOwner.ActualTop() * 1.75;
+
+    item = (Controller.MouseY - y) / 64;
+    item = Offset + Item - 2;
+    if(item < 0)
+        item = -1;
+    if(item>ERI.Smileys.Length-1)
+        item = -1;
+
+    return item;
+}
+
+function bool InternalOnEmoteKeyEvent(out byte Key, out byte State, float delta)
+{
+    local string text;
+    if(Key==13)
+    {
+        text = eb_Message.GetText();
+        if(text != "")
+            PlayerOwner().Player.Console.DelayedConsoleCommand("Say "@text);
+
+        eb_Message.SetText("");
+        return false;
+    }
+
+    if(Key==0xEC)
+    {
+        ScrollBar.WheelUp();
+    }
+    else if(Key==0xED)
+    {
+        ScrollBar.WheelDown();
+    }
+
+    return eb_Message.InternalOnKeyEvent(Key, State, delta);
+}
+
+function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
+{
+    if(Key==0xEC)
+    {
+        ScrollBar.WheelUp();
+    }
+    else if(Key==0xED)
+    {
+        ScrollBar.WheelDown();
+    }
+
+    return false;
+}
+
+
 defaultproperties
 {
      Begin Object Class=wsGUIVertScrollBar Name=ScrollBarObj
@@ -106,4 +181,28 @@ defaultproperties
         OnCreateComponent=EnableEmoticonsCheck.InternalOnCreateComponent
     End Object
     ch_EnableEmoticons=wsCheckBox'UTComp_Menu_Emoticons.EnableEmoticonsCheck'
+
+    Begin Object Class=GUILabel Name=SayLabel
+        Caption="Say:"
+        TextColor=(R=255,G=255,B=255,A=255)
+        WinTop=0.764162
+        WinLeft=0.325062
+    End Object
+    lbl_Say=GUILabel'UTComp_Menu_Emoticons.SayLabel'
+
+    Begin Object Class=GUIEditBox Name=MessageEditBox
+        StyleName="WSEditBox"
+		WinWidth=0.50500
+		WinHeight=0.035000
+		WinLeft=0.359062
+		WinTop=0.779162
+         OnActivate=MessageEditBox.InternalActivate
+         OnDeActivate=MessageEditBox.InternalDeactivate
+         OnKeyType=MessageEditBox.InternalOnKeyType
+         OnKeyEvent=UTComp_Menu_Emoticons.InternalOnEmoteKeyEvent
+    End Object
+    eb_Message=GUIEditBox'UTComp_Menu_Emoticons.MessageEditBox'
+
+    OnClick=InternalOnEmoteClick
+    OnKeyEvent=InternalOnKeyEvent
 }
