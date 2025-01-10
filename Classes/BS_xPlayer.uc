@@ -805,8 +805,11 @@ simulated function DamageIndicatorHit(int Damage, actor injured, pawn instigated
     local vector EyeHeight;
 
     HitDamage += Damage;
-    EyeHeight.z = instigatedBy.EyeHeight;
-    bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
+    if(instigatedBy != None)
+    {
+        EyeHeight.z = instigatedBy.EyeHeight;
+        bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
+    }
     HitDamageActor = injured;
 }
 
