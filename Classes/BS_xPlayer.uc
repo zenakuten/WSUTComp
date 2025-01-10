@@ -521,13 +521,21 @@ event PlayerTick(float deltatime)
                 SumDamageTime = Level.TimeSeconds;
             }
             
-            if(HUDSettings.DamageIndicatorType == 3)
+            if(HUDSettings.DamageIndicatorType == 3 && Level.NetMode != NM_DedicatedServer)
             {
                 class'Emitter_Damage'.static.ShowDamage(HitDamageActor, HitDamageActor.Location, Damage);        
             }
         }        
 
         LastDamage = HitDamage;
+    }
+
+    // fix annoying bug where sometimes weapon instigator gets set to none 
+    // due to race condition in replication
+    if(Level.NetMode == NM_Client)
+    {
+        if(Pawn != None && Pawn.Weapon != None && Pawn.Weapon.Instigator != Pawn)
+            Pawn.Weapon.Instigator = Pawn;
     }
 }
 
@@ -4684,7 +4692,6 @@ simulated function ClientReceiveAward(Sound awardSound, float delay, float atten
         }
     }
 }
-
 
 defaultproperties
 {
