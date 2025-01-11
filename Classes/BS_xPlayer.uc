@@ -381,6 +381,9 @@ simulated function Destroyed()
         NodeDamageHook = none;
     }
 
+    if(Settings != None)
+        Settings.default.Instance = None;
+
     super.Destroyed();
 }
 
