@@ -7,6 +7,7 @@ Release Notes
 
 V11
 - Fix some stats carrying over from warmup
+- Fix rare bug where weapons won't fire in TAM/Freon
 
 V10
 - Fix ONS node score offset when score >= 100
