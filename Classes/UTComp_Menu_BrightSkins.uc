@@ -18,6 +18,7 @@ var automated GUIButton bu_DeleteClanSkin, bu_AddClanSkin;
 
 var automated GUILabel l_SkinHeader, lModelHeader;
 var automated GUILabel l_RedSkin, l_BlueSkin, l_GreenSkin;
+var automated GUIButton bu_ResetSkins;
 
 var bool InitializationComplete;
 var bool bUpdatingCrap;
@@ -380,7 +381,26 @@ function bool InternalOnClick( GUIComponent Sender )
                                     co_TeamSelect.AddItem(Settings.ClanSkins[i].PlayerName);
                                co_TeamSelect.ReadOnly(True);
                                co_TeamSelect.SetIndex(0);
-                               InitializationComplete=True; break;
+                               InitializationComplete=True; 
+                               break;
+        case bu_ResetSkins:
+                                InitializationComplete=false;
+                                Settings.bEnemyBasedSkins = false;
+                                Settings.bEnemyBasedModels = false;
+                                Settings.ClientSkinModeRedTeammate = 2;
+                                Settings.ClientSkinModeBlueEnemy = 2;
+                                Settings.PreferredSkinColorRedTeammate = 5;
+                                Settings.PreferredSkinColorBlueEnemy = 6;
+                                Settings.bRedTeammateModelsForced = false;
+                                Settings.bBlueEnemyModelsForced = false;
+                                SaveSettings();                                
+                                class'UTComp_xPawn'.static.StaticSaveConfig();
+                                BS_xPlayer(PlayerOwner()).ReSkinAll();
+                                BS_xPlayer(PlayerOwner()).MatchHudColor();
+                                InitializationComplete=true;
+                                break;
+
+                            
     }
 
     UpdateAllComponents();
@@ -459,6 +479,10 @@ function UpdateAllComponents()
        bu_DeleteClanSkin.DisableMe();
     else
        bu_DeleteClanSkin.EnableMe();
+
+    ch_EnemySkins.Checked(Settings.bEnemyBasedSkins);
+    ch_EnemyModels.Checked(Settings.bEnemyBasedModels);
+    ch_DarkSkins.Checked(Settings.bEnableDarkSkinning);
 
     if(Team==0)
     {
@@ -1006,7 +1030,7 @@ defaultproperties
          Caption="Enemy Based Skins"
          Hint="Color is based on your team/enemy team instead of red/blue"
          OnCreateComponent=EnemyBasedSkinCheck.InternalOnCreateComponent
-		WinWidth=0.257812
+		WinWidth=0.157812
 		WinHeight=0.030000
 		WinLeft=0.096875
 		WinTop=0.330583
@@ -1018,7 +1042,7 @@ defaultproperties
         Caption="Enemy Based models"
          Hint="Model is based on your team/enemy team instead of red/blue"
         OnCreateComponent=EnemyBasedSkinCheck.InternalOnCreateComponent
-		WinWidth=0.273437
+		WinWidth=0.173437
 		WinHeight=0.030000
 		WinLeft=0.367188
 		WinTop=0.330583
@@ -1037,7 +1061,7 @@ defaultproperties
      co_TeamSelect=wsGUIComboBox'UTComp_Menu_BrightSkins.TeamSelectCombo'
 
      Begin Object Class=wsGUIComboBox Name=TypeSkinSelectCombo
-		WinWidth=0.423438
+		WinWidth=0.421875
 		WinHeight=0.035000
 		WinLeft=0.096249
 		WinTop=0.491263
@@ -1047,9 +1071,9 @@ defaultproperties
      co_TypeSkinSelect=wsGUIComboBox'UTComp_Menu_BrightSkins.TypeSkinSelectCombo'
 
      Begin Object Class=wsGUIComboBox Name=ModelSelectCombo
-		 WinWidth=0.417188
+		 WinWidth=0.421875
 		 WinHeight=0.035000
-		 WinLeft=0.100625
+		 WinLeft=0.096249
 	 	 WinTop=0.737925
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
          OnKeyEvent=UTComp_Menu_BrightSkins.InternalOnKeyEvent
@@ -1057,9 +1081,9 @@ defaultproperties
      co_ModelSelect=wsGUIComboBox'UTComp_Menu_BrightSkins.ModelSelectCombo'
 
      Begin Object Class=wsGUIComboBox Name=EpicSkinSelectCombo
-		WinWidth=0.420313
+		WinWidth=0.421875
 		WinHeight=0.035000
-		WinLeft=0.097812
+		WinLeft=0.096249
 		WinTop=0.537526
          OnChange=UTComp_Menu_BrightSkins.InternalOnChange
          OnKeyEvent=EpicSkinSelectCombo.InternalOnKeyEvent
@@ -1127,7 +1151,7 @@ defaultproperties
      Begin Object Class=wsCheckBox Name=ForceThisModelCheck
          Caption="Force This Model"
          OnCreateComponent=ForceThisModelCheck.InternalOnCreateComponent
-		WinWidth=0.309375
+		WinWidth=0.149375
 		WinHeight=0.030000
 		WinLeft=0.098749
 		WinTop=0.702431
@@ -1138,7 +1162,7 @@ defaultproperties
      Begin Object Class=wsCheckBox Name=DarkSkinCheck
          Caption="Darken Dead Bodies"
          OnCreateComponent=DarkSkinCheck.InternalOnCreateComponent
-		WinWidth=0.264062
+		WinWidth=0.164062
 		WinHeight=0.030000
 		WinLeft=0.648436
 		WinTop=0.330916
@@ -1174,7 +1198,7 @@ defaultproperties
          Caption="Red"
          TextColor=(R=255)
          WinTop=0.570000
-         WinLeft=0.100000
+         WinLeft=0.096249
      End Object
      l_RedSkin=GUILabel'UTComp_Menu_BrightSkins.RedSkinLabel'
 
@@ -1182,7 +1206,7 @@ defaultproperties
          Caption="Blue"
          TextColor=(B=255)
          WinTop=0.650000
-         WinLeft=0.100000
+         WinLeft=0.096249
      End Object
      l_BlueSkin=GUILabel'UTComp_Menu_BrightSkins.BlueSkinLabel'
 
@@ -1190,7 +1214,7 @@ defaultproperties
          Caption="Green"
          TextColor=(G=255)
          WinTop=0.610000
-         WinLeft=0.100000
+         WinLeft=0.096249
      End Object
      l_GreenSkin=GUILabel'UTComp_Menu_BrightSkins.GreenSkinLabel'
 
@@ -1211,6 +1235,19 @@ defaultproperties
 		DropShadowY=4
 		OnDraw=InternalOnDraw
 	End Object
+    Begin Object Class=GUIButton Name=ResetSkinsButton
+        Caption="Reset Skins"
+        StyleName="WSButton"
+		WinWidth=0.208125
+		WinHeight=0.040000
+		WinLeft=0.096249
+		WinTop=0.780417
+        OnClick=UTComp_Menu_BrightSkins.InternalOnClick
+        OnKeyEvent=ResetSkinsButton.InternalOnKeyEvent
+    End Object
+
+    bu_ResetSkins=GUIButton'UTComp_Menu_BrightSkins.ResetSkinsButton'
+
 	SpinnyDudeBounds=spinnydudeboundsimage
 
 }
