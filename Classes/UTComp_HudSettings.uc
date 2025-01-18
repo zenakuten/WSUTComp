@@ -22,6 +22,10 @@ var config bool bMatchHudColor;
 var SpecialCrosshair TempxHair;
 
 var config bool bEnableEmoticons;
+var config bool bEnableMapTeamRadar;
+var config bool bEnableTeamRadar;
+var config Color TeamRadarPlayer;
+var config Color TeamRadarVehicle;
 
 defaultproperties
 {
@@ -29,4 +33,8 @@ defaultproperties
     bEnableWidescreenFix=False
     DamageIndicatorType=2
     bEnableEmoticons=True
+    bEnableMapTeamRadar=True
+    bEnableTeamRadar=False
+    TeamRadarPlayer=(R=0,G=255,B=0,A=255)
+    TeamRadarVehicle=(R=255,G=0,B=255,A=255)
 }

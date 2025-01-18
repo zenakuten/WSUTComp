@@ -79,6 +79,9 @@ var float MoveErrorAccumFixValue;
 var bool bLimitTaunts;
 var int TauntCount;
 
+var bool bAllowTeamRadar;
+var bool bAllowTeamRadarMap;
+
 replication
 {
     reliable if(Role==Role_Authority)
@@ -95,7 +98,8 @@ replication
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
-        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount;
+        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
+        bAllowTeamRadar, bAllowTeamRadarMap;
 }
 
 defaultproperties
@@ -151,5 +155,7 @@ defaultproperties
 
      bLimitTaunts=false
      TauntCount=10
+     bAllowTeamRadar=false
+     bAllowTeamRadarMap=true
 }
 

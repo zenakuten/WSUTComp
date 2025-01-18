@@ -276,12 +276,10 @@ simulated function DrawTimer(Canvas C)
 	DrawNumericTileWidget( C, TimerSeconds, DigitsBig);
 }
 
-function SetVehicleData(class<Vehicle> VehicleClass, out color RadarColour, out float U, out float V)
+function SetVehicleData(class<Vehicle> VehicleClass, out color RadarColour)
 {
     local int i;
 
-    U=0;
-    V=0;
     RadarColour.R=0;
     RadarColour.G=0;
     RadarColour.B=0;
@@ -297,18 +295,16 @@ function SetVehicleData(class<Vehicle> VehicleClass, out color RadarColour, out 
         }
     }
 
-    SetVehicleDataFallback(VehicleClass, RadarColour,U,V);
+    SetVehicleDataFallback(VehicleClass, RadarColour);
 }
 
-function SetVehicleDataFallback(class<Vehicle> VehicleClass, out color RadarColour, out float U, out float V)
+function SetVehicleDataFallback(class<Vehicle> VehicleClass, out color RadarColour)
 {
     local color RC;
     RC.R=0;
     RC.G=0;
     RC.B=0;
     RC.A=255;
-    U=0;
-    V=0;
 
     if(ClassIsChildOf(VehicleClass, class'ONSTreadCraft'))
     {
@@ -342,6 +338,7 @@ function SetVehicleDataFallback(class<Vehicle> VehicleClass, out color RadarColo
     RadarColour=RC;
 }
 
+// Not the in play map, this is when the player has the menu open
 simulated function DrawRadarMapVehicles(Canvas C, float CenterPosX, float CenterPosY, float RadarWidth, bool bShowDisabledNodes)
 {
 	local float PawnIconSize, PlayerIconSize, CoreIconSize, MapScale, OldHudScale;
@@ -407,7 +404,7 @@ simulated function DrawRadarMapVehicles(Canvas C, float CenterPosX, float Center
 
                 //draw colored icon
                 C.SetPos(CenterPosX + (HUDLocation.X * MapScale) - (PlayerIconSize * 0.25), CenterPosY + (HUDLocation.Y * MapScale) - (PlayerIconSize * 0.25));
-                SetVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, C.DrawColor, U, V);
+                SetVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, C.DrawColor);
                 C.DrawColor.A = 255;
                 C.DrawTile(Material'NewHUDIcons', PlayerIconSize * 0.25, PlayerIconSize * 0.25, U, V, 32, 32);
             }
@@ -418,7 +415,7 @@ simulated function DrawRadarMapVehicles(Canvas C, float CenterPosX, float Center
     C.ColorModulate = SavedModulation;
 }
 
-simulated function DrawRadarMap(Canvas C, float CenterPosX, float CenterPosY, float RadarWidth, bool bShowDisabledNodes)
+simulated function UTComp_DrawRadarMap(Canvas C, float CenterPosX, float CenterPosY, float RadarWidth, bool bShowDisabledNodes, bool bIsTab)
 {
 	local float PawnIconSize, PlayerIconSize, CoreIconSize, MapScale, MapRadarWidth;
 	local vector HUDLocation;
@@ -427,6 +424,11 @@ simulated function DrawRadarMap(Canvas C, float CenterPosX, float CenterPosY, fl
 	local ONSPowerCore CurCore;
 	local int i;
 	local plane SavedModulation;
+    local Pawn P;
+    local ONSVehicle V;
+    local int TeamNum;
+    local color TeamColor;
+    local bool bRenderTeamRadarMap;
 
 	SavedModulation = C.ColorModulate;
 
@@ -531,6 +533,71 @@ simulated function DrawRadarMap(Canvas C, float CenterPosX, float CenterPosY, fl
         }
     }
 
+    if(PawnOwner != None)
+        TeamNum = PawnOwner.GetTeamNum();
+
+    if(TeamNum == 0)
+        TeamColor = C.MakeColor(255,0,0);
+    else
+        TeamColor = C.MakeColor(0,0,255);
+    
+    // check client and server setting
+    bRenderTeamRadarMap = 
+        BS_xPlayer(PlayerOwner).RepInfo != None 
+        && HUDSettings != None 
+        && BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadar
+        && HUDSettings.bEnableMapTeamRadar;
+
+    if(!bIsTab && bRenderTeamRadarMap)
+    {
+        foreach DynamicActors(class'Pawn', P)
+        {
+            if(!P.bHidden && PawnOwner != None && TeamNum == P.GetTeamNum())
+            {
+                HUDLocation = P.Location - MapCenter;
+                HUDLocation.Z = 0;
+
+                V = ONSVehicle(P);
+                if (V != None)
+                {
+                    if(!V.IsVehicleEmpty())
+                    {
+                        // draw larger black dot (as outline)
+                        C.DrawColor = C.MakeColor(0,0,0);
+                        C.SetPos(CenterPosX + HUDLocation.X * MapScale - PlayerIconSize * (0.5 * 0.5 + 0.05), CenterPosY + HUDLocation.Y * MapScale - PlayerIconSize * (0.5 * 0.5 + 0.05));
+                        C.DrawTile(Material'NewHUDIcons', PlayerIconSize * (0.5 + 0.1), PlayerIconSize * (0.5 + 0.1), 0, 0, 32, 32);
+
+                        // draw dot on top of black dot
+                        SetVehicleData(V.Class, C.DrawColor);
+                        C.SetPos(CenterPosX + HUDLocation.X * MapScale - PlayerIconSize * 0.5 * 0.5, CenterPosY + HUDLocation.Y * MapScale - PlayerIconSize * 0.5 * 0.5);
+                        C.DrawTile(Material'NewHUDIcons', PlayerIconSize * 0.5, PlayerIconSize * 0.5, 0, 0, 32, 32);
+                    }
+                }
+                else
+                {
+                    // pawn is a lot of things, we only want to draw xpawns
+                    if(xPawn(P) != None)
+                    {
+                        // Only draw player dot if they aren't driving (we draw the vehicle dot instead)
+                        if(P.DrivenVehicle == None)
+                        {
+                            // draw larger black dot (as outline)
+                            C.DrawColor = C.MakeColor(0,0,0);
+                            C.SetPos(CenterPosX + HUDLocation.X * MapScale - (PlayerIconSize * 0.5 * 0.25 + 1.0), CenterPosY + HUDLocation.Y * MapScale - (PlayerIconSize * 0.5 * 0.25 + 1.0));
+                            C.DrawTile(Material'NewHUDIcons', PlayerIconSize * (0.25 + 0.1), PlayerIconSize * (0.25 + 0.1), 0, 0, 32, 32);
+
+                            // draw dot on top of black dot
+                            C.DrawColor = TeamColor;
+                            C.SetPos(CenterPosX + HUDLocation.X * MapScale - PlayerIconSize * 0.5 * 0.25, CenterPosY + HUDLocation.Y * MapScale - PlayerIconSize * 0.5 * 0.25);
+                            C.DrawTile(Material'NewHUDIcons', PlayerIconSize * 0.25, PlayerIconSize * 0.25, 0, 0, 32, 32);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 //    // VERY SLOW DEBUGGING CODE for showing all the dynamic actors that exist in the level in real-time
 //    ForEach DynamicActors(class'Actor', A)
 //    {
@@ -583,8 +650,8 @@ simulated function DrawRadarMap(Canvas C, float CenterPosX, float CenterPosY, fl
                256,
                256);
 
-
-    DrawRadarMapVehicles(C, CenterPosX, CenterPosY, RadarWidth, bShowDisabledNodes);
+    if(bIsTab)
+        DrawRadarMapVehicles(C, CenterPosX, CenterPosY, RadarWidth, bShowDisabledNodes);
 
     C.ColorModulate = SavedModulation;
 }
@@ -708,6 +775,19 @@ simulated function ShowTeamScorePassA(Canvas C)
 		TeamOnslaughtWideShowTeamScorePassA(C);
 	else
 		Super.ShowTeamScorePassA(C);
+}
+
+simulated function ShowTeamScorePassC(Canvas C)
+{
+    local float RWidth, CRadarPosX, CRadarPosY;
+
+    if (Level.bShowRadarMap && !bMapDisabled)
+    {
+        RWidth = 0.5 * RadarScale * HUDScale * C.ClipX;
+        CRadarPosX = (RadarPosX * C.ClipX) - RWidth;
+        CRadarPosY = (RadarPosY * C.ClipY) + RWidth;
+        UTComp_DrawRadarMap(C, CRadarPosX, CRadarPosY, RWidth, false, false);
+    }
 }
 
 simulated function ShowVersusIcon(Canvas C)

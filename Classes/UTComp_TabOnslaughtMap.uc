@@ -79,7 +79,6 @@ function bool InternalOnPreDraw(Canvas C)
 function DrawVehicleFactoryHint(UTComp_ONSPlayerReplicationInfo OPPRI, ONSVehicleFactory Factory, optional UTComp_ONSHudOnslaught OwnerHUD)
 {
 	local int i;
-    local float u,v;
 	local color TempColour;
 
 	for (i=0; i<OPPRI.ClientVSpawnList.Length; i++)
@@ -91,7 +90,7 @@ function DrawVehicleFactoryHint(UTComp_ONSPlayerReplicationInfo OPPRI, ONSVehicl
 			i_HintImage.Image = None;
 
 			if (OwnerHUD != none)
-				OwnerHUD.SetVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, TempColour,u,v);
+				OwnerHUD.SetVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, TempColour);
 
 			TempColour.A = 255;
 
@@ -246,7 +245,7 @@ function bool DrawMap(Canvas C)
 	HS = ONSHUD.HudScale;
 	ONSHUD.HudScale = 1.0;
 	//ONSHUD.ONSPlusDrawRadarMap(C, OnslaughtMapCenterX, OnslaughtMapCenterY, OnslaughtMapRadius, false, true);
-	ONSHUD.DrawRadarMap(C, OnslaughtMapCenterX, OnslaughtMapCenterY, OnslaughtMapRadius, false);
+	ONSHUD.UTComp_DrawRadarMap(C, OnslaughtMapCenterX, OnslaughtMapCenterY, OnslaughtMapRadius, false, true);
 	ONSHUD.HudScale = HS;
 
 	if (Core != None)

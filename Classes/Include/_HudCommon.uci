@@ -183,3 +183,62 @@ simulated final function DrawNumericTileWidget(Canvas C, NumericWidget W, DigitS
 		);
 	}
 }
+
+simulated function DrawHudPassC(Canvas C)
+{
+  Super.DrawHudPassC(C);
+  DrawTeamRadar(C);
+}
+
+simulated function DrawTeamRadar(Canvas C)
+{
+    local Pawn Pawn;
+    local Vector eyePos;
+
+    //server disabled
+    if(BS_xPlayer(PlayerOwner).RepInfo != None && !BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadar)
+        return;
+
+    //client disabled
+    if(HUDSettings != None && !HUDSettings.bEnableTeamRadar)
+        return;
+
+    //not for spectators
+    if(PlayerOwner.PlayerReplicationInfo!=None && PlayerOwner.PlayerReplicationInfo.bOnlySpectator)
+        return;
+
+    if(UEngine == none)
+        foreach AllObjects(class'Engine', UEngine)
+            break;
+
+    if(UEngine != none)
+    {
+        foreach AllActors(class'Pawn', Pawn)
+        {
+            if(PawnOwner == Pawn)
+                continue;
+        
+            if(Pawn.GetTeamNum() == PawnOwner.GetTeamNum())
+            {
+                eyePos = PlayerOwner.CalcViewLocation;
+                if(!FastTrace(eyePos, Pawn.Location))
+                {
+                    if(ONSVehicle(Pawn) != None && !ONSVehicle(Pawn).IsVehicleEmpty())
+                    {
+                        UEngine.C_BrushWire = HUDSettings.TeamRadarVehicle;
+                        C.DrawActor(Pawn, true, true);
+                    }
+                    else if(xPawn(Pawn) != None)
+                    {
+                        // player
+                        UEngine.C_AnimMesh = HUDSettings.TeamRadarPlayer;
+                        // player weapon
+                        UEngine.C_BrushWire = HUDSettings.TeamRadarPlayer;
+                        C.DrawActor(Pawn, true, true);
+                    }
+
+                }
+            }
+        }
+    }
+}

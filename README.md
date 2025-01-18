@@ -5,6 +5,11 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V12
+- Add reset skins button to bright skins menu
+- Add feature to allow team radar
+- Add feature to allow minimap team radar (ONS)
+
 V11
 - Fix some stats carrying over from warmup
 - Fix rare bug where weapons won't fire in TAM/Freon

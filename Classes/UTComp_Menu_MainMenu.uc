@@ -62,21 +62,24 @@ function bool InternalOnClick(GUIComponent C)
         PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Hitsounds'));
 
     else if(C==UTCompMenuButtons[5])
-        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Voting'));
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_HUD'));
 
     else if(C==UTCompMenuButtons[6])
-        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_AutoDemoSS'));
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Voting'));
 
     else if(C==UTCompMenuButtons[7])
-        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Miscellaneous'));
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_AutoDemoSS'));
 
     else if(C==UTCompMenuButtons[8])
-        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_ColorWeapons'));
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Miscellaneous'));
 
     else if(C==UTCompMenuButtons[9])
-        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Extra'));
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_ColorWeapons'));
 
     else if(C==UTCompMenuButtons[10])
+        PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Extra'));
+
+    else if(C==UTCompMenuButtons[11])
         PlayerOwner().ClientReplaceMenu(string(class'UTComp_Menu_Emoticons'));
 
     return false;
@@ -106,7 +109,7 @@ defaultproperties
          WinTop=0.130000
          WinLeft=0.11250000
          //WinWidth=0.180000
-         WinWidth=0.144
+         WinWidth=0.12
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
@@ -118,9 +121,9 @@ defaultproperties
          WinTop=0.130000
          //WinLeft=0.31250000
          //0.16
-         WinLeft=0.2725
+         WinLeft=0.2458
          //WinWidth=0.180000
-         WinWidth=0.144
+         WinWidth=0.12
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
@@ -131,9 +134,9 @@ defaultproperties
          StyleName="WSButton"
          WinTop=0.130000
          //WinLeft=0.51250000
-         WinLeft=0.43250000
+         WinLeft=0.3791
          //WinWidth=0.180000
-         WinWidth=0.144
+         WinWidth=0.12
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
@@ -144,9 +147,9 @@ defaultproperties
          StyleName="WSButton"
          WinTop=0.130000
          //WinLeft=0.71250000
-         WinLeft=0.5925
+         WinLeft=0.5124
          //WinWidth=0.180000
-         WinWidth=0.144
+         WinWidth=0.12
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
@@ -158,13 +161,27 @@ defaultproperties
          //WinTop=0.220000
          WinTop=0.130000
          //WinLeft=0.11250000
-         WinLeft=0.7525
+         WinLeft=0.6458
          //WinWidth=0.180000
-         WinWidth=0.144
+         WinWidth=0.12
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
      UTCompMenuButtons(4)=GUIButton'HitsoundButton'
+
+     Begin Object class=GUIButton name=HUDButton
+         Caption="HUD"
+         StyleName="WSButton"
+         //WinTop=0.220000
+         WinTop=0.130000
+         //WinLeft=0.11250000
+         WinLeft=0.7791
+         //WinWidth=0.180000
+         WinWidth=0.12
+         WinHeight=0.060000
+         OnClick=InternalOnClick
+     End Object
+     UTCompMenuButtons(5)=GUIButton'HUDButton'
 
     //-------------------------------------------------------
 
@@ -178,7 +195,7 @@ defaultproperties
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
-     UTCompMenuButtons(5)=GUIButton'VotingButton'
+     UTCompMenuButtons(6)=GUIButton'VotingButton'
 
      Begin Object class=GUIButton name=AutoDemoButton
          Caption="Auto Demo/SS"
@@ -190,7 +207,7 @@ defaultproperties
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
-     UTCompMenuButtons(6)=GUIButton'AutoDemoButton'
+     UTCompMenuButtons(7)=GUIButton'AutoDemoButton'
 
      Begin Object class=GUIButton name=MiscButton
          Caption="Misc"
@@ -202,7 +219,7 @@ defaultproperties
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
-     UTCompMenuButtons(7)=GUIButton'MiscButton'
+     UTCompMenuButtons(8)=GUIButton'MiscButton'
 
      Begin Object class=GUIButton name=WeaponConfigButton
          Caption="Weapon Config"
@@ -214,7 +231,7 @@ defaultproperties
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
-     UTCompMenuButtons(8)=GUIButton'WeaponConfigButton'
+     UTCompMenuButtons(9)=GUIButton'WeaponConfigButton'
 
      Begin Object class=GUIButton name=ExtraButton
          Caption="Extra"
@@ -226,7 +243,7 @@ defaultproperties
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
-     UTCompMenuButtons(9)=GUIButton'ExtraButton'
+     UTCompMenuButtons(10)=GUIButton'ExtraButton'
 
      Begin Object class=GUIButton name=EmoteButton
          Caption="Emotes"
@@ -238,7 +255,7 @@ defaultproperties
          WinHeight=0.060000
          OnClick=InternalOnClick
      End Object
-     UTCompMenuButtons(10)=GUIButton'EmoteButton'
+     UTCompMenuButtons(11)=GUIButton'EmoteButton'
 
      Begin Object class=GUIButton name=AdminButton
          Caption="Admin"
@@ -251,7 +268,7 @@ defaultproperties
          OnClick=InternalOnClick
          bVisible=false
      End Object
-     UTCompMenuButtons(11)=GUIButton'AdminButton'
+     UTCompMenuButtons(12)=GUIButton'AdminButton'
 
      Begin Object Class=GUITabControl Name=LoginMenuTC
          bFillSpace=True

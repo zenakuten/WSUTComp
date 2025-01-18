@@ -2,3 +2,4 @@
 //Vars courtesy of HUD Scaling Fix by Azarael
 var const float XShifts[9];
 var const float YShifts[9];
+var Engine UEngine;
