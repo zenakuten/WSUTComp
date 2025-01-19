@@ -123,7 +123,6 @@ var config bool bNoTeamBoostingVehicles;
 var config bool bChargedWeaponsNoSpawnProtection;
 var config bool bUseUTCompStats;
 
-var bool bEnableScoreboard;  
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
 var bool bWarmupDisabled;
@@ -860,7 +859,6 @@ function SpawnReplicationClass()
     RepInfo.bEnableTeamOverlay=bEnableTeamOverlay;
     RepInfo.bEnablePowerupsOverlay=bEnablePowerupsOverlay;
     RepInfo.EnableHitSoundsMode=EnableHitSoundsMode;
-    RepInfo.bEnableScoreboard=bEnableScoreboard;
     RepInfo.bEnableWarmup=bEnableWarmup;
     RepInfo.bEnableWeaponStats=bEnableWeaponStats;
     RepInfo.bEnablePowerupStats=bEnablePowerupStats;
@@ -1221,25 +1219,20 @@ function ModifyLogin(out string Portal, out string Options)
 	  	
 	    if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardDeathMatch")
 	    {  // Regular DM Game
-	        if(bEnableScoreboard) 
 	           Level.Game.ScoreBoardType=string(class'UTComp_Scoreboard'); // special UTComp Scoreboard has different graphics.
-	        else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardDM');  // "Normal" scoreboard with some minor tweaks
 	    } // end DM if
 	    else if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardTeamDeathMatch")
 	    {  // WE have a TeamDM Game. (eg. ONS, CTF, AS etc.)
 	    	// Careful here as all these GameTypes are subclasses of TDM
-	        if(bEnableScoreboard)
-	        {
-	        	if (Level.Game.IsA('ONSOnslaughtGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardONS');
+	        	if (Level.Game.IsA('ONSOnslaughtGame')) 
+                    Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardONS');
+                else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardTDM');  // Enhanced for any TDM game that isn't specific above
 	        //	else if (Level.Game.IsA('xCTFGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardCTF');  // this one is quite different...based on Enhanced.
 	        // Commented out in previous version so keeping it commented out pooty 10/23
-	        	else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard');  // Enhanced for any TDM game that isn't specific above
-	        }
-	        else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardTDM');  //default GT for any TDM game that isn't specific above
 	       
 	     }  //else TDM if end
-	     else if (bEnableScoreboard && Level.Game.IsA('xMutantGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardMutant');
-	     else if (bEnableScoreboard && Level.Game.IsA('ASGameInfo')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardAS');
+	     else if (Level.Game.IsA('xMutantGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardMutant');
+	     else if (Level.Game.IsA('ASGameInfo')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardAS');
 	     // should never get here either DM game or TDM game..but just to be safe
 	    // so we will just leave it alone, as it could be some other custom scoreboard.
 	  
@@ -1864,7 +1857,6 @@ defaultproperties
      bEnableClanSkins=True
      bEnablePowerupsOverlay=True
      EnableHitSoundsMode=2
-     bEnableScoreboard=True  // really isn't configurable now, UTComp always tweaks scoreboards.
      
      bEnableWarmup=True
      WarmupClass=class'UTComp_Warmup'

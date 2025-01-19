@@ -9,7 +9,6 @@ var bool bEnableTeamOverlay;
 var bool bEnablePowerupsOverlay;
 var bool bEnableExtraHudClock;
 var byte EnableHitSoundsMode;
-var bool bEnableScoreboard;
 var bool bEnableWarmup;
 var bool bEnableWeaponStats;
 var bool bEnablePowerupStats;
@@ -110,7 +109,6 @@ defaultproperties
      bEnableTeamOverlay=True
      bEnablePowerupsOverlay=True
      EnableHitSoundsMode=1
-     bEnableScoreboard=True
      bEnableWarmup=True
      bEnableWeaponStats=True
      bEnablePowerupStats=True
