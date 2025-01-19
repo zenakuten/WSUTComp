@@ -58,6 +58,7 @@ function InternalOnChange( GUIComponent C )
                 class'UTComp_Scoreboard'.default.bDrawPickups=false;
                 ch_PickupStats.Checked(class'UTComp_Scoreboard'.default.bDrawPickups);
             }
+            BS_xPlayer(PlayerOwner()).InitializeScoreboard();
             break;
         case ch_ShowKills: Settings.bShowKillsOnScoreboard=ch_ShowKills.IsChecked(); break;
         case ch_WepStats:  class'UTComp_Scoreboard'.default.bDrawStats=ch_WepStats.IsChecked();

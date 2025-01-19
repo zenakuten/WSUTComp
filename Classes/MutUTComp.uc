@@ -1171,73 +1171,28 @@ function ModifyLogin(out string Portal, out string Options)
 		Level.Game.PlayerControllerClass = none;
 	}
 
-  if (bDebugLogging)  log("Initial ScoreboardType="$Level.Game.ScoreBoardType$" MAXPLAYERS="$Level.Game.MaxPlayers,'MutUTComp');
-// Restructing IF pooty 10/2023
+    /*
+    When client initializes in BS_xPlayer it sets its own scoreboard anyway, this is not needed
 
-/* old code
-    if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardDeathMatch")
-    {  
-        if(bEnableScoreBoard)
-            Level.Game.ScoreBoardType=string(class'UTComp_Scoreboard');
-        else
-            Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardDM');
-    }
-    else if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardTeamDeathMatch")
-    {
-        if(bEnableScoreBoard)
-        {
-            //TODO: SCOREBOARD
-            //if (Level.Game.IsA('xCTFGame'))
-            //    Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardCTF');
-            //else
-                Level.Game.ScoreBoardType=string(class'UTComp_Scoreboard');
-        }
-        else if(ONSOnslaughtGame(Level.Game) == none) // no custom scoreboard at all for Onslaught 
-        {
-            //if scoreboard is disabled and NOT and ONS game, then use this scoreboard
-            //for ONS game don't touch ScoreBoardType with scoreboard disabled
-            Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardTDM');
-        }
-    }
-    else if(Level.Game.ScoreBoardType~="UT2k4Assault.ScoreBoard_Assault")
-    {
-        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard_AS');
-    }
-    else if(Level.game.scoreboardtype~="BonusPack.MutantScoreboard")
-    {
-        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard_Mutant');
-    }
-*/
-  
+    if (bDebugLogging)  
+        log("Initial ScoreboardType="$Level.Game.ScoreBoardType$" MAXPLAYERS="$Level.Game.MaxPlayers,'MutUTComp');
+
+    if(Level.Game.IsA('ONSOnslaughtGame'))
+        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardONS');
+    else if(Level.Game.IsA('xCTFGame'))
+        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardCTF');
+    else if (Level.Game.IsA('xMutantGame')) 
+        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardMutant');
+    else if (Level.Game.IsA('ASGameInfo')) 
+        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardAS');
+    else if (Level.Game.IsA('xTeamGame')) 
+        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardTDM');
+    else 
+        Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoard');
 	  
-	 	  	//  the UTComp_ScoreBoard  It  has special graphics/display
-	  	// it CAN handle both DM And TDM games.
-	  	// Can be overridden by UserSettings
-	  	// If you don't use UTComp_Scoreboard then the other scoreboards
-	  	// UTComp_ScoreboardDM, UTComp_ScoreboardTDM - Same as the default scoreboard but with Colored Names
-	  	// No "real" option to just use default scoreboards -- that's ok colored names are cool.
-	  	
-	    if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardDeathMatch")
-	    {  // Regular DM Game
-	           Level.Game.ScoreBoardType=string(class'UTComp_Scoreboard'); // special UTComp Scoreboard has different graphics.
-	    } // end DM if
-	    else if(Level.Game.ScoreBoardType~="xInterface.ScoreBoardTeamDeathMatch")
-	    {  // WE have a TeamDM Game. (eg. ONS, CTF, AS etc.)
-	    	// Careful here as all these GameTypes are subclasses of TDM
-	        	if (Level.Game.IsA('ONSOnslaughtGame')) 
-                    Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardONS');
-                else Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardTDM');  // Enhanced for any TDM game that isn't specific above
-	        //	else if (Level.Game.IsA('xCTFGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardCTF');  // this one is quite different...based on Enhanced.
-	        // Commented out in previous version so keeping it commented out pooty 10/23
-	       
-	     }  //else TDM if end
-	     else if (Level.Game.IsA('xMutantGame')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardMutant');
-	     else if (Level.Game.IsA('ASGameInfo')) Level.Game.ScoreBoardType=string(class'UTComp_ScoreBoardAS');
-	     // should never get here either DM game or TDM game..but just to be safe
-	    // so we will just leave it alone, as it could be some other custom scoreboard.
-	  
-	  
-	if (bDebugLogging) log("ModifyLogin ScoreboardType="$Level.Game.ScoreBoardType,'MutUTComp');
+	if (bDebugLogging) 
+        log("ModifyLogin ScoreboardType="$Level.Game.ScoreBoardType,'MutUTComp');
+    */
 	
     Super.ModifyLogin(Portal, Options);
 

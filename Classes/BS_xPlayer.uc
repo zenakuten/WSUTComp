@@ -611,60 +611,92 @@ simulated function InitializeClient()
 
 simulated function InitializeScoreboard()
 {
-	// Updated pooty 10/2023
-	
-	
-   local class<scoreboard> NewScoreboardclass;
-		
+    local class<Scoreboard> ScoreboardClass;
 
-    log("InitializeScoreboard  myHUD.ScoreBoard="$ myHUD.ScoreBoard,'MutUTComp BS_xPlayer');
-    
-    if(myHud!=None 
-       && (myHUD.ScoreBoard.IsA('UTComp_Scoreboard') 
-           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardONS') 
-           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardCTF')
-           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardAS') 
-           || myHUD.ScoreBoard.IsA('UTComp_ScoreboardMutant')
-           // the above are all "enhanced" scoreboards.
-           ) 
-       // above are enhanced, but may or may not be subclassed of UTComp_Scoreboard 
-       && GameReplicationInfo!=None)
+    if(Settings.bUseDefaultScoreboard)
     {
-        if(Settings.bUseDefaultScoreboard)
+        if(Level.GRI.GameName ~= "Last Man Standing")
+            ScoreboardClass = class'BonusPack.ScoreboardLMS'; 
+        else if(Level.GRI.GameName ~= "Mutant")
+            ScoreboardClass = class'BonusPack.MutantScoreboard'; 
+        else if(Level.GRI.GameName ~= "Onslaught")
+            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+        else if(Level.GRI.GameName ~= "Invasion")
+            ScoreboardClass = class'Skaarjpack.ScoreboardInvasion'; 
+        else if(Level.GRI.GameName ~= "Assault")
+            ScoreboardClass = class'UT2k4Assault.Scoreboard_Assault'; 
+        else if(Level.GRI.GameName ~= "Championship Match")
+            ScoreboardClass = class'XInterface.ScoreboardDeathMatch'; 
+        else if(Level.GRI.GameName ~= "Instagib CTF")
+            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+        else if(Level.GRI.GameName ~= "Bombing Run")
+            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+        else if(Level.GRI.GameName ~= "Capture The Flag")
+            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+        else if(Level.GRI.GameName ~= "DeathMatch")
+            ScoreboardClass = class'XInterface.ScoreboardDeathMatch'; 
+        else if(Level.GRI.GameName ~= "Double Domination")
+            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+        else if(Level.GRI.GameName ~= "Team DeathMatch")
+            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+        else if(Level.GRI.GameName ~= "Vehicle CTF")
+            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+        else
         {
-            if(GameReplicationInfo.bTeamGame)
-                NewScoreboardClass=class'UTComp_ScoreBoardTDM';
+            if(Level.GRI.bTeamGame)
+                ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
             else
-                NewScoreboardClass=class'UTComp_ScoreBoardDM';
-            clientChangedScoreboard=True;
+                ScoreboardClass = class'XInterface.ScoreboardDeathMatch'; 
         }
     }
-    else if(ClientChangedScoreBoard && !Settings.bUseDefaultScoreboard)
+    else
     {
-        
-       	if (Level.Game.IsA('ONSOnslaughtGame')) NewScoreboardClass = class'UTComp_ScoreBoardONS';
-	     	//else if (Level.Game.IsA('xCTFGame')) NewScoreboardClass = class'UTComp_ScoreBoardCTF';  // this one is quite different...based on Enhanced.
-	     	// Commented out in previous version so keeping it commented out pooty 10/23
-	      else if (Level.Game.IsA('xMutantGame')) NewScoreboardClass = class'UTComp_ScoreBoardMutant';
-	      else if (Level.Game.IsA('ASGameInfo')) NewScoreboardClass = class'UTComp_ScoreBoardAS';
-	      else // default to base UTComp Enhanced scoreboard
-            NewScoreboardClass = class'UTComp_Scoreboard';
+        if(Level.GRI.GameName ~= "Last Man Standing")
+            ScoreboardClass = class'UTComp_Scoreboard'; 
+        else if(Level.GRI.GameName ~= "Mutant")
+            ScoreboardClass = class'UTComp_Scoreboard'; 
+        else if(Level.GRI.GameName ~= "Onslaught")
+            ScoreboardClass = class'UTComp_ScoreboardONS'; 
+        else if(Level.GRI.GameName ~= "Invasion")
+            ScoreboardClass = class'UTComp_ScoreboardTDM'; 
+        else if(Level.GRI.GameName ~= "Assault")
+            ScoreboardClass = class'UTComp_ScoreboardAS'; 
+        else if(Level.GRI.GameName ~= "Championship Match")
+            ScoreboardClass = class'UTComp_Scoreboard'; 
+        else if(Level.GRI.GameName ~= "Instagib CTF")
+            ScoreboardClass = class'UTComp_ScoreboardCTF'; 
+        else if(Level.GRI.GameName ~= "Bombing Run")
+            ScoreboardClass = class'UTComp_ScoreboardTDM'; 
+        else if(Level.GRI.GameName ~= "Capture The Flag")
+            ScoreboardClass = class'UTComp_ScoreboardCTF'; 
+        else if(Level.GRI.GameName ~= "DeathMatch")
+            ScoreboardClass = class'UTComp_Scoreboard'; 
+        else if(Level.GRI.GameName ~= "Double Domination")
+            ScoreboardClass = class'UTComp_ScoreboardTDM'; 
+        else if(Level.GRI.GameName ~= "Team DeathMatch")
+            ScoreboardClass = class'UTComp_ScoreboardTDM'; 
+        else if(Level.GRI.GameName ~= "Vehicle CTF")
+            ScoreboardClass = class'UTComp_ScoreboardCTF'; 
+        else
+        {
+            if(Level.GRI.bTeamGame)
+                ScoreboardClass = class'UTComp_ScoreboardTDM'; 
+            else
+                ScoreboardClass = class'UTComp_Scoreboard'; 
+        }
     }
-    
-        
-    if(myHUD!=None && NewScoreBoardClass!=None) {
-    	log("InitializeScoreboard  SET NEW ScoreBoard="$NewScoreboardClass,'MutUTComp BS_xPlayer');
-        myHUD.SetScoreBoardClass( NewScoreboardClass);
-    }    
+
+    if(myHUD != None)
+    {
+        log("InitializeScoreboard  SET NEW ScoreBoard="$ScoreboardClass,'MutUTComp BS_xPlayer');
+        myHUD.SetScoreBoardClass( ScoreboardClass);
+    }
 }
-
-
 
 simulated function SetInitialColoredName()
 {
     SetColoredNameOldStyle();
 }
-
 
 simulated function StartDemo()
 {
