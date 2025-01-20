@@ -80,6 +80,7 @@ var int TauntCount;
 
 var bool bAllowTeamRadar;
 var bool bAllowTeamRadarMap;
+var float TeamRadarCullDistance;
 
 replication
 {
@@ -98,7 +99,7 @@ replication
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
-        bAllowTeamRadar, bAllowTeamRadarMap;
+        bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance;
 }
 
 defaultproperties
@@ -154,6 +155,7 @@ defaultproperties
      bLimitTaunts=false
      TauntCount=10
      bAllowTeamRadar=false
-     bAllowTeamRadarMap=true
+     bAllowTeamRadarMap=false
+     TeamRadarCullDistance=10000.0
 }
 

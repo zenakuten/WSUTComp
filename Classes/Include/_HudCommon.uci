@@ -194,9 +194,11 @@ simulated function DrawTeamRadar(Canvas C)
 {
     local Pawn Pawn;
     local Vector eyePos;
+    local UTComp_ServerReplicationInfo RepInfo;
 
     //server disabled
-    if(BS_xPlayer(PlayerOwner).RepInfo != None && !BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadar)
+    RepInfo = BS_xPlayer(PlayerOwner).RepInfo;
+    if(RepInfo != None && !RepInfo.bAllowTeamRadar)
         return;
 
     //client disabled
@@ -221,7 +223,7 @@ simulated function DrawTeamRadar(Canvas C)
             if(Pawn.GetTeamNum() == PawnOwner.GetTeamNum())
             {
                 eyePos = PlayerOwner.CalcViewLocation;
-                if(!FastTrace(eyePos, Pawn.Location))
+                if(VSize(eyePos - Pawn.Location) < RepInfo.TeamRadarCullDistance && !FastTrace(eyePos, Pawn.Location))
                 {
                     if(ONSVehicle(Pawn) != None && !ONSVehicle(Pawn).IsVehicleEmpty())
                     {

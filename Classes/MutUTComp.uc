@@ -102,6 +102,7 @@ var config int TauntCount;
 
 var config bool bAllowTeamRadar;
 var config bool bAllowTeamRadarMap;
+var config float TeamRadarCullDistance;
 
 struct MapVotePair
 {
@@ -916,6 +917,7 @@ function SpawnReplicationClass()
 
     RepInfo.bAllowTeamRadar = bAllowTeamRadar;
     RepInfo.bAllowTeamRadarMap = bAllowTeamRadarMap;
+    RepInfo.TeamRadarCullDistance = TeamRadarCullDistance;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1291,7 +1293,7 @@ function ParseURL(string Url)
 {
    local string Skinz0r, Sounds, overlay, powerupsOverlay, warmup, dd, TimedOver
    , TimedOverLength, grenadesonspawn, enableenhancednetcode, suicideIntervalString
-   , fws;
+   , fws, allowTeamRadar, allowTeamRadarMap;
    local array<string> Parts;
    local int i;
 
@@ -1326,6 +1328,10 @@ function ParseURL(string Url)
                suicideIntervalString = Right(Parts[i], Len(Parts[i])-Len("SuicideInterval")-1);
            if (Left(Parts[i], Len("fws")) ~= "fws")
                suicideIntervalString = Right(Parts[i], Len(Parts[i])-Len("fws")-1);
+           if (Left(Parts[i], Len("allowTeamRadar")) ~= "allowTeamRadar")
+               allowTeamRadar = Right(Parts[i], Len(Parts[i])-Len("allowTeamRadar")-1);
+           if (Left(Parts[i], Len("allowTeamRadarMap")) ~= "allowTeamRadarMap")
+               allowTeamRadarMap = Right(Parts[i], Len(Parts[i])-Len("allowTeamRadarMap")-1);
        }
    }
    if(Skinz0r !="" && int(Skinz0r)<4 && int(Skinz0r)>0)
@@ -1391,6 +1397,16 @@ function ParseURL(string Url)
    {
       default.SuicideInterval = Int(suicideIntervalString);
       SuicideInterval = default.SuicideInterval;
+   }
+   if(allowTeamRadar !="" && (allowTeamRadar~="False" || allowTeamRadar~="True"))
+   {
+       default.bAllowTeamRadar=(allowTeamRadar~="True");
+       bAllowTeamRadar = default.bAllowTeamRadar;
+   }
+   if(allowTeamRadarMap !="" && (allowTeamRadarMap~="False" || allowTeamRadarMap~="True"))
+   {
+       default.bAllowTeamRadarMap=(allowTeamRadarMap~="True");
+       bAllowTeamRadarMap = default.bAllowTeamRadarMap;
    }
    StaticSaveConfig();
 }
@@ -1555,6 +1571,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bLimitTaunts", "Limit the number of voice taunts allowed", 1, weight++,"Check");
     PlayInfo.AddSetting("UTComp Settings", "TauntCount", "Number of voice taunts allowed",1, weight++, "Text","0;0:999",,False,False);
     PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadar", "Allow players to use team radar", 1, weight++,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "TeamRadarCullDistance", "Cull distance of team radar", 1, weight++, "Text", "0;0:100000",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadarMap", "Allow players to use minimap team radar", 1, weight++,"Check");
 
     weight = 1;
@@ -1607,6 +1624,7 @@ static event string GetDescriptionText(string PropName)
         case "bLimitTaunts": return "Limit the number of voice taunts allowed";
         case "TauntCount": return "Number of voice taunts allowed";
         case "bAllowTeamRadar": return "Allow players to use team radar";
+        case "TeamRadarCullDistance": return "Cull distance of team radar";
         case "bAllowTeamRadarMap": return "Allow players to use minimap team radar";
 
         case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
@@ -2046,7 +2064,8 @@ defaultproperties
      TauntCount=10
 
      bAllowTeamRadar=false
-     bAllowTeamRadarMap=true
+     TeamRadarCullDistance=10000.0
+     bAllowTeamRadarMap=false
 
      bUseUTCompStats=true
 }
