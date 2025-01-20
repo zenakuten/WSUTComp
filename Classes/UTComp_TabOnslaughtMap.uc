@@ -90,7 +90,7 @@ function DrawVehicleFactoryHint(UTComp_ONSPlayerReplicationInfo OPPRI, ONSVehicl
 			i_HintImage.Image = None;
 
 			if (OwnerHUD != none)
-				OwnerHUD.SetVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, TempColour);
+				OwnerHUD.SetRadarVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, TempColour);
 
 			TempColour.A = 255;
 

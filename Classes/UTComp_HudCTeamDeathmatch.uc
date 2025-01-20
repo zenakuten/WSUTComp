@@ -299,8 +299,23 @@ simulated function DrawHudPassA(Canvas C)
 
 simulated function DrawHudPassC(Canvas C)
 {
-  Super.DrawHudPassC(C);
-  DrawTeamRadar(C);
+    Super.DrawHudPassC(C);
+    DrawTeamRadar(C);
+
+    /*
+    // debug
+    // TODO lots of stuff...
+    C.DrawColor = C.MakeColor(200,200,200);
+	C.SetPos(1774.19 - 145.81, 253.81 - 145.81);
+	C.DrawTile(RadarBorderMat,
+               145.81 * 2.0,
+               145.81 * 2.0,
+               0,
+               0,
+               256,
+               256);  
+    UTComp_DrawRadarMapPawns(C, 1774.19, 253.81, 145.81, 10000.00, 148.00, 1.0, 0.93);
+    */
 }
 
 simulated function DrawUDamage(Canvas C)

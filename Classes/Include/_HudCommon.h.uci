@@ -3,3 +3,13 @@
 var const float XShifts[9];
 var const float YShifts[9];
 var Engine UEngine;
+
+struct RadarVehicleDescription
+{
+	//var class VehicleClass;
+	var config string Name;
+	var config color RadarColor;
+};
+
+var config array<RadarVehicleDescription> RadarVehicleData;
+var Material RadarBorderMat;

@@ -6,14 +6,6 @@ var UTComp_HUDSettings HUDSettings;
 
 var UTComp_ONSPlayerReplicationInfo OPPRI;
 
-struct VehicleDescription
-{
-	//var class VehicleClass;
-	var config string Name;
-	var config color RadarColor;
-};
-
-var config array<VehicleDescription> VehicleData;
 var color TempColour;
 
 struct NodeData
@@ -276,68 +268,6 @@ simulated function DrawTimer(Canvas C)
 	DrawNumericTileWidget( C, TimerSeconds, DigitsBig);
 }
 
-function SetVehicleData(class<Vehicle> VehicleClass, out color RadarColour)
-{
-    local int i;
-
-    RadarColour.R=0;
-    RadarColour.G=0;
-    RadarColour.B=0;
-    RadarColour.A=255;
-
-    for(i=0;i<VehicleData.Length;i++)
-    {
-        if(string(VehicleClass.Name) == VehicleData[i].Name)
-        {
-            RadarColour=VehicleData[i].RadarColor;
-            RadarColour.A=255;
-            return;
-        }
-    }
-
-    SetVehicleDataFallback(VehicleClass, RadarColour);
-}
-
-function SetVehicleDataFallback(class<Vehicle> VehicleClass, out color RadarColour)
-{
-    local color RC;
-    RC.R=0;
-    RC.G=0;
-    RC.B=0;
-    RC.A=255;
-
-    if(ClassIsChildOf(VehicleClass, class'ONSTreadCraft'))
-    {
-        //tank variant
-        RC.R=128;
-        RC.G=32;
-        RC.B=128;
-    }
-    else if(ClassIsChildOf(VehicleClass, class'ONSChopperCraft'))
-    {
-        //raptor variant
-        RC.R=128;
-        RC.G=128;
-        RC.B=0;
-    }
-    else if(ClassIsChildOf(VehicleClass, class'ONSHoverCraft'))
-    {
-        //manta variant
-        RC.R=128;
-        RC.G=128;
-        RC.B=32;
-    }
-    else if(ClassIsChildOf(VehicleClass, class'ONSWheeledCraft'))
-    {
-        //bender/scorp variant
-        RC.R=32;
-        RC.G=128;
-        RC.B=128;
-    }
-
-    RadarColour=RC;
-}
-
 // Not the in play map, this is when the player has the menu open
 simulated function DrawRadarMapVehicles(Canvas C, float CenterPosX, float CenterPosY, float RadarWidth, bool bShowDisabledNodes)
 {
@@ -404,7 +334,7 @@ simulated function DrawRadarMapVehicles(Canvas C, float CenterPosX, float Center
 
                 //draw colored icon
                 C.SetPos(CenterPosX + (HUDLocation.X * MapScale) - (PlayerIconSize * 0.25), CenterPosY + (HUDLocation.Y * MapScale) - (PlayerIconSize * 0.25));
-                SetVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, C.DrawColor);
+                SetRadarVehicleData(OPPRI.ClientVSpawnList[i].VehicleClass, C.DrawColor);
                 C.DrawColor.A = 255;
                 C.DrawTile(Material'NewHUDIcons', PlayerIconSize * 0.25, PlayerIconSize * 0.25, U, V, 32, 32);
             }
@@ -424,11 +354,6 @@ simulated function UTComp_DrawRadarMap(Canvas C, float CenterPosX, float CenterP
 	local ONSPowerCore CurCore;
 	local int i;
 	local plane SavedModulation;
-    local Pawn P;
-    local ONSVehicle V;
-    local int TeamNum;
-    local color TeamColor;
-    local bool bRenderTeamRadarMap;
 
 	SavedModulation = C.ColorModulate;
 
@@ -533,68 +458,10 @@ simulated function UTComp_DrawRadarMap(Canvas C, float CenterPosX, float CenterP
         }
     }
 
-    if(PawnOwner != None)
-        TeamNum = PawnOwner.GetTeamNum();
 
-    if(TeamNum == 0)
-        TeamColor = C.MakeColor(255,0,0);
-    else
-        TeamColor = C.MakeColor(0,0,255);
-    
-    // check client and server setting
-    bRenderTeamRadarMap = 
-        BS_xPlayer(PlayerOwner).RepInfo != None 
-        && HUDSettings != None 
-        && BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadar
-        && HUDSettings.bEnableMapTeamRadar;
-
-    if(!bIsTab && bRenderTeamRadarMap)
+    if(!bIsTab)
     {
-        foreach DynamicActors(class'Pawn', P)
-        {
-            if(!P.bHidden && PawnOwner != None && TeamNum == P.GetTeamNum())
-            {
-                HUDLocation = P.Location - MapCenter;
-                HUDLocation.Z = 0;
-
-                V = ONSVehicle(P);
-                if (V != None)
-                {
-                    if(!V.IsVehicleEmpty())
-                    {
-                        // draw larger black dot (as outline)
-                        C.DrawColor = C.MakeColor(0,0,0);
-                        C.SetPos(CenterPosX + HUDLocation.X * MapScale - PlayerIconSize * (0.5 * 0.5 + 0.05), CenterPosY + HUDLocation.Y * MapScale - PlayerIconSize * (0.5 * 0.5 + 0.05));
-                        C.DrawTile(Material'NewHUDIcons', PlayerIconSize * (0.5 + 0.1), PlayerIconSize * (0.5 + 0.1), 0, 0, 32, 32);
-
-                        // draw dot on top of black dot
-                        SetVehicleData(V.Class, C.DrawColor);
-                        C.SetPos(CenterPosX + HUDLocation.X * MapScale - PlayerIconSize * 0.5 * 0.5, CenterPosY + HUDLocation.Y * MapScale - PlayerIconSize * 0.5 * 0.5);
-                        C.DrawTile(Material'NewHUDIcons', PlayerIconSize * 0.5, PlayerIconSize * 0.5, 0, 0, 32, 32);
-                    }
-                }
-                else
-                {
-                    // pawn is a lot of things, we only want to draw xpawns
-                    if(xPawn(P) != None)
-                    {
-                        // Only draw player dot if they aren't driving (we draw the vehicle dot instead)
-                        if(P.DrivenVehicle == None)
-                        {
-                            // draw larger black dot (as outline)
-                            C.DrawColor = C.MakeColor(0,0,0);
-                            C.SetPos(CenterPosX + HUDLocation.X * MapScale - (PlayerIconSize * 0.5 * 0.25 + 1.0), CenterPosY + HUDLocation.Y * MapScale - (PlayerIconSize * 0.5 * 0.25 + 1.0));
-                            C.DrawTile(Material'NewHUDIcons', PlayerIconSize * (0.25 + 0.1), PlayerIconSize * (0.25 + 0.1), 0, 0, 32, 32);
-
-                            // draw dot on top of black dot
-                            C.DrawColor = TeamColor;
-                            C.SetPos(CenterPosX + HUDLocation.X * MapScale - PlayerIconSize * 0.5 * 0.25, CenterPosY + HUDLocation.Y * MapScale - PlayerIconSize * 0.5 * 0.25);
-                            C.DrawTile(Material'NewHUDIcons', PlayerIconSize * 0.25, PlayerIconSize * 0.25, 0, 0, 32, 32);
-                        }
-                    }
-                }
-            }
-        }
+        UTComp_DrawRadarMapPawns(C, CenterPosX, CenterPosY, RadarWidth, RadarRange, RadarTrans, HUDScale, IconScale);
     }
 
 
@@ -812,13 +679,4 @@ simulated function DrawSpectatingHud (Canvas C)
 
 defaultproperties
 {
-    VehicleData(0)=(Name="Minotaur",RadarColor=(R=255,G=255,B=255,A=255))
-    VehicleData(1)=(Name="Omnitaur",RadarColor=(R=255,G=255,B=255,A=255))
-    VehicleData(2)=(Name="Badgertaur",RadarColor=(R=255,G=255,B=255,A=255))
-    VehicleData(3)=(Name="ONSHoverTank",RadarColor=(R=128,G=0,B=128,A=255))
-    VehicleData(4)=(Name="ONSHoverBike",RadarColor=(R=0,G=128,B=0,A=255))
-    VehicleData(5)=(Name="ONSAttackCraft",RadarColor=(R=128,G=128,B=0,A=255))
-    VehicleData(6)=(Name="ONSDualAttackCraft",RadarColor=(R=128,G=128,B=0,A=255))
-    VehicleData(7)=(Name="ONSPRV",RadarColor=(R=0,G=128,B=128,A=255))
-    VehicleData(8)=(Name="ONSRV",RadarColor=(R=0,G=32,B=32,A=255))
 }
