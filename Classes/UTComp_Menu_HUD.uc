@@ -18,6 +18,24 @@ function InitComponent(GUIController MyController, GUIComponent MyComponent)
     {
         ch_EnableTeamRadar.DisableMe();
         ch_EnableTeamRadar.SetHint("Server disabled");
+        radar.Hide(); 
+        radarVehicle.Hide(); 
+        radarR.Hide();
+        radarG.Hide();
+        radarB.Hide();
+        radarA.Hide();
+        radarVehicleR.Hide();
+        radarVehicleG.Hide();
+        radarVehicleB.Hide();
+        radarVehicleA.Hide();
+        radarRSlide.Hide();
+        radarGSlide.Hide();
+        radarBSlide.Hide();
+        radarASlide.Hide();
+        radarVehicleRSlide.Hide();
+        radarVehicleGSlide.Hide();
+        radarVehicleBSlide.Hide();
+        radarVehicleASlide.Hide();
     }
 
     if(!CanUseTeamRadarMap())
