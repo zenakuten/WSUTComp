@@ -184,12 +184,6 @@ simulated final function DrawNumericTileWidget(Canvas C, NumericWidget W, DigitS
 	}
 }
 
-simulated function DrawHudPassC(Canvas C)
-{
-  Super.DrawHudPassC(C);
-  DrawTeamRadar(C);
-}
-
 simulated function DrawTeamRadar(Canvas C)
 {
     local Pawn Pawn;

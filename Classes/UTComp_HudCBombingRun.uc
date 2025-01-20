@@ -277,6 +277,12 @@ simulated function DrawHudPassA(Canvas C)
 		Super.DrawHudPassA(C);
 }
 
+simulated function DrawHudPassC(Canvas C)
+{
+  Super.DrawHudPassC(C);
+  DrawTeamRadar(C);
+}
+
 simulated function DrawChargeBar(Canvas C)
 {
     if(HUDSettings.bEnableWidescreenFix)
