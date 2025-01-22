@@ -190,6 +190,9 @@ simulated function DrawTeamRadar(Canvas C)
     local Vector eyePos;
     local UTComp_ServerReplicationInfo RepInfo;
 
+    if(Level.GRI.bTeamGame)
+        return;
+
     //server disabled
     RepInfo = BS_xPlayer(PlayerOwner).RepInfo;
     if(RepInfo != None && !RepInfo.bAllowTeamRadar)
