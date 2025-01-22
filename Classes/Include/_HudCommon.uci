@@ -190,7 +190,7 @@ simulated function DrawTeamRadar(Canvas C)
     local Vector eyePos;
     local UTComp_ServerReplicationInfo RepInfo;
 
-    if(Level.GRI.bTeamGame)
+    if(!Level.GRI.bTeamGame)
         return;
 
     //server disabled
