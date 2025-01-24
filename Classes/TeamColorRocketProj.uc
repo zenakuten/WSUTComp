@@ -1,14 +1,25 @@
 class TeamColorRocketProj extends RocketProj;
 
-#exec AUDIO IMPORT FILE=Sounds\AirRocket.wav        GROUP=Sounds
+#exec AUDIO IMPORT FILE=Sounds\AirRocket.wav GROUP=Sounds
+#exec AUDIO IMPORT FILE=Sounds\torpedo.wav GROUP=Sounds
 
 var int TeamNum;
 var bool bColorSet;
 var Sound AirRocketSound;
+var Sound TorpedoSound;
 var Emitter RocketTrail;
+var vector InitialLocation;
+
+var bool bKilledPlayerInAir;
+var bool bTorpedoedPlayer;
+var float torpedoThreshold;
+var float torpedoAccuracy;
 
 replication
 {
+    reliable if( bNetInitial && (Role==ROLE_Authority))
+       InitialLocation;
+
     unreliable if(Role == Role_Authority)
        TeamNum;
 }
@@ -72,6 +83,8 @@ simulated function PostBeginPlay()
 		Velocity=0.6*Velocity;
 	}
 
+    InitialLocation = Location;
+
     SetupTeam();
 
 	Super(Projectile).PostBeginPlay();
@@ -102,20 +115,18 @@ simulated function Tick(float DT)
 }
 
 // copy from projectile -> hurt radius, return true if anybody killed
-simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, class<DamageType> DamageType, float Momentum, vector HitLocation )
+simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<DamageType> DamageType, float Momentum, vector HitLocation )
 {
 	local actor Victims;
 	local float damageScale, dist;
 	local vector rocketdir;
-    local bool bKilledPlayerInAir;
     local EPhysics prePhysics;
     local bool bAboveGround;
 
 	if ( bHurtEntry )
-		return false;
+		return;
 
 	bHurtEntry = true;
-    bKilledPlayerInAir = false;
     prePhysics=PHYS_None;
 	foreach VisibleCollidingActors( class 'Actor', Victims, DamageRadius, HitLocation )
 	{
@@ -144,9 +155,14 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 			if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
-            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
-                bKilledPlayerInAir = true;
-
+            // killed player
+            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0)
+            {
+                if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
+                    bKilledPlayerInAir = true;
+                else if(VSize(Location - InitialLocation) > torpedoThreshold && VSize(Location - Victims.Location) < torpedoAccuracy)
+                    bTorpedoedPlayer = true; 
+            }
 		}
 	}
 	if ( (LastTouched != None) && (LastTouched != self) && (LastTouched.Role == ROLE_Authority) && !LastTouched.IsA('FluidSurfaceInfo') )
@@ -172,18 +188,22 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 		if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
-        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
-            bKilledPlayerInAir = true;
+        // killed player
+        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0)
+        {
+            if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
+                bKilledPlayerInAir = true;
+            else if(FlockIndex == 0 && VSize(Location - InitialLocation) > torpedoThreshold && VSize(Location - Victims.Location) < torpedoAccuracy)
+                bTorpedoedPlayer = true; 
+        }
 	}
 
 	bHurtEntry = false;
-    return bKilledPlayerInAir;
 }
 
 function BlowUp(vector HitLocation)
 {
-    local bool bKilledPlayerInAir;
-	bKilledPlayerInAir = HurtRadiusEx(Damage, DamageRadius, MyDamageType, MomentumTransfer, HitLocation );
+	HurtRadiusEx(Damage, DamageRadius, MyDamageType, MomentumTransfer, HitLocation );
 	MakeNoise(1.0);
 
     if(bKilledPlayerInAir)
@@ -193,10 +213,22 @@ function BlowUp(vector HitLocation)
             BS_xPlayer(Instigator.Controller).ClientReceiveAward(AirRocketSound,0.5, 2.0);
         }
     }
+    else if(bTorpedoedPlayer)
+    {    
+        if(BS_xPlayer(Instigator.Controller) != None)
+        {
+            BS_xPlayer(Instigator.Controller).ClientReceiveAward(TorpedoSound,0.5, 2.0);
+        }
+    }
 }
 
 defaultproperties
 {
     TeamNum=255
     AirRocketSound=Sound'Sounds.AirRocket'
+    TorpedoSound=Sound'Sounds.Torpedo'
+    torpedoThreshold=1200.0
+    torpedoAccuracy=30.0
+    bKilledPlayerInAir=false
+    bTorpedoedPlayer=false
 }

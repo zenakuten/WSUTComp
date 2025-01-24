@@ -1,12 +1,23 @@
 class TeamColorFlakShell extends FlakShell;
 
 #exec TEXTURE IMPORT NAME=NewFlakSkinWhite FILE=textures\NewFlakSkin_white.dds MIPS=off ALPHA=1 DXT=5
+#exec AUDIO IMPORT FILE=Sounds\shredded.wav GROUP=Sounds
+#exec AUDIO IMPORT FILE=Sounds\FromDowntown.wav GROUP=Sounds
 
 var int TeamNum;
 var Material TeamColorMaterial;
 var ColorModifier Alpha;
 var bool bColorSet, bAlphaSet;
 var UTComp_Settings Settings;
+
+var vector InitialLocation;
+var bool bKilledPlayerInAir;
+var bool bDowntownedPlayer;
+var float FromDowntownThreshold;
+var float FromDowntownAccuracy;
+
+var Sound FromDowntownSound;
+var Sound ShreddedSound;
 
 replication
 {
@@ -135,7 +146,7 @@ simulated function Explode(vector HitLocation, vector HitNormal)
 	start = Location + 10 * HitNormal;
 	if ( Role == ROLE_Authority )
 	{
-		HurtRadius(damage, 220, MyDamageType, MomentumTransfer, HitLocation);	
+		HurtRadiusEx(damage, 220, MyDamageType, MomentumTransfer, HitLocation);	
 		for (i=0; i<6; i++)
 		{
 			rot = Rotation;
@@ -145,14 +156,121 @@ simulated function Explode(vector HitLocation, vector HitNormal)
 			//NewChunk = Spawn( class 'FlakChunk',, '', Start, rot);
 			NewChunk = Spawn( class 'TeamColorFlakChunk',, '', Start, rot);
 		}
+
+        if(bKilledPlayerInAir)
+        {    
+            if(BS_xPlayer(Instigator.Controller) != None)
+            {
+                BS_xPlayer(Instigator.Controller).ClientReceiveAward(ShreddedSound,0.5, 2.0);
+            }
+        }
+        else if(bDowntownedPlayer)
+        {    
+            if(BS_xPlayer(Instigator.Controller) != None)
+            {
+                BS_xPlayer(Instigator.Controller).ClientReceiveAward(FromDowntownSound,0.5, 2.0);
+            }
+        }
 	}
     Destroy();
 }
 
+simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<DamageType> DamageType, float Momentum, vector HitLocation )
+{
+	local actor Victims;
+	local float damageScale, dist;
+	local vector rocketdir;
+    local EPhysics prePhysics;
+    local bool bAboveGround;
+
+	if ( bHurtEntry )
+		return;
+
+	bHurtEntry = true;
+    prePhysics=PHYS_None;
+	foreach VisibleCollidingActors( class 'Actor', Victims, DamageRadius, HitLocation )
+	{
+		// don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
+		if( (Victims != self) && (Hurtwall != Victims) && (Victims.Role == ROLE_Authority) && !Victims.IsA('FluidSurfaceInfo') )
+		{
+			rocketdir = Victims.Location - HitLocation;
+            bAboveGround = Victims.FastTrace(Victims.Location + vect(0,0,-150));
+            
+			dist = FMax(1,VSize(rocketdir));
+			rocketdir = rocketdir/dist;
+			damageScale = 1 - FMax(0,(dist - Victims.CollisionRadius)/DamageRadius);
+			if ( Instigator == None || Instigator.Controller == None )
+				Victims.SetDelayedDamageInstigatorController( InstigatorController );
+			if ( Victims == LastTouched )
+				LastTouched = None;
+            prePhysics = Victims.Physics;
+			Victims.TakeDamage
+			(
+				damageScale * DamageAmount,
+				Instigator,
+				Victims.Location - 0.5 * (Victims.CollisionHeight + Victims.CollisionRadius) * rocketdir,
+				(damageScale * Momentum * rocketdir),
+				DamageType
+			);
+			if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
+				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
+
+            // killed player
+            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0)
+            {
+                if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
+                    bKilledPlayerInAir = true;
+                else if(VSize(Location - InitialLocation) > FromDowntownThreshold && VSize(Location - Victims.Location) < FromDowntownAccuracy)
+                    bDowntownedPlayer = true; 
+            }
+		}
+	}
+	if ( (LastTouched != None) && (LastTouched != self) && (LastTouched.Role == ROLE_Authority) && !LastTouched.IsA('FluidSurfaceInfo') )
+	{
+		Victims = LastTouched;
+		LastTouched = None;
+		rocketdir = Victims.Location - HitLocation;
+        bAboveGround = Victims.FastTrace(Victims.Location + vect(0,0,-150));
+		dist = FMax(1,VSize(rocketdir));
+		rocketdir = rocketdir/dist;
+		damageScale = FMax(Victims.CollisionRadius/(Victims.CollisionRadius + Victims.CollisionHeight),1 - FMax(0,(dist - Victims.CollisionRadius)/DamageRadius));
+		if ( Instigator == None || Instigator.Controller == None )
+			Victims.SetDelayedDamageInstigatorController(InstigatorController);
+        prePhysics = Victims.Physics;
+		Victims.TakeDamage
+		(
+			damageScale * DamageAmount,
+			Instigator,
+			Victims.Location - 0.5 * (Victims.CollisionHeight + Victims.CollisionRadius) * rocketdir,
+			(damageScale * Momentum * rocketdir),
+			DamageType
+		);
+		if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
+			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
+
+        // killed player
+        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0)
+        {
+            if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
+                bKilledPlayerInAir = true;
+            else if(VSize(Location - InitialLocation) > FromDowntownThreshold && VSize(Location - Victims.Location) < FromDowntownAccuracy)
+                bDowntownedPlayer = true; 
+        }
+	}
+
+	bHurtEntry = false;
+}
 
 defaultproperties
 {
     TeamNum=255
     bColorSet=false
     TeamColorMaterial=Texture'NewFlakSkinWhite'
+
+    ShreddedSound=Sound'Sounds.Shredded'
+    FromDowntownSound=Sound'Sounds.FromDowntown'
+    FromDowntownThreshold=1500.0
+    FromDowntownAccuracy=30.0  
+    bKilledPlayerInAir=false
+    bDowntownedPlayer=false    
 }
