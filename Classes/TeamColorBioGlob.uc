@@ -218,7 +218,7 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
             // killed player
-            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && IsInState('Flying'))
+            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && IsInState('Flying') && GoopLevel == MaxGoopLevel)
             {
                 if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                     bKilledPlayerInAir = true;
@@ -251,7 +251,7 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
         // killed player
-        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && IsInState('Flying'))
+        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && IsInState('Flying') && GoopLevel == MaxGoopLevel)
         {
 
             if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
