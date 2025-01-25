@@ -1293,7 +1293,7 @@ function ParseURL(string Url)
 {
    local string Skinz0r, Sounds, overlay, powerupsOverlay, warmup, dd, TimedOver
    , TimedOverLength, grenadesonspawn, enableenhancednetcode, suicideIntervalString
-   , fws, allowTeamRadar, allowTeamRadarMap;
+   , fws, allowTeamRadar, allowTeamRadarMap, utcompmovement;
    local array<string> Parts;
    local int i;
 
@@ -1332,6 +1332,8 @@ function ParseURL(string Url)
                allowTeamRadar = Right(Parts[i], Len(Parts[i])-Len("allowTeamRadar")-1);
            if (Left(Parts[i], Len("allowTeamRadarMap")) ~= "allowTeamRadarMap")
                allowTeamRadarMap = Right(Parts[i], Len(Parts[i])-Len("allowTeamRadarMap")-1);
+           if (Left(Parts[i], Len("utcompmovement")) ~= "utcompmovement")
+               utcompmovement = Right(Parts[i], Len(Parts[i])-Len("utcompmovement")-1);
        }
    }
    if(Skinz0r !="" && int(Skinz0r)<4 && int(Skinz0r)>0)
@@ -1408,7 +1410,11 @@ function ParseURL(string Url)
        default.bAllowTeamRadarMap=(allowTeamRadarMap~="True");
        bAllowTeamRadarMap = default.bAllowTeamRadarMap;
    }
-   StaticSaveConfig();
+   if(utcompmovement !="" && (utcompmovement~="False" || utcompmovement~="True"))
+   {
+       default.bKeepMomentumOnLanding=(utcompmovement~="True");
+       bKeepMomentumOnLanding = default.bKeepMomentumOnLanding;
+   }
 }
 
 function AutoDemoRecord()
