@@ -136,8 +136,8 @@ function MatchTextToSliders()
 defaultproperties
 {
     Begin Object Class=wsCheckBox Name=EnableMapTeamRadarCheck
-        Caption="Show teammates on the minimap"
-        Hint="Show teammates as a dot on the minimap"
+        Caption="Show teammates on the HUD or minimap"
+        Hint="Show teammates as a dot on the HUD or minimap"
         OnCreateComponent=EnableMapTeamRadarCheck.InternalOnCreateComponent
         WinWidth=0.500000
         WinHeight=0.030000
@@ -148,7 +148,7 @@ defaultproperties
     ch_EnableMapTeamRadar=wsCheckBox'UTComp_Menu_HUD.EnableMapTeamRadarCheck'
 
     Begin Object Class=wsCheckBox Name=EnableTeamRadarCheck
-        Caption="Show teammates with radar"
+        Caption="Show teammates through walls"
         Hint="Allows seeing teammates through walls"
         OnCreateComponent=EnableTeamRadarCheck.InternalOnCreateComponent
         WinWidth=0.500000
