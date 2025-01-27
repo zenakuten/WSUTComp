@@ -1,9 +1,16 @@
 //Variable declarations as a "header" include. Must be on top!
 //Vars courtesy of HUD Scaling Fix by Azarael
+#exec TEXTURE IMPORT NAME=bigcircle FILE=Textures\bigcircle.tga GROUP=Textures MIPS=On ALPHA=1
+#exec TEXTURE IMPORT NAME=Hudzaxis FILE=Textures\Hudzaxis.dds GROUP=Textures MIPS=On ALPHA=1 DXT=5
+
 var const float XShifts[9];
 var const float YShifts[9];
+
+// radar stuff
+// used for changing wireframe color
 var Engine UEngine;
 
+// minimap radar
 struct RadarVehicleDescription
 {
 	//var class VehicleClass;
@@ -13,3 +20,21 @@ struct RadarVehicleDescription
 
 var config array<RadarVehicleDescription> RadarVehicleData;
 var Material RadarBorderMat;
+// end minimap radar
+
+// mutant style radar
+var() SpriteWidget HUDCenterRadarBG;
+var() Color	HUDCurrentMutantColor;
+var() Color HUDAboveMutantColor;
+var() Color HUDLevelMutantColor;
+var() Color HUDBelowMutantColor;
+var() float HUDLevelRampRegion;
+
+var() float HUDBigDotSize;
+var()float HUDSmallDotSize;
+
+var() float HUDXCen, HUDXRad, HUDYCen, HUDYRad; // Center radar tweaking
+
+var texture HUDZAxisTex;
+
+// end radar

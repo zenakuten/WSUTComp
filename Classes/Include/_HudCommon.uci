@@ -242,6 +242,141 @@ simulated function DrawTeamRadar(Canvas C)
     }
 }
 
+function Color GetHealthRampColor(PlayerReplicationInfo RepInfo)
+{
+    local color output;
+    local Pawn P;
+
+    output.R=255;
+    output.G=255;
+    output.B=255;
+    output.A=255;
+
+    P = Pawn(RepInfo.Owner);
+    if(P != None)
+    {
+        if(P.Health >= 90)
+        {
+            output.R=0;
+            output.G=0;
+            output.B=255;
+        }
+        else if(P.Health >= 70)
+        {
+            output.R=0;
+            output.G=255;
+            output.B=0;
+        }
+        else if(P.Health >= 50)
+        {
+            output.R=255;
+            output.G=255;
+            output.B=0;
+        }
+        else if(P.Health >= 20)
+        {
+            output.R=255;
+            output.G=0;
+            output.B=0;
+        }
+    }
+
+    return output;
+}
+
+simulated function DrawMutantStyleTeamRadar(Canvas C)
+{
+    local rotator Dir;
+    local float Angle, VertDiff;
+    local xPawn P;
+    local Actor start;
+    local float dist;
+    local float scale;
+
+    // check server config
+    if(BS_xPlayer(PlayerOwner).RepInfo == None || !BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadarMap)
+        return;
+
+    // check client config
+    if(HUDSettings == None || !HUDSettings.bEnableMapTeamRadar)
+        return;
+
+    C.Style = ERenderStyle.STY_Alpha;
+    HUDXCen = HUDSettings.MapTeamRadarX;
+    HUDYCen = HUDSettings.MapTeamRadarY;
+
+    HUDCenterRadarBG.TextureScale = HUDSettings.MapTeamRadarScale;
+    HUDCenterRadarBG.Tints[0].A = HUDSettings.MapTeamRadarAlpha;
+    HUDCenterRadarBG.Tints[1].A = HUDSettings.MapTeamRadarAlpha;
+    HUDCenterRadarBG.PosX = HUDXCen;
+    HUDCenterRadarBG.PosY = HUDYCen;
+    //DrawSpriteWidget (C, CenterRadarBG);
+    // support widescreen
+    DrawSpriteTileWidget(C, HUDCenterRadarBG);
+
+   if(PlayerOwner.Pawn == None)
+    {
+        if(PlayerOwner.ViewTarget != None)
+            Start = PlayerOwner.ViewTarget;
+        else
+            Start = PlayerOwner;
+    }
+    else
+    {
+        Start = PlayerOwner.Pawn;
+    }
+
+    foreach DynamicActors(class'xPawn', P)
+    {
+        if(PawnOwner.PlayerReplicationInfo.bOnlySpectator)
+            continue;
+
+        if(P == PawnOwner)
+            continue;
+
+        if(PawnOwner.GetTeamNum() != P.GetTeamNum())
+            continue;
+
+        Dir = rotator(P.Location - PawnOwner.Location);
+        VertDiff = P.Location.Z - PawnOwner.Location.Z;
+
+        Angle = ((Dir.Yaw - PawnOwner.Rotation.Yaw) & 65535) * 6.2832/65536;
+        
+        dist = VSize(P.Location - Start.Location);
+        scale = 1.5 - dist/3000.0;
+        scale = scale * HUDSettings.MapTeamRadarScale/0.77;
+        // todo make dot size configurable, for now multi by 0.5 for medium size dot
+        scale = scale * 0.5;
+        scale = FClamp(scale, 0.5,2.0);        
+        
+        C.DrawColor = GetHealthRampColor(P.PlayerReplicationInfo);
+        C.DrawColor.A = Clamp(HUDSettings.MapTeamRadarAlpha * 2.0,0,255);
+
+        C.Style = ERenderStyle.STY_Alpha;
+
+        //C.SetPos(XCen * C.ClipX + HudScale * XRad * C.ClipX * sin(Angle) - 0.5*BigDotSize*C.ClipX,
+        //    YCen * C.ClipY - HudScale * YRad * C.ClipY * cos(Angle) - 0.5*BigDotSize*C.ClipX );
+
+        // support widescreen
+        // fyi scale 0.77 matches texture size to default dot location
+        C.SetPos(HUDXCen * C.ClipX + (HudScale / (ResScaleX/ResScaleY) * HUDXRad * C.ClipX * sin(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX,
+                 HUDYCen * C.ClipY - (HudScale * HUDYRad * C.ClipY * cos(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX);
+
+        // dot
+        C.DrawTile(Material'InterfaceContent.Hud.SkinA', scale*HUDBigDotSize*C.ClipX, scale*HUDBigDotSize*C.ClipX,838,238,144,144);
+
+
+        C.SetPos(HUDXCen * C.ClipX + (HudScale / (ResScaleX/ResScaleY) * HUDXRad * C.ClipX * sin(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX - 0.5*scale*HUDBigDotSize,
+                 HUDYCen * C.ClipY - (HudScale * HUDYRad * C.ClipY * cos(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX);
+        // plus/minus
+        if(P.Location.Z > (PlayerOwner.ViewTarget.Location.Z + 176))
+            C.DrawTile(HudzaxisTex, scale*HUDBigDotSize*C.ClipX, scale*HUDBigDotSize*C.ClipX, 80, 1, 78, 78); //plus
+        else if (P.Location.Z < (PlayerOwner.ViewTarget.Location.Z - 176))
+            C.DrawTile(HudzaxisTex, scale*HUDBigDotSize*C.ClipX, scale*HUDBigDotSize*C.ClipX, 160, 1, 78, 78); //minus
+    }
+}
+
+
 simulated function UTComp_DrawRadarMapPawns(Canvas C, float CenterPosX, float CenterPosY, float RWidth, float RRange, float RTrans, float HScale, float IScale)
 {
 	local float PlayerIconSize, MapScale, MapRadarWidth;

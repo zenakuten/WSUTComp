@@ -4,6 +4,8 @@ var automated wsCheckBox ch_EnableMapTeamRadar;
 var automated wsCheckBox ch_EnableTeamRadar;
 var automated GUILabel radar, radarVehicle, radarR, radarG, radarB, radarA, radarVehicleR, radarVehicleG, radarVehicleB, radarVehicleA;
 var automated GUISlider radarRSlide, radarGSlide, radarBSlide, radarASlide, radarVehicleRSlide, radarVehicleGSlide, radarVehicleBSlide, radarVehicleASlide;
+var automated GUILabel radarMapScaleLabel, radarMapAlphaLabel, radarMapXLabel, radarMapYLabel;
+var automated GUISlider radarMapScaleSlide, radarMapAlphaSlide, radarMapXSlide, radarMapYSlide;
 
 function InitComponent(GUIController MyController, GUIComponent MyComponent)
 {
@@ -42,6 +44,14 @@ function InitComponent(GUIController MyController, GUIComponent MyComponent)
     {
         ch_EnableMapTeamRadar.DisableMe();
         ch_EnableMapTeamRadar.SetHint("Server disabled");
+        radarMapScaleLabel.Hide();
+        radarMapScaleSlide.Hide();
+        radarMapAlphaLabel.Hide();
+        radarMapAlphaSlide.Hide();
+        radarMapXLabel.Hide();
+        radarMapXSlide.Hide();
+        radarMapYLabel.Hide();
+        radarMapYSlide.Hide();
     }
 }
 
@@ -108,6 +118,18 @@ function InternalOnChange( GUIComponent C )
         case radarVehicleASlide: HUDSettings.TeamRadarVehicle.A = radarVehicleASlide.Value;
             MatchTextToSliders();
             break;
+
+        case radarMapScaleSlide: HUDSettings.MapTeamRadarScale = radarMapScaleSlide.Value;
+            break;
+
+        case radarMapAlphaSlide: HUDSettings.MapTeamRadarAlpha = radarMapAlphaSlide.Value;
+            break;
+
+        case radarMapXSlide: HUDSettings.MapTeamRadarX = radarMapXSlide.Value;
+            break;
+
+        case radarMapYSlide: HUDSettings.MapTeamRadarY = radarMapYSlide.Value;
+            break;
     }
 
     SaveSettings();
@@ -125,6 +147,11 @@ function MatchSlidersToColors()
     radarVehicleGSlide.Value = HUDSettings.TeamRadarVehicle.G;
     radarVehicleBSlide.Value = HUDSettings.TeamRadarVehicle.B;
     radarVehicleASlide.Value = HUDSettings.TeamRadarVehicle.B;
+
+    radarMapScaleSlide.Value = HUDSettings.MapTeamRadarScale;
+    radarMapAlphaSlide.Value = HUDSettings.MapTeamRadarAlpha;
+    radarMapXSlide.Value = HUDSettings.MapTeamRadarX;
+    radarMapYSlide.Value = HUDSettings.MapTeamRadarY;
 }
 
 function MatchTextToSliders()
@@ -142,7 +169,7 @@ defaultproperties
         WinWidth=0.500000
         WinHeight=0.030000
         WinLeft=0.250000
-        WinTop=0.330000
+        WinTop=0.300000
         OnChange=UTComp_Menu_HUD.InternalOnChange
     End Object
     ch_EnableMapTeamRadar=wsCheckBox'UTComp_Menu_HUD.EnableMapTeamRadarCheck'
@@ -154,10 +181,106 @@ defaultproperties
         WinWidth=0.500000
         WinHeight=0.030000
         WinLeft=0.250000
-        WinTop=0.38
+        WinTop=0.35
         OnChange=UTComp_Menu_HUD.InternalOnChange
     End Object
     ch_EnableTeamRadar=wsCheckBox'UTComp_Menu_HUD.EnableTeamRadarCheck'
+
+    Begin Object Class=GUILabel Name=radarMapScaleSliderLabel
+        Caption="Radar Scale"
+        TextColor=(R=255,G=255,B=255)
+        WinTop=0.40
+        WinLeft=0.25
+        WinHeight=20.000000
+    End Object
+    radarMapScaleLabel=GUILabel'UTComp_Menu_HUD.radarMapScaleSliderLabel'
+
+    Begin Object Class=wsGUISlider Name=RadarMapScaleSlider
+        bIntSlider=False
+        WinTop=0.39500
+        WinLeft=0.40000
+        WinWidth=0.35000
+        OnClick=RadarMapScaleSlider.InternalOnClick
+        OnMousePressed=RadarMapScaleSlider.InternalOnMousePressed
+        OnMouseRelease=RadarMapScaleSlider.InternalOnMouseRelease
+        OnChange=UTComp_Menu_HUD.InternalOnChange
+        OnKeyEvent=RadarMapScaleSlider.InternalOnKeyEvent
+        OnCapturedMouseMove=RadarMapScaleSlider.InternalCapturedMouseMove
+        MaxValue=2.0
+    End Object
+    radarMapScaleSlide=wsGUISlider'UTComp_Menu_HUD.RadarMapScaleSlider'
+
+    Begin Object Class=GUILabel Name=radarMapAlphaSliderLabel
+        Caption="Radar Alpha"
+        TextColor=(R=255,G=255,B=255)
+        WinTop=0.45
+        WinLeft=0.25
+        WinHeight=20.000000
+    End Object
+    radarMapAlphaLabel=GUILabel'UTComp_Menu_HUD.radarMapAlphaSliderLabel'
+
+    Begin Object Class=wsGUISlider Name=RadarMapAlphaSlider
+        bIntSlider=True
+        WinTop=0.44500
+        WinLeft=0.40000
+        WinWidth=0.35000
+        OnClick=RadarMapAlphaSlider.InternalOnClick
+        OnMousePressed=RadarMapAlphaSlider.InternalOnMousePressed
+        OnMouseRelease=RadarMapAlphaSlider.InternalOnMouseRelease
+        OnChange=UTComp_Menu_HUD.InternalOnChange
+        OnKeyEvent=RadarMapAlphaSlider.InternalOnKeyEvent
+        OnCapturedMouseMove=RadarMapAlphaSlider.InternalCapturedMouseMove
+        MaxValue=255
+    End Object
+    radarMapAlphaSlide=wsGUISlider'UTComp_Menu_HUD.RadarMapAlphaSlider'
+
+    Begin Object Class=GUILabel Name=radarMapXSliderLabel
+        Caption="Radar X"
+        TextColor=(R=255,G=255,B=255)
+        WinTop=0.50
+        WinLeft=0.25
+        WinHeight=20.000000
+    End Object
+    radarMapXLabel=GUILabel'UTComp_Menu_HUD.radarMapXSliderLabel'
+
+    Begin Object Class=wsGUISlider Name=RadarMapXSlider
+        bIntSlider=false
+        WinTop=0.49500
+        WinLeft=0.40000
+        WinWidth=0.35000
+        OnClick=RadarMapXSlider.InternalOnClick
+        OnMousePressed=RadarMapXSlider.InternalOnMousePressed
+        OnMouseRelease=RadarMapXSlider.InternalOnMouseRelease
+        OnChange=UTComp_Menu_HUD.InternalOnChange
+        OnKeyEvent=RadarMapXSlider.InternalOnKeyEvent
+        OnCapturedMouseMove=RadarMapXSlider.InternalCapturedMouseMove
+        MaxValue=1.0
+    End Object
+    radarMapXSlide=wsGUISlider'UTComp_Menu_HUD.RadarMapXSlider'
+
+    Begin Object Class=GUILabel Name=radarMapYSliderLabel
+        Caption="Radar Y"
+        TextColor=(R=255,G=255,B=255)
+        WinTop=0.55
+        WinLeft=0.25
+        WinHeight=20.000000
+    End Object
+    radarMapYLabel=GUILabel'UTComp_Menu_HUD.radarMapYSliderLabel'
+
+    Begin Object Class=wsGUISlider Name=RadarMapYSlider
+        bIntSlider=false
+        WinTop=0.54500
+        WinLeft=0.40000
+        WinWidth=0.35000
+        OnClick=RadarMapYSlider.InternalOnClick
+        OnMousePressed=RadarMapYSlider.InternalOnMousePressed
+        OnMouseRelease=RadarMapYSlider.InternalOnMouseRelease
+        OnChange=UTComp_Menu_HUD.InternalOnChange
+        OnKeyEvent=RadarMapYSlider.InternalOnKeyEvent
+        OnCapturedMouseMove=RadarMapYSlider.InternalCapturedMouseMove
+        MaxValue=1.0
+    End Object
+    radarMapYSlide=wsGUISlider'UTComp_Menu_HUD.RadarMapYSlider'
 
     /////////////////////
 
@@ -282,7 +405,7 @@ defaultproperties
      radarVehicleASlide=wsGUISlider'UTComp_Menu_HUD.BlueASlider'
 
      Begin Object Class=GUILabel Name=radarLabel
-         Caption="Player Radar Color"
+         Caption="Through Wall Player Color"
          TextColor=(R=255,G=255,B=255)
          WinTop=0.6000000
          WinLeft=0.235000
@@ -291,7 +414,7 @@ defaultproperties
      radar=GUILabel'UTComp_Menu_HUD.radarLabel'
 
      Begin Object Class=GUILabel Name=radarVehicleLabel
-         Caption="Vehicle Radar Color"
+         Caption="Through Wall Vehicle Color"
          TextColor=(R=255,G=255,B=255)
          WinTop=0.6000000
          WinLeft=0.650000
@@ -370,4 +493,5 @@ defaultproperties
          WinHeight=20.000000
      End Object
      radarVehicleA=GUILabel'UTComp_Menu_HUD.BlueALabel'
+
 }

@@ -26,6 +26,10 @@ var config bool bEnableMapTeamRadar;
 var config bool bEnableTeamRadar;
 var config Color TeamRadarPlayer;
 var config Color TeamRadarVehicle;
+var config float MapTeamRadarScale;
+var config int MapTeamRadarAlpha;
+var config float MapTeamRadarX;
+var config float MapTeamRadarY;
 
 defaultproperties
 {
@@ -37,4 +41,8 @@ defaultproperties
     bEnableTeamRadar=False
     TeamRadarPlayer=(R=0,G=255,B=0,A=255)
     TeamRadarVehicle=(R=255,G=0,B=255,A=255)
+    MapTeamRadarScale=1.0
+    MapTeamRadarAlpha=255
+    MapTeamRadarX=0.5
+    MapTeamRadarY=0.5
 }
