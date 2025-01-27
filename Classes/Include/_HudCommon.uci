@@ -292,6 +292,7 @@ simulated function DrawMutantStyleTeamRadar(Canvas C)
     local Actor start;
     local float dist;
     local float scale;
+    local float widescreenscale;
 
     // check server config
     if(BS_xPlayer(PlayerOwner).RepInfo == None || !BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadarMap)
@@ -358,15 +359,18 @@ simulated function DrawMutantStyleTeamRadar(Canvas C)
         //    YCen * C.ClipY - HudScale * YRad * C.ClipY * cos(Angle) - 0.5*BigDotSize*C.ClipX );
 
         // support widescreen
+        widescreenscale=1.0;
+        if(HUDSettings.bEnableWidescreenFix)
+            widescreenscale=ResScaleX/ResScaleY;
         // fyi scale 0.77 matches texture size to default dot location
-        C.SetPos(HUDXCen * C.ClipX + (HudScale / (ResScaleX/ResScaleY) * HUDXRad * C.ClipX * sin(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX,
+        C.SetPos(HUDXCen * C.ClipX + (HudScale / widescreenscale * HUDXRad * C.ClipX * sin(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX,
                  HUDYCen * C.ClipY - (HudScale * HUDYRad * C.ClipY * cos(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX);
 
         // dot
         C.DrawTile(Material'InterfaceContent.Hud.SkinA', scale*HUDBigDotSize*C.ClipX, scale*HUDBigDotSize*C.ClipX,838,238,144,144);
 
 
-        C.SetPos(HUDXCen * C.ClipX + (HudScale / (ResScaleX/ResScaleY) * HUDXRad * C.ClipX * sin(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX - 0.5*scale*HUDBigDotSize,
+        C.SetPos(HUDXCen * C.ClipX + (HudScale / widescreenscale * HUDXRad * C.ClipX * sin(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX - 0.5*scale*HUDBigDotSize,
                  HUDYCen * C.ClipY - (HudScale * HUDYRad * C.ClipY * cos(Angle) * HUDSettings.MapTeamRadarScale/0.77) - 0.5*scale*HUDBigDotSize*C.ClipX);
         // plus/minus
         if(P.Location.Z > (PlayerOwner.ViewTarget.Location.Z + 176))
