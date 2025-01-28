@@ -37,7 +37,7 @@ defaultproperties
     bEnableWidescreenFix=False
     DamageIndicatorType=2
     bEnableEmoticons=True
-    bEnableMapTeamRadar=True
+    bEnableMapTeamRadar=False
     bEnableTeamRadar=False
     TeamRadarPlayer=(R=0,G=255,B=0,A=255)
     TeamRadarVehicle=(R=255,G=0,B=255,A=255)
