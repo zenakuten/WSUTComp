@@ -9,7 +9,7 @@ V12
 - Add reset skins button to bright skins menu
 - Add feature to allow team radar
 - Add feature to allow minimap team radar (ONS)
-- Add feature to allow mutant style team radar (ONS)
+- Add feature to allow mutant style team radar
 - Load default weapon configs (crosshairs, etc) on new version of utcomp
 - Add airsnot, torpedo, fromdowntown, shredded awards
 

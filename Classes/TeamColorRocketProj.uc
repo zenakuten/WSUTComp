@@ -227,7 +227,7 @@ defaultproperties
     TeamNum=255
     AirRocketSound=Sound'Sounds.AirRocket'
     TorpedoSound=Sound'Sounds.Torpedo'
-    torpedoThreshold=1200.0
+    torpedoThreshold=1800.0
     torpedoAccuracy=30.0
     bKilledPlayerInAir=false
     bTorpedoedPlayer=false
