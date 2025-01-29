@@ -184,6 +184,21 @@ simulated final function DrawNumericTileWidget(Canvas C, NumericWidget W, DigitS
 	}
 }
 
+// we can't use vehicle.IsVehicleEmpty since it's not simulated
+simulated function bool IsVehicleEmpty(ONSVehicle V)
+{
+	local int i;
+
+	if ( V.Driver != None )
+		return false;
+
+	for (i=0; i<V.WeaponPawns.length; i++)
+		if ( V.WeaponPawns[i].Driver != None )
+			return false;
+
+	return true;
+}
+
 simulated function DrawTeamRadar(Canvas C)
 {
     local Pawn Pawn;
@@ -222,7 +237,7 @@ simulated function DrawTeamRadar(Canvas C)
                 eyePos = PlayerOwner.CalcViewLocation;
                 if(VSize(eyePos - Pawn.Location) < RepInfo.TeamRadarCullDistance && !FastTrace(eyePos, Pawn.Location))
                 {
-                    if(ONSVehicle(Pawn) != None && !ONSVehicle(Pawn).IsVehicleEmpty())
+                    if(ONSVehicle(Pawn) != None && !IsVehicleEmpty(ONSVehicle(Pawn)))
                     {
                         UEngine.C_BrushWire = HUDSettings.TeamRadarVehicle;
                         C.DrawActor(Pawn, true, true);
