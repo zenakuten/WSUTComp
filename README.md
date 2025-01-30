@@ -6,6 +6,7 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 Release Notes
 
 V12
+- Fix setting/changing scoreboard types bug
 - Add reset skins button to bright skins menu
 - Add feature to allow team radar
 - Add feature to allow minimap team radar (ONS)
