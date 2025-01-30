@@ -412,7 +412,7 @@ simulated function UTComp_DrawRadarMapPawns(Canvas C, float CenterPosX, float Ce
     bRenderTeamRadarMap = 
         BS_xPlayer(PlayerOwner).RepInfo != None 
         && HUDSettings != None 
-        && BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadar
+        && BS_xPlayer(PlayerOwner).RepInfo.bAllowTeamRadarMap
         && HUDSettings.bEnableMapTeamRadar;
 
     if(bRenderTeamRadarMap)

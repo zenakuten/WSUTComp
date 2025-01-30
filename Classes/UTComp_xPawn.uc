@@ -1299,6 +1299,26 @@ simulated function Destroyed()
     super.Destroyed();
 }
 
+// Override default giveweapon to pass owner param.
+// The weapon instigator is assigned inside spawn method.
+// There is a bug where sometimes weapon instigator is none
+// due to weapon switch at round start?  It's weird... 
+// GiveTo also assigns the instigator, so not sure how this happens
+function GiveWeapon(string aClassName )
+{
+	local class<Weapon> WeaponClass;
+	local Weapon NewWeapon;
+
+	WeaponClass = class<Weapon>(DynamicLoadObject(aClassName, class'Class'));
+
+	if( FindInventoryType(WeaponClass) != None )
+		return;
+	newWeapon = Spawn(WeaponClass, self);  //pass self as owner param
+	if( newWeapon != None )
+		newWeapon.GiveTo(self);
+}
+
+
 defaultproperties
 {
     bAlwaysRelevant=True
