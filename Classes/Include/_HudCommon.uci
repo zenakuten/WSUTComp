@@ -187,16 +187,7 @@ simulated final function DrawNumericTileWidget(Canvas C, NumericWidget W, DigitS
 // we can't use vehicle.IsVehicleEmpty since it's not simulated
 simulated function bool IsVehicleEmpty(ONSVehicle V)
 {
-	local int i;
-
-	if ( V.Driver != None )
-		return false;
-
-	for (i=0; i<V.WeaponPawns.length; i++)
-		if ( V.WeaponPawns[i].Driver != None )
-			return false;
-
-	return true;
+    return V == None || !V.bDriving;
 }
 
 simulated function DrawTeamRadar(Canvas C)
