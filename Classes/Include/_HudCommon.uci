@@ -454,7 +454,7 @@ simulated function UTComp_DrawRadarMapPawns(Canvas C, float CenterPosX, float Ce
 
         foreach DynamicActors(class'Pawn', P)
         {
-            if(!P.bHidden && PawnOwner != None && TeamNum == P.GetTeamNum())
+            if(PawnOwner != None && TeamNum == P.GetTeamNum())
             {
                 HUDLocation = P.Location - MCenter;
                 HUDLocation.Z = 0;
