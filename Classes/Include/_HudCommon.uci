@@ -462,7 +462,7 @@ simulated function UTComp_DrawRadarMapPawns(Canvas C, float CenterPosX, float Ce
                 V = ONSVehicle(P);
                 if (V != None)
                 {
-                    if(!V.IsVehicleEmpty())
+                    if(!IsVehicleEmpty(V))
                     {
                         // draw larger black dot (as outline)
                         C.DrawColor = C.MakeColor(0,0,0);
