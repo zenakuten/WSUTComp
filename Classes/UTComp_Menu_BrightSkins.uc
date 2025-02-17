@@ -424,13 +424,15 @@ function ChangeComboBoxCaption()
         {
             co_TeamSelect.AddItem("Teammates(Skins), Red(Models)");
             co_TeamSelect.AddItem("Enemies(Skins), Blue(Models)");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
         else
         {
             co_TeamSelect.AddItem("Teammates");
             co_TeamSelect.AddItem("Enemies");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
     }
     else
@@ -439,13 +441,15 @@ function ChangeComboBoxCaption()
         {
             co_TeamSelect.AddItem("Red(Skins), Teammates(Models)");
             co_TeamSelect.AddItem("Blue(Skins), Enemies(Models)");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
         else
         {
             co_TeamSelect.AddItem("Red Team");
             co_TeamSelect.AddItem("Blue Team");
-            co_TeamSelect.AddItem("Spawn protected");
+            co_TeamSelect.AddItem("Spawn protected (enemy)");
+            co_TeamSelect.AddItem("Spawn protected (team)");
         }
     }
     for(i=0; i<Settings.ClanSkins.Length; i++)

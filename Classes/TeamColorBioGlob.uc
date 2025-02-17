@@ -23,7 +23,7 @@ replication
     unreliable if(Role == Role_Authority)
        TeamNum;
     
-    reliable if( bNetInitial && (Role==ROLE_Authority))
+    reliable if(Role == ROLE_Authority)
        InitialLocation;       
 }
 
