@@ -1,7 +1,6 @@
 class TeamColorBioGlob extends BioGlob;
 
 #exec AUDIO IMPORT FILE=Sounds\AirSnot.wav GROUP=Sounds
-#exec AUDIO IMPORT FILE=Sounds\FromDowntown.wav GROUP=Sounds
 
 
 var int TeamNum;
@@ -12,10 +11,10 @@ var UTComp_Settings Settings;
 
 var vector InitialLocation;
 var bool bKilledPlayerInAir;
-var bool bDowntownedPlayer;
-var float FromDowntownThreshold;
+var bool bEagleEyedPlayer;
+var float EagleEyeThreshold;
 
-var Sound FromDowntownSound;
+var Sound EagleEyeSound;
 var Sound AirSnotSound;
 
 replication
@@ -156,11 +155,11 @@ function BlowUp(Vector HitLocation)
                 BS_xPlayer(Instigator.Controller).ClientReceiveAward(AirSnotSound,0.5, 2.0);
             }
         }
-        else if(bDowntownedPlayer)
+        else if(bEagleEyedPlayer)
         {    
             if(BS_xPlayer(Instigator.Controller) != None)
             {
-                BS_xPlayer(Instigator.Controller).ClientReceiveAward(FromDowntownSound,0.5, 2.0);
+                BS_xPlayer(Instigator.Controller).ClientReceiveAward(EagleEyeSound,0.5, 2.0);
             }
         }
 
@@ -222,8 +221,8 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
             {
                 if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                     bKilledPlayerInAir = true;
-                else if(VSize(Location - InitialLocation) > FromDowntownThreshold)
-                    bDowntownedPlayer = true; 
+                else if(VSize(Location - InitialLocation) > EagleEyeThreshold)
+                    bEagleEyedPlayer = true; 
             }
 		}
 	}
@@ -256,8 +255,8 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 
             if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                 bKilledPlayerInAir = true;
-            else if(VSize(Location - InitialLocation) > FromDowntownThreshold)
-                bDowntownedPlayer = true; 
+            else if(VSize(Location - InitialLocation) > EagleEyeThreshold)
+                bEagleEyedPlayer = true; 
         }
 	}
 
@@ -271,8 +270,8 @@ defaultproperties
     TeamColorMaterial=FinalBlend'GoopFB'
 
     AirSnotSound=Sound'Sounds.AirSnot'
-    FromDowntownSound=Sound'Sounds.FromDowntown'
-    FromDowntownThreshold=1500.0
+    EagleEyeSound=Sound'AnnouncerMale2K4.EagleEye'
+    EagleEyeThreshold=1500.0
     bKilledPlayerInAir=false
-    bDowntownedPlayer=false
+    bEagleEyedPlayer=false
 }

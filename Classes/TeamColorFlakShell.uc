@@ -2,7 +2,6 @@ class TeamColorFlakShell extends FlakShell;
 
 #exec TEXTURE IMPORT NAME=NewFlakSkinWhite FILE=textures\NewFlakSkin_white.dds MIPS=off ALPHA=1 DXT=5
 #exec AUDIO IMPORT FILE=Sounds\shredded.wav GROUP=Sounds
-#exec AUDIO IMPORT FILE=Sounds\FromDowntown.wav GROUP=Sounds
 
 var int TeamNum;
 var Material TeamColorMaterial;
@@ -12,11 +11,11 @@ var UTComp_Settings Settings;
 
 var vector InitialLocation;
 var bool bKilledPlayerInAir;
-var bool bDowntownedPlayer;
-var float FromDowntownThreshold;
-var float FromDowntownAccuracy;
+var bool bEagleEyedPlayer;
+var float EagleEyeThreshold;
+var float EagleEyeAccuracy;
 
-var Sound FromDowntownSound;
+var Sound EagleEyeSound;
 var Sound ShreddedSound;
 
 replication
@@ -167,11 +166,11 @@ simulated function Explode(vector HitLocation, vector HitNormal)
                 BS_xPlayer(Instigator.Controller).ClientReceiveAward(ShreddedSound,0.5, 2.0);
             }
         }
-        else if(bDowntownedPlayer)
+        else if(bEagleEyedPlayer)
         {    
             if(BS_xPlayer(Instigator.Controller) != None)
             {
-                BS_xPlayer(Instigator.Controller).ClientReceiveAward(FromDowntownSound,0.5, 2.0);
+                BS_xPlayer(Instigator.Controller).ClientReceiveAward(EagleEyeSound,0.5, 2.0);
             }
         }
 	}
@@ -223,8 +222,8 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
             {
                 if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                     bKilledPlayerInAir = true;
-                else if(VSize(Location - InitialLocation) > FromDowntownThreshold && VSize(Location - Victims.Location) < FromDowntownAccuracy)
-                    bDowntownedPlayer = true; 
+                else if(VSize(Location - InitialLocation) > EagleEyeThreshold && VSize(Location - Victims.Location) < EagleEyeAccuracy)
+                    bEagleEyedPlayer = true; 
             }
 		}
 	}
@@ -256,8 +255,8 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
         {
             if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                 bKilledPlayerInAir = true;
-            else if(VSize(Location - InitialLocation) > FromDowntownThreshold && VSize(Location - Victims.Location) < FromDowntownAccuracy)
-                bDowntownedPlayer = true; 
+            else if(VSize(Location - InitialLocation) > EagleEyeThreshold && VSize(Location - Victims.Location) < EagleEyeAccuracy)
+                bEagleEyedPlayer = true; 
         }
 	}
 
@@ -271,9 +270,9 @@ defaultproperties
     TeamColorMaterial=Texture'NewFlakSkinWhite'
 
     ShreddedSound=Sound'Sounds.Shredded'
-    FromDowntownSound=Sound'Sounds.FromDowntown'
-    FromDowntownThreshold=1500.0
-    FromDowntownAccuracy=30.0  
+    EagleEyeSound=Sound'AnnouncerMale2K4.EagleEye'
+    EagleEyeThreshold=1500.0
+    EagleEyeAccuracy=30.0  
     bKilledPlayerInAir=false
-    bDowntownedPlayer=false    
+    bEagleEyedPlayer=false    
 }

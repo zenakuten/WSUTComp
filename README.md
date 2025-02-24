@@ -5,6 +5,10 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V13
+- Fix bug where sometimes you cant set spawn protected bright skin for teammates
+- Change 'from downtown' award to eagleeye
+
 V12
 - Fix setting/changing scoreboard types bug
 - Add reset skins button to bright skins menu
@@ -12,7 +16,7 @@ V12
 - Add feature to allow minimap team radar (ONS)
 - Add feature to allow mutant style team radar
 - Load default weapon configs (crosshairs, etc) on new version of utcomp
-- Add airsnot, torpedo, fromdowntown, shredded awards
+- Add airsnot, torpedo, EagleEye, shredded awards
 
 V11
 - Fix some stats carrying over from warmup
