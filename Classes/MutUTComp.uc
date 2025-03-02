@@ -1820,7 +1820,16 @@ function InitStatsOverride()
 
 defaultproperties
 {
+     FriendlyName="Wicked Sick UTComp"
+     FriendlyVersionPrefix="UTComp Version"
+     FriendlyVersionName="Wicked Sick"
+     FriendlyVersionNumber="V13"
+     Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
+     bNetTemporary=True
+     bAlwaysRelevant=True
+     RemoteRole=ROLE_SimulatedProxy
      bAddToServerPackages=True
+
      bEnableVoting=False
      bEnableBrightskinsVoting=True
      bEnableHitsoundsVoting=True
@@ -1878,14 +1887,6 @@ defaultproperties
      NewNetUpdateFrequency=200
      PingTweenTime=3.0
 
-     FriendlyName="Wicked Sick UTComp"
-     FriendlyVersionPrefix="UTComp Version"
-     FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V13"
-     Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
-     bNetTemporary=True
-     bAlwaysRelevant=True
-     RemoteRole=ROLE_SimulatedProxy
      bEnableAdvancedVotingOptions=True
      bForceMapVoteMatchPrefix=True
      TimedOverTimeLength=300
