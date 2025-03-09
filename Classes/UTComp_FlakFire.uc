@@ -16,5 +16,5 @@ event ModeDoFire()
 
 defaultproperties
 {
-    ProjectileClass=Class'TeamColorFlakChunk'
+    ProjectileClass=Class'UTComp_FlakChunk'
 }
