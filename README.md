@@ -8,6 +8,7 @@ Release Notes
 V13
 - Fix bug where sometimes you cant set spawn protected bright skin for teammates
 - Change 'from downtown' award to eagleeye
+- Better support for foxwsfix (dodge issue)
 
 V12
 - Fix setting/changing scoreboard types bug
