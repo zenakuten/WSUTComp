@@ -1500,6 +1500,78 @@ function GetServerDetails( out GameInfo.ServerResponseLine ServerState )
 	ServerState.ServerInfo[i].Value = FriendlyVersionName$" "$FriendlyVersionNumber;
 	ServerState.ServerInfo[i+1].Key = "Enhanced Netcode";
 	ServerState.ServerInfo[i+1].Value = string(bEnhancedNetCodeEnabledAtStartOfMap);
+
+    if(bFastWeaponSwitch)
+    {
+        i=i+2;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Fast Weapon Switch";
+        ServerState.ServerInfo[i].Value = "Enabled";
+    }
+
+    if(bKeepMomentumOnLanding)
+    {
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Gliding Movement";
+        ServerState.ServerInfo[i].Value = "Enabled";
+    }
+
+    if(bAllowTeamRadar)
+    {
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Team Radar";
+        ServerState.ServerInfo[i].Value = "Enabled";
+    }
+    if(bAllowTeamRadarMap)
+    {
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Team Radar (HUD)";
+        ServerState.ServerInfo[i].Value = "Enabled";
+    }
+    if(bEnableWarmup)
+    {
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Warmup";
+        ServerState.ServerInfo[i].Value = "Enabled";
+
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Warmup time";
+        ServerState.ServerInfo[i].Value = string(WarmupTime);
+
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Warmup weapons mode";
+        switch(EnableWarmupWeaponsMode)
+        {
+            case 3: ServerState.ServerInfo[i].Value = "ONS+TAM";
+                break;
+            case 2: ServerState.ServerInfo[i].Value = "TAM";
+                break;
+            case 1: ServerState.ServerInfo[i].Value = "UTComp (use weapons found in map)";
+                break;
+            case 0: ServerState.ServerInfo[i].Value = "None";
+                break;
+        }
+    }
+    if(bAllowColorWeapons)
+    {
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Color weapons";
+        ServerState.ServerInfo[i].Value = "Enabled";
+    }
+    if(bEnableEmoticons)
+    {
+        i++;
+        ServerState.ServerInfo.Length = i+1;
+        ServerState.ServerInfo[i].Key = "Emoticons";
+        ServerState.ServerInfo[i].Value = "Enabled";
+    }
 }
 
 function string CreateTimeString()
@@ -1537,56 +1609,74 @@ simulated function string StripIllegalWindowsCharacters(string S)
 
 static function FillPlayInfo (PlayInfo PlayInfo)
 {
-    local int weight;
+    local int weight, security;
 	PlayInfo.AddClass(Default.Class);
 
+    security = 0;
     weight = 1;
-    PlayInfo.AddSetting("UTComp Settings", "EnableBrightSkinsMode", "Brightskins Mode", 1, weight++, "Select", "0;Disabled;1;Epic Style;2;BrighterEpic Style;3;UTComp Style ");
-    PlayInfo.AddSetting("UTComp Settings", "EnableHitSoundsMode", "Hitsounds Mode", 1, weight++, "Select", "0;Disabled;1;Line Of Sight;2;Everywhere");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableWarmup", "Enable Warmup", 1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableDoubleDamage", "Enable Double Damage", 1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableAutoDemoRec", "Enable Serverside Demo-Recording", 1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableTeamOverlay", "Enable Team Overlay", 1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnablePowerupsOverlay", "Enable Powerups Overlay for spectators", 1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", 1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Settings", "ServerMaxPlayers", "Voting Max Players",255, weight++, "Text","2;0:32",,False,False);
-    PlayInfo.AddSetting("UTComp Settings", "NumGrenadesOnSpawn", "Number of grenades on spawn",255, weight++, "Text","2;0:32",,False,False);
-    PlayInfo.AddSetting("UTComp Settings", "MaxMultiDodges", "Number of additional dodges",255, weight++, "Text","2;0:99",);
-    PlayInfo.AddSetting("UTComp Settings", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight++, "Text","0;0:1000000",);
-    PlayInfo.AddSetting("UTComp Settings", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight++, "Text","0;0:1000000",);
+    PlayInfo.AddSetting("UTComp Settings", "EnableBrightSkinsMode", "Brightskins Mode", security, weight, "Select", "0;Disabled;1;Epic Style;2;BrighterEpic Style;3;UTComp Style ");
+    PlayInfo.AddSetting("UTComp Settings", "EnableHitSoundsMode", "Hitsounds Mode", security, weight, "Select", "0;Disabled;1;Line Of Sight;2;Everywhere");
+    PlayInfo.AddSetting("UTComp Settings", "bEnableWarmup", "Enable Warmup", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Settings", "WarmupTime", "Warmup Time", security, weight, "Text","0;0:1800",,False,False);
+    PlayInfo.AddSetting("UTComp Settings", "EnableWarmupWeaponsMode", "0) none 1) utcomp 2) tam 3) ons+tam", security, weight, "Text","0;0:3",,False,False);
+    PlayInfo.AddSetting("UTComp Settings", "bEnableDoubleDamage", "Enable Double Damage", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Settings", "bEnableAutoDemoRec", "Enable Serverside Demo-Recording", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Settings", "bEnableTeamOverlay", "Enable Team Overlay", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Settings", "bEnablePowerupsOverlay", "Enable Powerups Overlay for spectators", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Settings", "ServerMaxPlayers", "Voting Max Players",255, weight, "Text","2;0:32",,False,False);
+    PlayInfo.AddSetting("UTComp Settings", "NumGrenadesOnSpawn", "Number of grenades on spawn",255, weight, "Text","2;0:32",,False,False);
+    PlayInfo.AddSetting("UTComp Settings", "MaxMultiDodges", "Number of additional dodges",255, weight, "Text","2;0:99",);
+    
+    weight++;
+    PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", security, weight, "Text", "0;0:1800",, False, False);
+    PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bChargedWeaponsNoSpawnProtection", "Disable spawn protection during weapon charging", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bLimitTaunts", "Limit the number of voice taunts allowed", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "TauntCount", "Number of voice taunts allowed", security, weight, "Text","0;0:999",,False,False);
+    PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadar", "Allow players to use 3D view team radar", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "TeamRadarCullDistance", "Cull distance of team radar", security, weight, "Text", "0;0:100000",, False, False);
+    PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadarMap", "Allow players to use minimap or HUD team radar", security, weight,"Check");
 
-    PlayInfo.AddSetting("UTComp Settings", "bEnableVoting", "Enable Voting", 1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableBrightskinsVoting", "Allow players to vote on Brightskins settings", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableWarmupVoting", "Allow players to vote on Warmup setting", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableHitsoundsVoting", "Allow players to vote on Hitsounds settings", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableTeamOverlayVoting", "Allow players to vote on team overlay setting", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnablePowerupsOverlayVoting", "Allow players to vote on powerups overlay setting", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableEnhancedNetcodeVoting", "Allow players to vote on enhanced netcode setting", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableMapVoting", "Allow players to vote for map changes", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "WarmupTime", "Warmup Time",1, weight++, "Text","0;0:1800",,False,False);
-    PlayInfo.AddSetting("UTComp Settings", "EnableWarmupWeaponsMode", "0) none 1) utcomp 2) tam 3) ons+tam",1, weight++, "Text","0;0:3",,False,False);
+    weight++;
+    PlayInfo.AddSetting("UTComp NewNet", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (200)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Tween Time (3.0)", security, weight, "Text","0;0.0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionHistoryLength", "NewNet Pawn Collision History Length (0.35)", security, weight, "Text","0;0.0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:1000000",);
+    PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:1000000",);
 
-    PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", 1, weight++, "Text", "0;0:1800",, False, False);
-    PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bChargedWeaponsNoSpawnProtection", "Disable spawn protection during weapon charging", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "bLimitTaunts", "Limit the number of voice taunts allowed", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "TauntCount", "Number of voice taunts allowed",1, weight++, "Text","0;0:999",,False,False);
-    PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadar", "Allow players to use team radar", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Settings", "TeamRadarCullDistance", "Cull distance of team radar", 1, weight++, "Text", "0;0:100000",, False, False);
-    PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadarMap", "Allow players to use minimap team radar", 1, weight++,"Check");
+    weight++;
+    PlayInfo.AddSetting("UTComp ONS", "NodeIsolateBonusPct", "Power Node Isolate Bonus Pct (20)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp ONS", "VehicleHealScore", "Vehicle Heal Score (200)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp ONS", "VehicleDamagePoints", "Vehicle Damage Points (400)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp ONS", "PowerCoreScore", "Power Core Score (10)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp ONS", "PowerNodeScore", "Power Node Score (5)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp ONS", "NodeHealBonusPct", "Node Heal Bonus Pct (60)", security, weight, "Text","0;0.0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp ONS", "bNodeHealBonusForLockedNodes", "Receive Node Heal Bonus For Locked Nodes", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp ONS", "bNodeHealBonusForConstructor", "Player That Started Node Receives Node Heal Bonus", security, weight,"Check");
 
-    weight = 1;
-    PlayInfo.AddSetting("UTComp Movement Settings", "bKeepMomentumOnLanding", "UTComp style gliding movement", 1, weight++,"Check");
-    PlayInfo.AddSetting("UTComp Movement Settings", "NetMoveDelta", "How often clients send move updates (default 0.011)",1, weight++, "Text","0.011;0.001:0.022",,False,False);
-    PlayInfo.AddSetting("UTComp Movement Settings", "MaxSavedMoves", "Max saved moves for warp fix (default 300)",1, weight++, "Text","300;100:750",,False,False);
-    PlayInfo.AddSetting("UTComp Movement Settings", "MaxResponseTime", "delay for client move update (default 0.125)",1, weight++, "Text","0.125;0.001:0.250",,False,False);
-    PlayInfo.AddSetting("UTComp Movement Settings", "bMoveErrorAccumFix", "use move accum fix (default false)",1, weight++, "Check");
-    PlayInfo.AddSetting("UTComp Movement Settings", "MoveErrorAccumFixValue", "move accum fix value (default 0.009)",1, weight++, "Text", "0.009:0.001:0.018",,false, false);
+    weight++;
+    PlayInfo.AddSetting("UTComp Movement", "bKeepMomentumOnLanding", "UTComp style gliding movement", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Movement", "NetMoveDelta", "How often clients send move updates (default 0.011)", security, weight, "Text","0.011;0.001:0.022",,False,False);
+    PlayInfo.AddSetting("UTComp Movement", "MaxSavedMoves", "Max saved moves for warp fix (default 300)", security, weight, "Text","300;100:750",,False,False);
+    PlayInfo.AddSetting("UTComp Movement", "MaxResponseTime", "delay for client move update (default 0.125)", security, weight, "Text","0.125;0.001:0.250",,False,False);
+    PlayInfo.AddSetting("UTComp Movement", "bMoveErrorAccumFix", "use move accum fix (default false)", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Movement", "MoveErrorAccumFixValue", "move accum fix value (default 0.009)", security, weight, "Text", "0.009:0.001:0.018",,false, false);
+
+    weight++;
+    PlayInfo.AddSetting("UTComp Voting", "bEnableVoting", "Enable Voting", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Voting", "bEnableBrightskinsVoting", "Allow players to vote on Brightskins settings", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Voting", "bEnableWarmupVoting", "Allow players to vote on Warmup setting", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Voting", "bEnableHitsoundsVoting", "Allow players to vote on Hitsounds settings", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Voting", "bEnableTeamOverlayVoting", "Allow players to vote on team overlay setting", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Voting", "bEnablePowerupsOverlayVoting", "Allow players to vote on powerups overlay setting", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Voting", "bEnableEnhancedNetcodeVoting", "Allow players to vote on enhanced netcode setting", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Voting", "bEnableMapVoting", "Allow players to vote for map changes", security, weight,"Check");
 
     PlayInfo.PopClass();
     super.FillPlayInfo(PlayInfo);
@@ -1632,6 +1722,19 @@ static event string GetDescriptionText(string PropName)
         case "bAllowTeamRadar": return "Allow players to use team radar";
         case "TeamRadarCullDistance": return "Cull distance of team radar";
         case "bAllowTeamRadarMap": return "Allow players to use minimap team radar";
+
+        case "NewNetUpdateFrequency": return "NewNet Update Frequency (200)";
+        case "PingTweenTime": return "NewNet Ping Tween Time (3.0)";
+        case "PawnCollisionHistoryLength": return "NewNet Pawn Collision History Length (0.35)";
+        
+        case "NodeIsolateBonusPct": return "Power Node Isolate Bonus Pct (20)";
+        case "VehicleHealScore": return "Vehicle Heal Score (200)";
+        case "VehicleDamagePoints": return "Vehicle Damage Points (400)";
+        case "PowerCoreScore": return "Power Core Score (10)";
+        case "PowerNodeScore": return "Power Node Score (5)";
+        case "NodeHealBonusPct": return "Node Heal Bonus Pct (60)";
+        case "bNodeHealBonusForLockedNodes": return "Receive Node Heal Bonus For Locked Nodes";
+        case "bNodeHealBonusForConstructor": return "Player That Started Node Receives Node Heal Bonus";
 
         case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
         case "NetMoveDelta": return "How often clients send move updates, lower is faster (default 0.011)";
@@ -1823,7 +1926,7 @@ defaultproperties
      FriendlyName="Wicked Sick UTComp"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V13"
+     FriendlyVersionNumber="V14"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
