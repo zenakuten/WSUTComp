@@ -5,6 +5,11 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V14
+- Add starting health, armor as options
+- show tick rate in server info
+- cleanup webadmin 
+
 V13
 - Fix bug where sometimes you cant set spawn protected bright skin for teammates
 - Change 'from downtown' award to eagleeye
