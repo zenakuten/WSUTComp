@@ -124,6 +124,9 @@ var config bool bNoTeamBoostingVehicles;
 var config bool bChargedWeaponsNoSpawnProtection;
 var config bool bUseUTCompStats;
 
+var config int StartingHealth;
+var config int StartingArmor;
+
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
 var bool bWarmupDisabled;
@@ -483,6 +486,13 @@ function ModifyPlayer(Pawn Other)
 {
     local inventory inv;
     local int i;
+
+    if(xPawn(other) != None)
+    {
+        other.Health = StartingHealth;
+        other.ShieldStrength = 0;
+        other.AddShieldStrength(StartingArmor);
+    }
 
     //Give all weps if its warmup
     if(WarmupInfo!=None && !Level.Game.IsA('UTComp_ClanArena')&& (WarmupInfo.bInWarmup==True || WarmupInfo.bGivePlayerWeaponHack ))
@@ -1495,15 +1505,23 @@ function GetServerDetails( out GameInfo.ServerResponseLine ServerState )
     super.GetServerDetails(ServerState);
 
 	i = ServerState.ServerInfo.Length;
-	ServerState.ServerInfo.Length = i+2;
+	ServerState.ServerInfo.Length = i+1;
 	ServerState.ServerInfo[i].Key = FriendlyVersionPrefix;
 	ServerState.ServerInfo[i].Value = FriendlyVersionName$" "$FriendlyVersionNumber;
-	ServerState.ServerInfo[i+1].Key = "Enhanced Netcode";
-	ServerState.ServerInfo[i+1].Value = string(bEnhancedNetCodeEnabledAtStartOfMap);
+
+    i++;
+    ServerState.ServerInfo.Length = i+1;
+	ServerState.ServerInfo[i].Key = "Enhanced Netcode";
+	ServerState.ServerInfo[i].Value = string(bEnhancedNetCodeEnabledAtStartOfMap);
+
+    i++;
+    ServerState.ServerInfo.Length = i+1;
+	ServerState.ServerInfo[i].Key = "Tick Rate";
+	ServerState.ServerInfo[i].Value = ConsoleCommand("get IpDrv.TcpNetDriver NetServerMaxTickRate");
 
     if(bFastWeaponSwitch)
     {
-        i=i+2;
+        i++;
         ServerState.ServerInfo.Length = i+1;
         ServerState.ServerInfo[i].Key = "Fast Weapon Switch";
         ServerState.ServerInfo[i].Value = "Enabled";
@@ -1626,9 +1644,9 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "ServerMaxPlayers", "Voting Max Players",255, weight, "Text","2;0:32",,False,False);
     PlayInfo.AddSetting("UTComp Settings", "NumGrenadesOnSpawn", "Number of grenades on spawn",255, weight, "Text","2;0:32",,False,False);
     PlayInfo.AddSetting("UTComp Settings", "MaxMultiDodges", "Number of additional dodges",255, weight, "Text","2;0:99",);
+    PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", security, weight, "Text", "0;0:1800",, False, False);
     
     weight++;
-    PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", security, weight, "Text", "0;0:1800",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", security, weight,"Check");
@@ -1641,6 +1659,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadar", "Allow players to use 3D view team radar", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "TeamRadarCullDistance", "Cull distance of team radar", security, weight, "Text", "0;0:100000",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadarMap", "Allow players to use minimap or HUD team radar", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "StartingHealth", "Starting health of players", security, weight, "Text", "0;0:199",, False, False);
+    PlayInfo.AddSetting("UTComp Settings", "StartingArmor", "Starting armor of players", security, weight, "Text", "0;0:150",, False, False);
 
     weight++;
     PlayInfo.AddSetting("UTComp NewNet", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", security, weight, "Check");
@@ -1742,6 +1762,8 @@ static event string GetDescriptionText(string PropName)
         case "MaxResponseTime": return "server delay for client move update before setting position (default 0.125)";
         case "bMoveErrorAccumFix": return "use server define movement accumulation (default false)";
         case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
+        case "StartingHealth": return "Starting health of players (100)";
+        case "StartingArmor": return "Starting armor of players (0)";
     }
 	return Super.GetDescriptionText(PropName);
 }
@@ -2178,4 +2200,7 @@ defaultproperties
      bAllowTeamRadarMap=false
 
      bUseUTCompStats=true
+
+     StartingHealth=100
+     StartingArmor=0
 }
