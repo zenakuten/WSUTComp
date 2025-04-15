@@ -1303,7 +1303,7 @@ function ParseURL(string Url)
 {
    local string Skinz0r, Sounds, overlay, powerupsOverlay, warmup, dd, TimedOver
    , TimedOverLength, grenadesonspawn, enableenhancednetcode, suicideIntervalString
-   , fws, allowTeamRadar, allowTeamRadarMap, utcompmovement;
+   , fws, allowTeamRadar, allowTeamRadarMap, utcompmovement, starthealth, startarmor;
    local array<string> Parts;
    local int i;
 
@@ -1344,6 +1344,11 @@ function ParseURL(string Url)
                allowTeamRadarMap = Right(Parts[i], Len(Parts[i])-Len("allowTeamRadarMap")-1);
            if (Left(Parts[i], Len("utcompmovement")) ~= "utcompmovement")
                utcompmovement = Right(Parts[i], Len(Parts[i])-Len("utcompmovement")-1);
+           if (Left(Parts[i], Len("startinghealth")) ~= "startinghealth")
+               starthealth = Right(Parts[i], Len(Parts[i])-Len("startinghealth")-1);
+           if (Left(Parts[i], Len("startingarmor")) ~= "startingarmor")
+               startarmor = Right(Parts[i], Len(Parts[i])-Len("startingarmor")-1);
+
        }
    }
    if(Skinz0r !="" && int(Skinz0r)<4 && int(Skinz0r)>0)
@@ -1425,6 +1430,17 @@ function ParseURL(string Url)
        default.bKeepMomentumOnLanding=(utcompmovement~="True");
        bKeepMomentumOnLanding = default.bKeepMomentumOnLanding;
    }
+   if(starthealth != "")
+   {
+       default.StartingHealth = int(starthealth);
+       StartingHealth = default.StartingHealth;
+   }
+   if(startarmor != "")
+   {
+       default.StartingArmor = int(startarmor);
+       StartingArmor = default.StartingArmor;
+   }
+
 }
 
 function AutoDemoRecord()
