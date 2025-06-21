@@ -1,5 +1,5 @@
 class MutUTComp extends Mutator
-    config(WSUTComp_Server)
+    config(WSUTComp)
     PerObjectConfig;
 
 // #exec OBJ LOAD FILE="Textures\minimegatex.utx" PACKAGE=WSUTComp
@@ -1532,8 +1532,13 @@ function GetServerDetails( out GameInfo.ServerResponseLine ServerState )
 
     i++;
     ServerState.ServerInfo.Length = i+1;
-	ServerState.ServerInfo[i].Key = "Tick Rate";
-	ServerState.ServerInfo[i].Value = ConsoleCommand("get IpDrv.TcpNetDriver NetServerMaxTickRate");
+	ServerState.ServerInfo[i].Key = "Current Tick Rate";
+	ServerState.ServerInfo[i].Value = ConsoleCommand("getcurrenttickrate");
+
+    i++;
+    ServerState.ServerInfo.Length = i+1;
+	ServerState.ServerInfo[i].Key = "Max Tick Rate";
+	ServerState.ServerInfo[i].Value = ConsoleCommand("getmaxtickrate");
 
     if(bFastWeaponSwitch)
     {
