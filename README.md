@@ -9,6 +9,8 @@ V14
 - Add starting health, armor as options
 - show tick rate in server info
 - cleanup webadmin 
+- revert moving server configs to own file
+- fix bug where you received awards for shooting dead bodies
 
 V13
 - Fix bug where sometimes you cant set spawn protected bright skin for teammates

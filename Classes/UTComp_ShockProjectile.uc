@@ -15,6 +15,7 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 	local float damageScale, dist;
 	local vector dir;
     local bool bKilledPlayer;
+    local float prevHealth;
 
 	if ( bHurtEntry )
 		return false;
@@ -26,6 +27,9 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 		// don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
 		if( (Victims != self) && (Hurtwall != Victims) && (Victims.Role == ROLE_Authority) && !Victims.IsA('FluidSurfaceInfo') )
 		{
+            if(Pawn(Victims) != None)
+                prevHealth = Pawn(Victims).Health;
+
 			dir = Victims.Location - HitLocation;
 			dist = FMax(1,VSize(dir));
 			dir = dir/dist;
@@ -45,7 +49,7 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 			if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
-            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && Victims != Instigator)
+            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0 && Victims != Instigator)
                 bKilledPlayer = true;
 
 		}
@@ -61,6 +65,9 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 		if ( Instigator == None || Instigator.Controller == None )
 			Victims.SetDelayedDamageInstigatorController(InstigatorController);
 
+        if(Pawn(Victims) != None)
+            prevHealth = Pawn(Victims).Health;
+
 		Victims.TakeDamage
 		(
 			damageScale * DamageAmount,
@@ -72,7 +79,7 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 		if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
-        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && Victims != Instigator)
+        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0.0 && Victims != Instigator)
             bKilledPlayer = true;
 	}
 

@@ -183,6 +183,7 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 	local vector rocketdir;
     local EPhysics prePhysics;
     local bool bAboveGround;
+    local float prevHealth;
 
 	if ( bHurtEntry )
 		return;
@@ -194,6 +195,9 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 		// don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
 		if( (Victims != self) && (Hurtwall != Victims) && (Victims.Role == ROLE_Authority) && !Victims.IsA('FluidSurfaceInfo') )
 		{
+            if(Pawn(Victims) != None)
+                prevHealth = Pawn(Victims).Health;
+
 			rocketdir = Victims.Location - HitLocation;
             bAboveGround = Victims.FastTrace(Victims.Location + vect(0,0,-150));
             
@@ -217,7 +221,7 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
             // killed player
-            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && IsInState('Flying') && GoopLevel == MaxGoopLevel)
+            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0 && IsInState('Flying') && GoopLevel == MaxGoopLevel)
             {
                 if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                     bKilledPlayerInAir = true;
