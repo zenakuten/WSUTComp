@@ -275,7 +275,7 @@ defaultproperties
 
     ShreddedSound=Sound'Sounds.Shredded'
     EagleEyeSound=Sound'AnnouncerMale2K4.EagleEye'
-    EagleEyeThreshold=1500.0
+    EagleEyeThreshold=2500.0
     EagleEyeAccuracy=30.0  
     bKilledPlayerInAir=false
     bEagleEyedPlayer=false    

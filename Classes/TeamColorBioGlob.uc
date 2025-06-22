@@ -242,6 +242,9 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 		if ( Instigator == None || Instigator.Controller == None )
 			Victims.SetDelayedDamageInstigatorController(InstigatorController);
         prePhysics = Victims.Physics;
+        if(Pawn(Victims) != None)
+            prevHealth = Pawn(Victims).Health;
+
 		Victims.TakeDamage
 		(
 			damageScale * DamageAmount,
@@ -254,7 +257,7 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
         // killed player
-        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && IsInState('Flying') && GoopLevel == MaxGoopLevel)
+        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0.0 && IsInState('Flying') && GoopLevel == MaxGoopLevel)
         {
 
             if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
@@ -275,7 +278,7 @@ defaultproperties
 
     AirSnotSound=Sound'Sounds.AirSnot'
     EagleEyeSound=Sound'AnnouncerMale2K4.EagleEye'
-    EagleEyeThreshold=1500.0
+    EagleEyeThreshold=2500.0
     bKilledPlayerInAir=false
     bEagleEyedPlayer=false
 }
