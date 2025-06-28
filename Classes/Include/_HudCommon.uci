@@ -554,3 +554,20 @@ function SetRadarVehicleDataFallback(class<Vehicle> VehicleClass, out color Rada
 
     RadarColour=RC;
 }
+
+function CheckCountdown(GameReplicationInfo GRI)
+{
+    if(GRI != None 
+        && GRI.RemainingTime != 0 
+        && GRI.RemainingTime <= 10
+        && BS_xPlayer(PlayerOwner) != None 
+        && BS_xPlayer(PlayerOwner).uWarmup!=None
+        && BS_xPlayer(PlayerOwner).uWarmup.bWarmupEnded)
+    {
+        // fix the extra "one" at end of warmup
+        // the warmup countdown already does this
+        return;
+    }
+
+    super.CheckCountdown(GRI);
+}

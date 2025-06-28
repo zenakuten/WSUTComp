@@ -8,6 +8,7 @@ var int iFinalCountDown;
 var int iWarmupTime; //0=unlimited, #=time in seconds
 var int iWarmupTimeRemaining;
 var bool bTimeUnlimitedWarmup;
+var bool bWarmupEnded;
 
 //For choosing Weapons to give in Warmup
 var array<string> sWeaponsToGive;
@@ -49,6 +50,7 @@ function InitializeWarmup()
     Deathmatch(level.game).bwaitfornetplayers=false;
 
     bInWarmup=True;
+    bWarmupEnded=False;
     bInFinalCountDown=False;
     iFinalCountDown=0;
     SetTimer(1.0, True);
@@ -329,6 +331,7 @@ function EndWarmup(bool bIsRestart)
     ResetKills();
     RemoveSpawnVisualization();
     AutoDemoRecord();
+    bWarmupEnded=!bIsRestart;
 }
 
 function EndArenaWarmup(bool bIsRestart)
