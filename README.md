@@ -12,6 +12,7 @@ V14
 - revert moving server configs to own file
 - fix bug where you received awards for shooting dead bodies
 - revert 1.7a flak primary change and use 1.8c deaod fix 
+- fix the extra countdown at warmup end
 
 V13
 - Fix bug where sometimes you cant set spawn protected bright skin for teammates
