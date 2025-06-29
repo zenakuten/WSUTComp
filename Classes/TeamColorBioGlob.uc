@@ -225,7 +225,7 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
             {
                 if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                     bKilledPlayerInAir = true;
-                else if(VSize(Location - InitialLocation) > EagleEyeThreshold)
+                else if(VSize(HitLocation - InitialLocation) > EagleEyeThreshold)
                     bEagleEyedPlayer = true; 
             }
 		}
@@ -262,7 +262,7 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 
             if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
                 bKilledPlayerInAir = true;
-            else if(VSize(Location - InitialLocation) > EagleEyeThreshold)
+            else if(VSize(HitLocation - InitialLocation) > EagleEyeThreshold)
                 bEagleEyedPlayer = true; 
         }
 	}
@@ -278,7 +278,7 @@ defaultproperties
 
     AirSnotSound=Sound'Sounds.AirSnot'
     EagleEyeSound=Sound'AnnouncerMale2K4.EagleEye'
-    EagleEyeThreshold=2500.0
+    EagleEyeThreshold=5500.0
     bKilledPlayerInAir=false
     bEagleEyedPlayer=false
 }

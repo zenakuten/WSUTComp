@@ -14,6 +14,7 @@ var bool bKilledPlayerInAir;
 var bool bEagleEyedPlayer;
 var float EagleEyeThreshold;
 var float EagleEyeAccuracy;
+var int ShreddedThreshold;
 
 var Sound EagleEyeSound;
 var Sound ShreddedSound;
@@ -222,11 +223,11 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
             // killed player
-            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0)
+            if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0 && Victims != Instigator)
             {
-                if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
+                if(prePhysics == PHYS_Falling && bAboveGround || (prevHealth - Pawn(Victims).Health > ShreddedThreshold))
                     bKilledPlayerInAir = true;
-                else if(VSize(Location - InitialLocation) > EagleEyeThreshold && VSize(Location - Victims.Location) < EagleEyeAccuracy)
+                else if(VSize(HitLocation - InitialLocation) > EagleEyeThreshold && VSize(HitLocation - Victims.Location) < EagleEyeAccuracy)
                     bEagleEyedPlayer = true; 
             }
 		}
@@ -255,11 +256,11 @@ simulated function HurtRadiusEx( float DamageAmount, float DamageRadius, class<D
 			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
 
         // killed player
-        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0)
+        if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0 && Victims != Instigator)
         {
-            if(prePhysics == PHYS_Falling && bAboveGround && Victims != Instigator)
+            if(prePhysics == PHYS_Falling && bAboveGround || (prevHealth - Pawn(Victims).Health) > ShreddedThreshold )
                 bKilledPlayerInAir = true;
-            else if(VSize(Location - InitialLocation) > EagleEyeThreshold && VSize(Location - Victims.Location) < EagleEyeAccuracy)
+            else if(VSize(HitLocation - InitialLocation) > EagleEyeThreshold && VSize(HitLocation - Victims.Location) < EagleEyeAccuracy)
                 bEagleEyedPlayer = true; 
         }
 	}
@@ -275,8 +276,9 @@ defaultproperties
 
     ShreddedSound=Sound'Sounds.Shredded'
     EagleEyeSound=Sound'AnnouncerMale2K4.EagleEye'
-    EagleEyeThreshold=2500.0
-    EagleEyeAccuracy=30.0  
+    EagleEyeThreshold=5500.0
+    EagleEyeAccuracy=30.0
+    ShreddedThreshold=85
     bKilledPlayerInAir=false
-    bEagleEyedPlayer=false    
+    bEagleEyedPlayer=false
 }
