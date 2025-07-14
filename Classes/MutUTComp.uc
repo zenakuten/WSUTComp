@@ -1,5 +1,4 @@
 class MutUTComp extends Mutator
-    config(WSUTComp)
     PerObjectConfig;
 
 // #exec OBJ LOAD FILE="Textures\minimegatex.utx" PACKAGE=WSUTComp
