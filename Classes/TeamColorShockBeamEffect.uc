@@ -142,7 +142,4 @@ defaultproperties
 
     TeamColorMaterial=Texture'ShockBeamTex_white'
     CoilClass=Class'TeamColorShockBeamCoil'
-
-    // fix for beams not always rendering
-    bAlwaysRelevant=True
 }
