@@ -1304,6 +1304,8 @@ simulated function Destroyed()
 // There is a bug where sometimes weapon instigator is none
 // due to weapon switch at round start?  It's weird... 
 // GiveTo also assigns the instigator, so not sure how this happens
+// this was fixed in commit 9dfd85a so commenting out here now (not needed and might cause issue?)
+/* 
 function GiveWeapon(string aClassName )
 {
 	local class<Weapon> WeaponClass;
@@ -1317,7 +1319,7 @@ function GiveWeapon(string aClassName )
 	if( newWeapon != None )
 		newWeapon.GiveTo(self);
 }
-
+*/
 
 defaultproperties
 {
