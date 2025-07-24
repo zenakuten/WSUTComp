@@ -142,4 +142,6 @@ defaultproperties
 
     TeamColorMaterial=Texture'ShockBeamTex_white'
     CoilClass=Class'TeamColorShockBeamCoil'
+
+    bAlwaysRelevant=true
 }
