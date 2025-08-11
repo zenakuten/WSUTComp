@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V15
+- fix bug where custom skins didn't work
+
 V14
 - Add starting health, armor as options
 - show tick rate in server info

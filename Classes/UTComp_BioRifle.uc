@@ -16,7 +16,7 @@ simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    //for each new version of wsutcomp, the weapon is considered a new
+    //for each new version of ws utcomp, the weapon is considered a new
     //weapon due to different package name.  As a result a lot of custom config might be lost
     //like these custom weapon settings.  So on a new release, for first run of the weapon 
     //copy these config values from the stock weapon
