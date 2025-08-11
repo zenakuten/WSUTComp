@@ -573,18 +573,14 @@ function timer()
 
 simulated function Setup(xUtil.PlayerRecord rec, optional bool bLoadNow)
 {
-    if ( (rec.Species == None)
-       ||  (Level.NetMode==NM_DedicatedServer && class'DeathMatch'.default.bForceDefaultCharacter) || (Level.NetMode!= NM_DedicatedServer && ShouldForceModel()))
-		    rec = class'xUtil'.static.FindPlayerRecord(GetDefaultCharacter());
-    // check causes CPB skins to fuckup, erm?
-    if(!Material(DynamicLoadObject(rec.BodySkinName, class'Material', true)).IsA('Texture') && !Material(DynamicLoadObject(rec.BodySkinName, class'Material', true)).IsA('FinalBlend'))
+	if ( (rec.Species == None) || ForceDefaultCharacter() || (Level.NetMode!= NM_DedicatedServer && ShouldForceModel()))
+		rec = class'xUtil'.static.FindPlayerRecord(GetDefaultCharacter());
+
+    if(!ShouldUseModel(Rec.DefaultName))
     {
         rec = class'xUtil'.static.FindPlayerRecord(Settings.FallbackCharacterName);
     }
-    else if(!ShouldUseModel(Rec.DefaultName))
-    {
-        rec = class'xUtil'.static.FindPlayerRecord(Settings.FallbackCharacterName);
-    }
+
     Species = rec.Species;
 	RagdollOverride = rec.Ragdoll;
 	if ( !Species.static.Setup(self,rec) )
