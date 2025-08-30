@@ -2,6 +2,11 @@
 
 class UTComp_SniperFire extends SniperFire;
 
+#exec AUDIO IMPORT FILE=Sounds\Bullseye.wav GROUP=Sounds
+
+var Sound PerfectShotSound;
+var float PerfectShotScale;
+
 event ModeDoFire()
 {
     local UTComp_PRI uPRI;
@@ -26,6 +31,7 @@ function DoTrace(Vector Start, Rotator Dir)
     local vector arcEnd, mainArcHit;
     local Pawn HeadShotPawn;
     local vector EffectOffset;
+    local bool bPerfectShot;    
 
     if ( class'PlayerController'.Default.bSmallWeapons )
         EffectOffset = Weapon.SmallEffectOffset;
@@ -95,7 +101,14 @@ function DoTrace(Vector Start, Rotator Dir)
                         HeadShotPawn.TakeDamage(Damage * HeadShotDamageMult, Instigator, HitLocation, Momentum*X, DamageTypeHeadShot);
                     else if ( (Pawn(Other) != None) && (arcsRemaining == NumArcs)
                         && Pawn(Other).IsHeadShot(HitLocation, X, 1.0) )
-                        Other.TakeDamage(Damage * HeadShotDamageMult, Instigator, HitLocation, Momentum*X, DamageTypeHeadShot);
+                        {
+                            bPerfectShot = Pawn(Other).IsHeadShot(HitLocation, X, PerfectShotScale);
+                            Other.TakeDamage(Damage * HeadShotDamageMult, Instigator, HitLocation, Momentum*X, DamageTypeHeadShot);
+                            
+                            //if they died and it was perfect shot,receive award
+                            if(Pawn(Other).Health <= 0 && bPerfectShot && BS_xPlayer(Instigator.Controller) != None)
+                                BS_xPlayer(Instigator.Controller).ClientReceiveAward(PerfectShotSound, 1.0, 2.0); 
+                        }                        
                     else
                     {
                         if ( arcsRemaining < NumArcs )
@@ -154,4 +167,6 @@ function DoTrace(Vector Start, Rotator Dir)
 
 defaultproperties
 {
+    PerfectShotSound=Sound'Sounds.Bullseye'
+    PerfectShotScale=0.20
 }

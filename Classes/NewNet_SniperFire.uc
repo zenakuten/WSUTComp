@@ -212,6 +212,7 @@ function DoTrace(Vector Start, Rotator Dir)
 	local actor AltOther;
 	local vector AltHitlocation,altHitNormal,altpawnhitlocation;
 	local float f;
+    local bool bPerfectShot;
 
 	if(!bUseEnhancedNetCode)
 	{
@@ -432,7 +433,14 @@ function DoTrace(Vector Start, Rotator Dir)
                         HeadShotPawn.TakeDamage(Damage * HeadShotDamageMult, Instigator, PawnHitLocation, Momentum*X, DamageTypeHeadShot);
 					else if ( (Pawn(Other) != None) && (arcsRemaining == NumArcs)
 						&& Pawn(Other).IsHeadShot(PawnHitLocation, X, 1.0) )
-                        Other.TakeDamage(Damage * HeadShotDamageMult, Instigator, PawnHitLocation, Momentum*X, DamageTypeHeadShot);
+                        {
+                            bPerfectShot = Pawn(Other).IsHeadShot(PawnHitLocation, X, PerfectShotScale);
+                            Other.TakeDamage(Damage * HeadShotDamageMult, Instigator, PawnHitLocation, Momentum*X, DamageTypeHeadShot);
+                            
+                            //if they died and it was perfect shot,receive award
+                            if(Pawn(Other).Health <= 0 && bPerfectShot && BS_xPlayer(Instigator.Controller) != None)
+                                BS_xPlayer(Instigator.Controller).ClientReceiveAward(PerfectShotSound, 1.0, 2.0); 
+                        }
                     else
                     {
 						if ( arcsRemaining < NumArcs )
