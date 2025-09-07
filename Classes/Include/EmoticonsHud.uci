@@ -225,7 +225,7 @@ function string StripColorForTTS( string s )
 }
 
 // Borrowed from AssaultPlus by Marco a.k.a .:..:
-function int FindNextSmile( EmoticonsReplicationInfo replication, string S, out int SmileNr )
+function int FindNextSmile( EmoticonsReplicationInfo replication, string S, optional out int SmileNr )
 {
 	local int i,j,p,bp;
 
