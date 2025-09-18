@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V16
+- fix floating/ghost players appearing in some ONS games
+
 V15
 - fix bug where custom skins didn't work
 
