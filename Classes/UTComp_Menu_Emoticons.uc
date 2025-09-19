@@ -4,7 +4,7 @@ class UTComp_Menu_Emoticons extends UTComp_Menu_MainMenu;
 var automated AltSectionBackground BackG;
 var automated GUIVertScrollBar ScrollBar;
 var EmoticonsReplicationInfo ERI;
-var int Offset;
+var int ScrollIndex;
 var automated wsCheckBox ch_EnableEmoticons;
 var automated GUIEditBox eb_Message;
 var automated GUILabel lbl_Say;
@@ -27,12 +27,12 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
 
 delegate PositionChanged(int NewPos)
 {
-	Offset = NewPos;
+	ScrollIndex = NewPos;
 }
 
 delegate OnRender(Canvas C)
 {	
-	local int i;
+	local int i,j;
 	local float x, y, w, h;
 	local float iconY;
 	
@@ -54,18 +54,21 @@ delegate OnRender(Canvas C)
 	
 	iconY = 0;
 	
-	for(i=0; i<ERI.Smileys.Length; ++i)
+	for(i=0; i<ERI.Smileys.Length; i+=4)	
 	{		
-		if(Offset>i)
+		if(ScrollIndex>i)
 			continue;
 			
-		C.SetPos(0,iconY);
-        if(ERI.Smileys[i].Icon != None)
-            C.DrawTile(ERI.Smileys[i].Icon, 64,64, 0,0,64,64);
-        else if(ERI.Smileys[i].MatIcon != None)
-            C.DrawTile(ERI.Smileys[i].MatIcon, 64,64, 0,0,64,64);
-		C.SetPos(128,iconY+24);
-		C.DrawText(ERI.Smileys[i].Event);
+        for(j=0;j<4 && i<ERI.Smileys.Length;j++)
+        {
+            C.SetPos(j*384,iconY);
+            if(ERI.Smileys[i+j].Icon != None)
+                C.DrawTile(ERI.Smileys[i+j].Icon, 64,64, 0,0,64,64);
+            else if(ERI.Smileys[i+j].MatIcon != None)
+                C.DrawTile(ERI.Smileys[i+j].MatIcon, 64,64, 0,0,64,64);
+            C.SetPos(64+j*384,iconY+24);
+            C.DrawText(ERI.Smileys[i+j].Event);
+        }
 		
 		iconY += 64;
 		
@@ -102,13 +105,17 @@ function bool InternalOnEmoteClick(GUIComponent C)
 
 function int CalcIndex()
 {
-	local float y;
-    local int item;
+	local float left,top;
+    local int coord, x, y, item;
 	
-	y = PageOwner.ActualTop() * 1.75;
+	top = PageOwner.ActualTop() * 1.75;
+	left = PageOwner.ActualWidth() * 0.1;
 
-    item = (Controller.MouseY - y) / 64;
-    item = Offset + Item - 2;
+    x = clamp((Controller.MouseX - left) / 320,0,3);
+    y = ((Controller.MouseY - top) / 64)-2;
+    coord = y * 4 + x;
+    item = coord + ((scrollindex+2)/4)*4;
+
     if(item < 0)
         item = -1;
     if(item>ERI.Smileys.Length-1)
