@@ -6,10 +6,12 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 Release Notes
 
 V16
+- emote menu improvements
 - fix floating/ghost players appearing in some ONS games
 
 V15
 - fix bug where custom skins didn't work
+- add bullseye award, get hs kill with center (0.25*r) hit  
 
 V14
 - Add starting health, armor as options
