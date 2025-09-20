@@ -421,8 +421,8 @@ function FindPlayerInput() {
             PInAlt = PIn;
             if (InStr(PIn, ".PlayerInput") < 0)
                 PlayerInput2 = PIn;
-            else if (InStr(PIn, ".foxPlayerInput") < 0)
-                PlayerInput2 = PIn; //foxwsfix also captures playerinput through a hack like this
+//            else if (InStr(PIn, ".foxPlayerInput") < 0)
+//                PlayerInput2 = PIn; //foxwsfix also captures playerinput through a hack like this
         }
 
     if (PlayerInput2 == none)
