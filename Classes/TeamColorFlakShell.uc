@@ -22,10 +22,7 @@ var Sound ShreddedSound;
 replication
 {
     unreliable if(Role == Role_Authority)
-       TeamNum;
-
-    reliable if(Role == ROLE_Authority)
-       InitialLocation;           
+       TeamNum, InitialLocation;
 }
 
 function SetupTeam()
