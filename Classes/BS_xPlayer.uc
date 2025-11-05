@@ -375,6 +375,8 @@ simulated function DenyPlayer()
 
 simulated function Destroyed()
 {
+    local LinkedReplicationInfo LPRI, Next;
+
     if(NodeDamageHook != none)
     {
         NodeDamageHook.Destroy();
@@ -383,6 +385,21 @@ simulated function Destroyed()
 
     if(Settings != None)
         Settings.default.Instance = None;
+
+    if(PlayerReplicationInfo != None)
+    {
+        LPRI = PlayerReplicationInfo.CustomReplicationInfo;
+        while(LPRI != None)
+        {
+            Next = LPRI.NextReplicationInfo;
+            LPRI.Destroy();
+            LPRI = Next;
+        }
+
+        PlayerReplicationInfo.CustomReplicationInfo = None;
+        PlayerReplicationInfo.Destroy();
+        PlayerReplicationInfo = None;
+    }
 
     super.Destroyed();
 }
