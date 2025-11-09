@@ -22,6 +22,8 @@ function bool InternalOnPreDraw(Canvas C)
     ColorModulate = C.ColorModulate;
 
 	ONSHUD = UTComp_ONSHudOnslaught(PlayerOwner().myHud);
+    if(ONSHUD == None)
+        return false;
 
 	TempSelectedSpawn = ONSHUD.LocateSpawnArea(Controller.MouseX - OnslaughtMapCenterX + 3.5, Controller.MouseY - OnslaughtMapCenterY + 3.5, OnslaughtMapRadius);
 
