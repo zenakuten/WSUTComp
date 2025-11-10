@@ -397,8 +397,6 @@ simulated function Destroyed()
         }
 
         PlayerReplicationInfo.CustomReplicationInfo = None;
-        PlayerReplicationInfo.Destroy();
-        PlayerReplicationInfo = None;
     }
 
     super.Destroyed();
