@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V17
+- fix channel leak when controllers join/leave
+
 V16
 - emote menu improvements
 - fix floating/ghost players appearing in some ONS games
