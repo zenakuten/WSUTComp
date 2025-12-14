@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-class BS_xPlayer extends xPlayer;
+class BS_xPlayer extends AerialController;
 
 #exec AUDIO IMPORT FILE=Sounds\headshotted.wav     GROUP=Sounds
 

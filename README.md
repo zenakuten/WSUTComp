@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V18
+- Fix aiming in 3p view (adapted from superaerialview)
+
 V17
 - fix channel leak when controllers join/leave
 
