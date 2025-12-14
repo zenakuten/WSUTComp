@@ -862,7 +862,7 @@ function SpawnReplicationClass()
     local int i;
     if(RepInfo==None)
         RepInfo=Spawn(class'UTComp_ServerReplicationInfo', self);
-
+    
     RepInfo.bEnableVoting=bEnableVoting;
     RepInfo.EnableBrightSkinsMode=Clamp(EnableBrightSkinsMode,1,3);
     RepInfo.bEnableClanSkins=bEnableClanSkins;
@@ -941,6 +941,7 @@ function SpawnReplicationClass()
     }
 
     RepInfo.NetUpdateTime=Level.TimeSeconds-1;
+    class'UTComp_Util'.default.RepInfo = RepInfo;
 }
 
 function PostBeginPlay()

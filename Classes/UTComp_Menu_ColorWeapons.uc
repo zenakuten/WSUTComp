@@ -10,6 +10,7 @@ var automated wsCheckBox ch_TeamColorEnemyAlly;
 var TeamColorSpinnyRocket redRox,blueRox;
 var vector      RedRoxOffset;
 var vector      BlueRoxOffset;
+var int MinHue;
 
 function bool AllowOpen(string MenuClass)
 {
@@ -153,6 +154,7 @@ function MatchSlidersToColors()
 
 function InternalOnChange( GUIComponent C )
 {
+    local float lastval;
     Switch(C)
     {	
         case ch_TeamColorEnemyAlly:
@@ -178,38 +180,97 @@ function InternalOnChange( GUIComponent C )
         break;
 
         case RRSlide:
+            lastval=Settings.TeamColorRed.R;
             Settings.TeamColorRed.R = RRSlide.Value;
-            UpdateColors();
+            if(checkcolor(Settings.TeamColorRed))
+            {
+                UpdateColors();
+            }
+            else
+            {
+                Settings.TeamColorRed.R = lastval;
+            }
         break;
 
         case RGSlide:
+            lastval=Settings.TeamColorRed.G;
             Settings.TeamColorRed.G = RGSlide.Value;
-            UpdateColors();
+            if(checkcolor(Settings.TeamColorRed))
+            {
+                UpdateColors();
+            }
+            else
+            {
+                Settings.TeamColorRed.G = lastval;
+            }
         break;
 
         case RBSlide:
+            lastval=Settings.TeamColorRed.B;
             Settings.TeamColorRed.B = RBSlide.Value;
-            UpdateColors();
+            if(checkcolor(Settings.TeamColorRed))
+            {
+                UpdateColors();
+            }
+            else
+            {
+                Settings.TeamColorRed.B = lastval;
+            }
         break;
         
         case BRSlide:
+            lastval=Settings.TeamColorBlue.R;
             Settings.TeamColorBlue.R = BRSlide.Value;
-            UpdateColors();
+            if(checkcolor(Settings.TeamColorBlue))
+            {
+                UpdateColors();
+            }
+            else
+            {
+                Settings.TeamColorBlue.R = lastval;
+            }
         break;
 
         case BGSlide:
+            lastval=Settings.TeamColorBlue.G;
             Settings.TeamColorBlue.G = BGSlide.Value;
-            UpdateColors();
+            if(checkcolor(Settings.TeamColorBlue))
+            {
+                UpdateColors();
+            }
+            else
+            {
+                Settings.TeamColorBlue.G = lastval;
+            }
         break;
 
         case BBSlide:
+            lastval=Settings.TeamColorBlue.B;
             Settings.TeamColorBlue.B = BBSlide.Value;
-            UpdateColors();
+            if(checkcolor(Settings.TeamColorBlue))
+            {
+                UpdateColors();
+            }
+            else
+            {
+                Settings.TeamColorBlue.B = lastval;
+            }
         break;
 
     }
 	
     SaveSettings();
+}
+
+function bool checkcolor(Color c)
+{
+    if(c.R + c.G + c.B < MinHue)
+    {
+        PlayerOwner().ClientMessage("too dark");
+        return false;
+    }
+
+    return true;
 }
 
 function bool IsEnemyAlly()
@@ -588,4 +649,5 @@ defaultproperties
      BlueRoxOffset=(X=300.000000,Y=220.000000,Z=-60.000000)
 
     OnRendered=InternalDraw
+    MinHue=128
 }
