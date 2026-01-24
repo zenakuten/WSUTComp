@@ -188,6 +188,9 @@ replication
 
     reliable if (Role==ROLE_Authority)
         HitDamage, bHitContact, HitDamageActor;        
+
+    unreliable if(role < Role_Authority)
+        Ready, NotReady;
 }
 
 simulated function SaveSettings()
@@ -3590,7 +3593,7 @@ ignores SeePlayer, HearNoise, Bump;
 
     function bool WantsSmoothedView()
     {
-        return ( !Pawn.bJustLanded );
+        return ( Pawn != None && !Pawn.bJustLanded );
     }
 }
 

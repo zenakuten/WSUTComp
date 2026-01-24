@@ -568,22 +568,25 @@ simulated function Actor LocateSpawnArea(float PosX, float PosY, float RadarWidt
 	if (OPPRI == none && PlayerOwner != none && PlayerOwner.PlayerReplicationInfo != none && UTComp_ONSPlayerReplicationInfo(PlayerOwner.PlayerReplicationInfo) != none)
 		OPPRI = UTComp_ONSPlayerReplicationInfo(PlayerOwner.PlayerReplicationInfo);
 
-	// See if there is a vehiclespawn even closer-by (note: this will also account for team-based selections)
-	for (i=0; i<OPPRI.ClientVSpawnList.Length; i++)
-	{
-		if (OPPRI.ClientVSpawnList[i].CurFactoryTeam == PlayerOwner.GetTeamNum() && OPPRI.ClientVSpawnList[i].bSpawned)
-		{
-			DistanceVector = OPPRI.ClientVSpawnList[i].Factory.Location - WorldLocation;
-			DistanceVector.Z = 0;
-			Distance = VSize(DistanceVector);
+    if(OPPRI != None)
+    {
+        // See if there is a vehiclespawn even closer-by (note: this will also account for team-based selections)
+        for (i=0; i<OPPRI.ClientVSpawnList.Length; i++)
+        {
+            if (OPPRI.ClientVSpawnList[i].CurFactoryTeam == PlayerOwner.GetTeamNum() && OPPRI.ClientVSpawnList[i].bSpawned)
+            {
+                DistanceVector = OPPRI.ClientVSpawnList[i].Factory.Location - WorldLocation;
+                DistanceVector.Z = 0;
+                Distance = VSize(DistanceVector);
 
-			if (Distance < LowestDistance)
-			{
-				BestSpawnArea = OPPRI.ClientVSpawnList[i].Factory;
-				LowestDistance = Distance;
-			}
-		}
-	}
+                if (Distance < LowestDistance)
+                {
+                    BestSpawnArea = OPPRI.ClientVSpawnList[i].Factory;
+                    LowestDistance = Distance;
+                }
+            }
+        }
+    }
 
 	return BestSpawnArea;
 }

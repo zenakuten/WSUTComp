@@ -727,29 +727,32 @@ function GiveWeaponTo(string InventoryClassName, Pawn P, int StartingAmmoPrimary
 function AddGameSpecificInventory(Pawn P)
 {
     local inventory inv;
+    local string packagename;
+    packagename = "WSUTComp.";
+
     if(!class'MutUTComp'.default.bEnableEnhancedNetCode)
     {
-        GiveWeaponTo("UTComp_ShieldGun", P, -1, -1);
-        GiveWeaponTo("UTComp_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
-        GiveWeaponTo("UTComp_BioRifle", P, BioRifleAmmo, -2);
-        GiveWeaponTo("UTComp_ShockRifle", P, ShockRifleAmmo, -2);
-        GiveWeaponTo("UTComp_LinkGun", P, LinkGunAmmo, -2);
-        GiveWeaponTo("UTComp_MiniGun", P, MinigunAmmo, -2);
-        GiveWeaponTo("UTComp_FlakCannon", P, FlakCannonAmmo, -2);
-        GiveWeaponTo("UTComp_RocketLauncher", P, RocketLauncherAmmo, -2);
-        GiveWeaponTo("UTComp_SniperRifle", P, LightningGunAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_ShieldGun", P, -1, -1);
+        GiveWeaponTo(packagename$"UTComp_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
+        GiveWeaponTo(packagename$"UTComp_BioRifle", P, BioRifleAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_ShockRifle", P, ShockRifleAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_LinkGun", P, LinkGunAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_MiniGun", P, MinigunAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_FlakCannon", P, FlakCannonAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_RocketLauncher", P, RocketLauncherAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_SniperRifle", P, LightningGunAmmo, -2);
     }
     else
     {
-        GiveWeaponTo("UTComp_ShieldGun", P, -1, -1);
-        GiveWeaponTo("NewNet_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
-        GiveWeaponTo("NewNet_BioRifle", P, BioRifleAmmo, -2);
-        GiveWeaponTo("NewNet_ShockRifle", P, ShockRifleAmmo, -2);
-        GiveWeaponTo("NewNet_LinkGun", P, LinkGunAmmo, -2);
-        GiveWeaponTo("NewNet_MiniGun", P, MinigunAmmo, -2);
-        GiveWeaponTo("NewNet_FlakCannon", P, FlakCannonAmmo, -2);
-        GiveWeaponTo("NewNet_RocketLauncher", P, RocketLauncherAmmo, -2);
-        GiveWeaponTo("NewNet_SniperRifle", P, LightningGunAmmo, -2);
+        GiveWeaponTo(packagename$"UTComp_ShieldGun", P, -1, -1);
+        GiveWeaponTo(packagename$"NewNet_AssaultRifle", P, AssaultRifleAmmo, AssaultRifleGrenades);
+        GiveWeaponTo(packagename$"NewNet_BioRifle", P, BioRifleAmmo, -2);
+        GiveWeaponTo(packagename$"NewNet_ShockRifle", P, ShockRifleAmmo, -2);
+        GiveWeaponTo(packagename$"NewNet_LinkGun", P, LinkGunAmmo, -2);
+        GiveWeaponTo(packagename$"NewNet_MiniGun", P, MinigunAmmo, -2);
+        GiveWeaponTo(packagename$"NewNet_FlakCannon", P, FlakCannonAmmo, -2);
+        GiveWeaponTo(packagename$"NewNet_RocketLauncher", P, RocketLauncherAmmo, -2);
+        GiveWeaponTo(packagename$"NewNet_SniperRifle", P, LightningGunAmmo, -2);
     }
     P.SuperHealthMax = MaxHealth;
     xPawn(P).ShieldStrengthMax = MaxArmor;

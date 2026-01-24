@@ -45,7 +45,8 @@ function SetStandardCrosshair()
 	CurrentCrosshairColor = C.myhud.CrossHairColor;
 	CurrentCrosshairScale = C.myhud.CrosshairScale;
 
-	CurrentCrosshairTexture = C.Pawn.Weapon.CustomCrosshairTexture;
+    if(C.Pawn != None && C.Pawn.Weapon != None)
+        CurrentCrosshairTexture = C.Pawn.Weapon.CustomCrosshairTexture;
 }
 
 //Use per-weapon custom crosshairs
@@ -65,7 +66,7 @@ function SetCustomCrosshair()
 	CurrentCrosshairColor = C.Pawn.Weapon.CustomCrosshairColor;
 	CurrentCrosshairScale = C.Pawn.Weapon.CustomCrosshairScale;
 
-	if(C.Pawn.Weapon.CustomCrosshairTextureName != "")
+	if(C.Pawn != None && C.Pawn.Weapon != None && C.Pawn.Weapon.CustomCrosshairTextureName != "")
 	{
 		if(C.Pawn.Weapon.CustomCrosshairTexture == None)
 		{

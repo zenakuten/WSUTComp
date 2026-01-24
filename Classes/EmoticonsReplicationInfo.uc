@@ -25,6 +25,7 @@ event Tick(float deltaTime)
 	if (nextIndex == EmoteActor.Smileys.Length) {
         // bTearOff = true;
         Disable('Tick');
+        NetUpdateFrequency=10;
 		return;
     }
 
@@ -51,4 +52,5 @@ simulated function ClientAddEmoticon(string event, string icon, string matIcon)
 defaultproperties
 {
      bOnlyRelevantToOwner=True
+     NetUpdateFrequency=100
 }

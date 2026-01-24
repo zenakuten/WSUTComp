@@ -60,12 +60,12 @@ simulated event PostBeginPlay() {
 
     foreach AllObjects(class'UTComp_Settings', Settings)
         break;
-    if (Settings == none)
+    if (Settings == none && Bot(Controller) == None)
         Warn(self@"Settings object not found!");
 
     foreach AllObjects(class'UTComp_HUDSettings', HUDSettings)
         break;
-    if (HUDSettings == none)
+    if (HUDSettings == none && Bot(Controller) == None)
         Warn(self@"HUDSettings object not found!");
 }
 
@@ -258,7 +258,7 @@ simulated function TickFX(float DeltaTime)
 simulated function string GetDefaultCharacter()
 {
     local int i;
-    if(Level.NetMode==NM_DedicatedServer)
+    if(Level.NetMode==NM_DedicatedServer || Settings == None)
         return placedcharactername;
 
     if(!PawnIsEnemyOrBlue(True))
@@ -288,7 +288,7 @@ simulated function bool InStrNonCaseSensitive(String S, string S2)
 
 simulated function bool ShouldForceModel()
 {
-   if(Level.NetMode==NM_DedicatedServer)
+   if(Level.NetMode==NM_DedicatedServer || Settings == None)
        return true;
 
    if(PawnIsEnemyOrBlue(Settings.bEnemyBasedModels))
@@ -449,7 +449,7 @@ simulated function bool ShouldUpdateSkin()
     if(IsInState('Dying') || Controller != None && Controller.IsInState('Dead'))
         return false;
 
-    if((Level.TimeSeconds - lastSkinUpdateTime) < 0.5) 
+    if((Level.TimeSeconds - lastSkinUpdateTime) < 0.166) 
         return false;
 
     lastSkinUpdateTime = Level.TimeSeconds;
@@ -576,7 +576,7 @@ simulated function Setup(xUtil.PlayerRecord rec, optional bool bLoadNow)
 	if ( (rec.Species == None) || ForceDefaultCharacter() || (Level.NetMode!= NM_DedicatedServer && ShouldForceModel()))
 		rec = class'xUtil'.static.FindPlayerRecord(GetDefaultCharacter());
 
-    if(!ShouldUseModel(Rec.DefaultName))
+    if(!ShouldUseModel(Rec.DefaultName) && Settings != None)
     {
         rec = class'xUtil'.static.FindPlayerRecord(Settings.FallbackCharacterName);
     }
@@ -628,6 +628,9 @@ simulated function material ChangeColorOfSkin(material SkinToChange, byte SkinNu
     if(RepInfo!=None && RepInfo.EnableBrightSkinsMode==0)
         return SkinToChange;
 
+    if(ONSStationaryWeaponPawn(DrivenVehicle) != None)
+        return SkinToChange;
+
     if(IsSpawnProtectionEnabled())
         return ChangeToUTCompSkin(SkinToChange, SkinNum);
 
@@ -650,6 +653,9 @@ simulated function material ChangeColorOfSkin(material SkinToChange, byte SkinNu
 
 simulated function byte FindSkinMode()
 {
+    if(Settings == None)
+        return 0;
+
     if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
         return  Settings.ClientSkinModeBlueEnemy;
     else
@@ -671,6 +677,10 @@ simulated function int GetColorMode()
 simulated function int GetColorModeBright()
 {
     local int colormode;
+
+    if(Settings == None)
+        return 0;
+
     if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
         ColorMode=Settings.PreferredSkinColorBlueEnemy;
     else
@@ -682,6 +692,9 @@ simulated function int GetColorModeEpic()
 {
     local byte ColorMode;
     local byte OtherColorMode;
+
+    if(Settings == None)
+        return 0;
 
     if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
     {
@@ -715,6 +728,9 @@ simulated function material ChangeOnlyColor(material SkinToChange)
     local byte ColorMode;
     local byte OtherColorMode;
 
+    if(Settings == None)
+        return SkinToChange;
+
     if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
     {
         ColorMode=Settings.PreferredSkinColorBlueEnemy;
@@ -746,6 +762,9 @@ simulated function material ChangeOnlyColor(material SkinToChange)
 simulated function material ChangeColorAndBrightness(material SkinToChange, int SkinNum)
 {
     local byte ColorMode;
+
+    if(Settings == None)
+        return SkinToChange;
 
     if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
         ColorMode=Settings.PreferredSkinColorBlueEnemy;
@@ -785,8 +804,15 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
     C=New(None)Class'Combiner';
     CC=New(None)Class'ConstantColor';
 
+    if(C == None || CC == None)
+        return SkinToChange;
+
     C.CombineOperation=CO_Add;
     C.Material1=MakeDMSkin(SkinToChange);
+
+    if(Settings == None)
+        return C;
+
     if(IsSpawnProtectionEnabled())
     {
         LPC = Level.GetLocalPlayerController();
@@ -811,6 +837,10 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
 simulated function color MakeClanSkin(color PreviousColor)
 {
     local int i;
+
+    if(Settings == None)
+        return PreviousColor;
+
     if(RepInfo==None || (RepInfo.bEnableClanSkins && !PawnIsEnemyOrBlue(True)))
     {
         for(i=0; i<Settings.ClanSkins.Length && PlayerReplicationInfo !=None; i++)
@@ -1029,7 +1059,7 @@ state Dying
 	    Super.BeginState();
      	AmbientSound = None;
     	DarkSkinMe();
-        if(Settings.bFastGhost)
+        if(Settings != none && Settings.bFastGhost)
         {
             LifeSpan=3.5;
             StartDeRes();
@@ -1037,7 +1067,7 @@ state Dying
     }
     simulated function DarkSkinMe()
     {
-        if(Level.NetMode==NM_DedicatedServer || !Settings.benableDarkSkinning)
+        if(Level.NetMode==NM_DedicatedServer || (Settings != None && !Settings.benableDarkSkinning))
             return;
         if(Skins.Length >= 1 && Skins[0].IsA('Combiner'))
         {
@@ -1066,7 +1096,7 @@ simulated function StartDeRes()
 	{
 		DeResFX.Emitters[0].SkeletalMeshActor = self;
 		DeResFX.SetBase(self);
-        if(Settings.bColorGhost)
+        if(Settings != None && Settings.bColorGhost)
         {
             //DeResFX.Emitters[0].Opacity=0.50;
             SpriteEmitter(DeResFX.Emitters[0]).ColorScale[0].Color.R = Settings.DeResFXColor.R;
@@ -1084,7 +1114,7 @@ simulated function StartDeRes()
         }
 	}
 
-    if(Settings.bColorGhost)
+    if(Settings != None && Settings.bColorGhost)
     {
         DeResModifier0 = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
         DeResModifier0.Material = DeResMatColored0;
@@ -1190,6 +1220,11 @@ simulated function Touch(Actor Other) {
 event UpdateEyeHeight( float DeltaTime )
 {
     local vector Delta;
+
+    if(bDeleteMe)
+    {
+        return;
+    }
 
     if (BS_xPlayer(Controller) == none || BS_xPlayer(Controller).bUseNewEyeHeightAlgorithm == false) {
         super.UpdateEyeHeight(DeltaTime);
