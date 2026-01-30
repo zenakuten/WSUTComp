@@ -208,6 +208,8 @@ var UTComp_Whitelist Whitelist;
 
 var string OriginalStatsClass;
 
+var config bool bDisableCameraShake;
+
 function PreBeginPlay()
 {
     bEnhancedNetCodeEnabledAtStartOfMap = bEnableEnhancedNetCode;
@@ -927,6 +929,8 @@ function SpawnReplicationClass()
     RepInfo.bAllowTeamRadar = bAllowTeamRadar;
     RepInfo.bAllowTeamRadarMap = bAllowTeamRadarMap;
     RepInfo.TeamRadarCullDistance = TeamRadarCullDistance;
+	
+	RepInfo.bDisableCameraShake = bDisableCameraShake;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1666,6 +1670,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "NumGrenadesOnSpawn", "Number of grenades on spawn",255, weight, "Text","2;0:32",,False,False);
     PlayInfo.AddSetting("UTComp Settings", "MaxMultiDodges", "Number of additional dodges",255, weight, "Text","2;0:99",);
     PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", security, weight, "Text", "0;0:1800",, False, False);
+	PlayInfo.AddSetting("UTComp Settings", "bDisableCameraShake", "Disable Camera Shake", security, weight, "Check");
     
     weight++;
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
@@ -1688,8 +1693,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (200)", security, weight, "Text","0;0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Tween Time (3.0)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionHistoryLength", "NewNet Pawn Collision History Length (0.35)", security, weight, "Text","0;0.0:1000",,False,False);
-    PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:1000000",);
-    PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:1000000",);
+    PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
+    PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
 
     weight++;
     PlayInfo.AddSetting("UTComp ONS", "NodeIsolateBonusPct", "Power Node Isolate Bonus Pct (20)", security, weight, "Text","0;0:1000",,False,False);
@@ -1763,6 +1768,7 @@ static event string GetDescriptionText(string PropName)
         case "bAllowTeamRadar": return "Allow players to use team radar";
         case "TeamRadarCullDistance": return "Cull distance of team radar";
         case "bAllowTeamRadarMap": return "Allow players to use minimap team radar";
+		case "bDisableCameraShake": return "Disable camera shake effects";
 
         case "NewNetUpdateFrequency": return "NewNet Update Frequency (200)";
         case "PingTweenTime": return "NewNet Ping Tween Time (3.0)";
@@ -2016,7 +2022,7 @@ defaultproperties
      VotingGametype(8)=(GametypeOptions="?game=XGame.xBombingRun?timelimit=20?goalscore=0?FriendlyFireScale=0,WeaponStay=True?mutator=XWeapons.MutNoSuperWeapon?DoubleDamage=True?GrenadesOnSpawn=4?TimedOverTimeLength=0",GametypeName="Bombing Run")
 
      MinNetSpeed=10000
-     MaxNetSpeed=1000000
+     MaxNetSpeed=100000000
 
      //ONS
      NodeIsolateBonusPct=20
@@ -2219,6 +2225,8 @@ defaultproperties
      bAllowTeamRadar=false
      TeamRadarCullDistance=10000.0
      bAllowTeamRadarMap=false
+	 
+	 bDisableCameraShake=false
 
      bUseUTCompStats=true
 

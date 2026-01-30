@@ -149,6 +149,8 @@ var bool bLimitTaunts;
 
 var sound HeadshotSound;
 
+var bool bDisableCameraShake;
+
 replication
 {
     reliable if(Role==Role_Authority)
@@ -562,6 +564,18 @@ event PlayerTick(float deltatime)
     }
 }
 
+simulated function ShakeView(vector shRotMag, vector shRotRate, float shRotTime, vector shOffsetMag, vector shOffsetRate, float shOffsetTime)
+{
+    if(bDisableCameraShake)
+        return;
+}
+
+function SetDisableCameraShake()
+{
+    if(RepInfo != None)
+        bDisableCameraShake = RepInfo.bDisableCameraShake;
+}
+
 function SetBStats(bool b)
 {
     bWantsStats=b;
@@ -605,6 +619,7 @@ simulated function InitializeClient()
     SetMaxSavedMoves();
     SetTauntCount();
     SetMaxResponseTime();
+	SetDisableCameraShake();
     if(Settings.bFirstRun)
     {
         Settings.bFirstRun=False;
