@@ -562,6 +562,14 @@ event PlayerTick(float deltatime)
     }
 }
 
+simulated function ShakeView(vector shRotMag, vector shRotRate, float shRotTime, vector shOffsetMag, vector shOffsetRate, float shOffsetTime)
+{
+    if(RepInfo != None && RepInfo.bDisableCameraShake)
+        return;
+    
+    Super.ShakeView(shRotMag, shRotRate, shRotTime, shOffsetMag, shOffsetRate, shOffsetTime);
+}
+
 function SetBStats(bool b)
 {
     bWantsStats=b;

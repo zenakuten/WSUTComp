@@ -82,6 +82,8 @@ var bool bAllowTeamRadar;
 var bool bAllowTeamRadarMap;
 var float TeamRadarCullDistance;
 
+var bool bDisableCameraShake;
+
 replication
 {
     reliable if(Role==Role_Authority)
@@ -99,7 +101,8 @@ replication
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
-        bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance;
+        bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
+		bDisableCameraShake;
 }
 
 defaultproperties
@@ -157,5 +160,7 @@ defaultproperties
      bAllowTeamRadar=false
      bAllowTeamRadarMap=false
      TeamRadarCullDistance=10000.0
+	 
+	 bDisableCameraShake=false
 }
 
