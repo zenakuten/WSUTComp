@@ -59,7 +59,7 @@ delegate OnRender(Canvas C)
 		if(ScrollIndex>i)
 			continue;
 			
-        for(j=0;j<4 && i<ERI.Smileys.Length;j++)
+        for(j=0;j<4 && i+j<ERI.Smileys.Length;j++)
         {
             C.SetPos(j*384,iconY);
             if(ERI.Smileys[i+j].Icon != None)
