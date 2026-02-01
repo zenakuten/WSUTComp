@@ -54,6 +54,17 @@ simulated function bool ReadyToFire(int Mode)
 	return super.ReadyToFire(mode);
 }
 
+simulated event RenderOverlays( Canvas Canvas )
+{
+    if(class'UTComp_Settings'.default.Instance != None && class'UTComp_Settings'.default.Instance.bShockCrashFix)
+    {
+        super(Weapon).RenderOverlays(Canvas);
+        return;
+    }
+
+	Super.RenderOverlays(Canvas);
+}
+
 DefaultProperties
 {
     FireModeClass(0)=class'UTComp_ShockBeamFire'

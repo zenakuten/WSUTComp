@@ -96,6 +96,8 @@ var config bool bColorGhost;
 var config color DeResColor;
 var config color DeResFXColor;
 
+var config bool bShockCrashFix;
+
 var UTComp_Settings instance;
 
 function Save()
@@ -181,6 +183,7 @@ defaultproperties
     DeResColor=(R=00,G=70,B=255,A=255)
     DeResFXColor=(R=00,G=70,B=255,A=255)
     bShowKillsOnScoreboard=True
+    bShockCrashFix=false
 
     instance=none
 }

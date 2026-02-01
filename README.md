@@ -7,6 +7,9 @@ Release Notes
 
 V18
 - Fix aiming in 3p view (adapted from superaerialview)
+- Possible? fix for shock crash
+- Limit the custom weapon color range to minimum rgb value
+- Add server option to disable all view shake
 
 V17
 - fix channel leak when controllers join/leave
