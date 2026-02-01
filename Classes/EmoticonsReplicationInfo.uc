@@ -10,7 +10,7 @@ var transient int nextIndex;
 
 replication
 {
-	reliable if (Role == ROLE_Authority)
+	unreliable if (Role == ROLE_Authority)
 		ClientAddEmoticon;
 }
 
