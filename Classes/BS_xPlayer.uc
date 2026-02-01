@@ -151,13 +151,13 @@ var sound HeadshotSound;
 
 replication
 {
-    reliable if(Role==Role_Authority)
-        ReceiveHit, ReceiveStats, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, 
-        ClientDelayedSound, ClientReceiveAward, ClientHeadshotted;
+    unreliable if(Role==Role_Authority)
+        ReceiveHit, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, 
+        ClientDelayedSound, ClientReceiveAward, ClientHeadshotted, EmoteInfo;
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
-        SetMenuColor, DenyPlayer, WhitelistCheck, EmoteInfo;
+        SetMenuColor, DenyPlayer, WhitelistCheck, ReceiveStats;
 
     reliable if(Role<Role_Authority)
         SetbStats, TurnOffNetCode, ServerSetEyeHeightAlgorithm, ServerViewPlayer;
@@ -186,7 +186,7 @@ replication
     reliable if(Role == ROLE_Authority)
         ClientResetNetcode;
 
-    reliable if (Role==ROLE_Authority)
+    unreliable if (Role==ROLE_Authority)
         HitDamage, bHitContact, HitDamageActor;        
 
     unreliable if(role < Role_Authority)
