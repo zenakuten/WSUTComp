@@ -22,7 +22,7 @@ function UpdateCrosshairs()
 		return;
 
 	//Spawn a special crosshair.
-	if(bBehindView && AerialCrosshair == None && !Pawn.IsA('Vehicle'))
+	if(bBehindView && AerialCrosshair == None && Pawn != None && !Pawn.IsA('Vehicle'))
 		AerialCrosshair = Spawn(class'CrosshairEmitter', self);
 
 	//Don't show normal crosshair if a special crosshair exists.
