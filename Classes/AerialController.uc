@@ -11,31 +11,40 @@ var CrosshairEmitter AerialCrosshair;
 var ConstantColor Transparency;
 var bool bRememberBehindView;
 
+replication
+{
+    reliable if(Role == ROLE_Authority)
+        bRememberBehindView;
+}
+
 // Track user preference whenever they manually change camera
 exec function BehindView(bool B)
 {
     Super.BehindView(B);
-    // Only save when controlling a regular pawn (not vehicle)
     if(Vehicle(Pawn) == None)
         bRememberBehindView = B;
 }
 
-// Override ClientRestart - this is called after vehicle exit
+// Capture camera state when pawn dies
+function PawnDied(Pawn P)
+{
+    if(P != None && Vehicle(P) == None)
+        bRememberBehindView = bBehindView;
+    
+    Super.PawnDied(P);
+}
+
+// Override ClientRestart
 function ClientRestart(Pawn NewPawn)
 {
-    local bool bWasInVehicle;
-    
-    // Check if we're leaving a vehicle (old pawn was vehicle, new pawn isn't)
-    bWasInVehicle = (Pawn != None && Vehicle(Pawn) != None);
-    
     // Save state before entering vehicle
-    if(NewPawn != None && Vehicle(NewPawn) != None && Vehicle(Pawn) == None)
+    if(NewPawn != None && Vehicle(NewPawn) != None && Pawn != None && Vehicle(Pawn) == None)
         bRememberBehindView = bBehindView;
     
     Super.ClientRestart(NewPawn);
     
-    // Restore camera only when exiting a vehicle
-    if(bWasInVehicle && Vehicle(NewPawn) == None && bRememberBehindView)
+    // Restore camera after Super call completes
+    if(Vehicle(NewPawn) == None && bRememberBehindView)
     {
         bBehindView = true;
         BehindView(true);
