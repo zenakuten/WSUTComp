@@ -22,7 +22,7 @@ function UpdateCrosshairs()
 		return;
 
 	//Spawn a special crosshair.
-	if(bBehindView && AerialCrosshair == None && Pawn != None && !Pawn.IsA('Vehicle'))
+	if(bBehindView && AerialCrosshair == None && Pawn != None)
 		AerialCrosshair = Spawn(class'CrosshairEmitter', self);
 
 	//Don't show normal crosshair if a special crosshair exists.
@@ -41,6 +41,10 @@ event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator
 	local float Distance;
 
 	Super.PlayerCalcView(ViewActor, CameraLocation, CameraRotation);
+
+    // Let vehicles use their standard camera system
+    if(Vehicle(Pawn) != None)
+        return;
 
 	if(bBehindView)
 	{
