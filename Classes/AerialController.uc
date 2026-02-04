@@ -9,6 +9,38 @@ class AerialController extends xPlayer;
 //Behindview stuff:
 var CrosshairEmitter AerialCrosshair;
 var ConstantColor Transparency;
+var bool bRememberBehindView;
+
+// Track user preference whenever they manually change camera
+exec function BehindView(bool B)
+{
+    Super.BehindView(B);
+    // Only save when controlling a regular pawn (not vehicle)
+    if(Vehicle(Pawn) == None)
+        bRememberBehindView = B;
+}
+
+// Override ClientRestart - this is called after vehicle exit
+function ClientRestart(Pawn NewPawn)
+{
+    local bool bWasInVehicle;
+    
+    // Check if we're leaving a vehicle (old pawn was vehicle, new pawn isn't)
+    bWasInVehicle = (Pawn != None && Vehicle(Pawn) != None);
+    
+    // Save state before entering vehicle
+    if(NewPawn != None && Vehicle(NewPawn) != None && Vehicle(Pawn) == None)
+        bRememberBehindView = bBehindView;
+    
+    Super.ClientRestart(NewPawn);
+    
+    // Restore camera only when exiting a vehicle
+    if(bWasInVehicle && Vehicle(NewPawn) == None && bRememberBehindView)
+    {
+        bBehindView = true;
+        BehindView(true);
+    }
+}
 
 function ChangedWeapon()
 {
