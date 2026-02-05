@@ -945,7 +945,6 @@ function SpawnReplicationClass()
     }
 
     RepInfo.NetUpdateTime=Level.TimeSeconds-1;
-    class'UTComp_Util'.default.RepInfo = RepInfo;
 }
 
 function PostBeginPlay()
