@@ -38,8 +38,8 @@ function PawnDied(Pawn P)
 // Override ClientRestart
 function ClientRestart(Pawn NewPawn)
 {
-    // Save state before entering vehicle
-    if(NewPawn != None && Vehicle(NewPawn) != None && Pawn != None)
+    // Save state only when entering vehicle from a non-vehicle pawn
+    if(NewPawn != None && Vehicle(NewPawn) != None && Pawn != None && Vehicle(Pawn) == None)
     {
         bRememberBehindView = bBehindView;
         
@@ -55,8 +55,8 @@ function ClientRestart(Pawn NewPawn)
     
     Super.ClientRestart(NewPawn);
     
-    // Restore camera after Super call completes
-    if(Vehicle(NewPawn) == None && bRememberBehindView)
+    // Restore camera after Super call completes (only when exiting vehicle)
+    if(NewPawn != None && Vehicle(NewPawn) == None && bRememberBehindView)
     {
         bBehindView = true;
         BehindView(true);
