@@ -11,6 +11,7 @@ var CrosshairEmitter AerialCrosshair;
 var ConstantColor Transparency;
 var bool bRememberBehindView;
 
+// Add replication block
 replication
 {
     reliable if(Role == ROLE_Authority)
@@ -38,8 +39,19 @@ function PawnDied(Pawn P)
 function ClientRestart(Pawn NewPawn)
 {
     // Save state before entering vehicle
-    if(NewPawn != None && Vehicle(NewPawn) != None && Pawn != None && Vehicle(Pawn) == None)
+    if(NewPawn != None && Vehicle(NewPawn) != None && Pawn != None)
+    {
         bRememberBehindView = bBehindView;
+        
+        // Clean up aerial crosshair when entering vehicle
+        if(AerialCrosshair != None)
+        {
+            AerialCrosshair.Destroy();
+            AerialCrosshair = None;
+        }
+        if(myHUD != None)
+            myHUD.bCrosshairShow = myHUD.Default.bCrosshairShow;
+    }
     
     Super.ClientRestart(NewPawn);
     
@@ -62,8 +74,8 @@ function UpdateCrosshairs()
 	if(Level.GetLocalPlayerController() != self)
 		return;
 
-	//Spawn a special crosshair.
-	if(bBehindView && AerialCrosshair == None && Pawn != None)
+	//Spawn a special crosshair (when not in a vehicle).
+	if(bBehindView && AerialCrosshair == None && Pawn != None && Vehicle(Pawn) == None)
 		AerialCrosshair = Spawn(class'CrosshairEmitter', self);
 
 	//Don't show normal crosshair if a special crosshair exists.
@@ -82,6 +94,10 @@ event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator
 	local float Distance;
 
 	Super.PlayerCalcView(ViewActor, CameraLocation, CameraRotation);
+	
+    // Do not reposition camera when using ToggleBehindView as a free-floating spectator camera
+    if(Pawn == None && (ViewTarget == None || ViewTarget == self))
+        return;
 
     // Let vehicles use their standard camera system
     if(Vehicle(Pawn) != None)
