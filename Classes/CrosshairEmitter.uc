@@ -39,14 +39,34 @@ function SetNormalCrosshair()
 //Use standard crosshair settings.
 function SetStandardCrosshair()
 {
+	local int CrosshairIndex;
+	local Material CrosshairMat;
+	
 	Emitters[0].UseSizeScale = false;
 	Emitters[0].FadeIn = false;
 
 	CurrentCrosshairColor = C.myhud.CrossHairColor;
 	CurrentCrosshairScale = C.myhud.CrosshairScale;
 
-    if(C.Pawn != None && C.Pawn.Weapon != None)
-        CurrentCrosshairTexture = C.Pawn.Weapon.CustomCrosshairTexture;
+	// Get the user's selected crosshair
+	if(HudBase(C.myhud) != None)
+	{
+		CrosshairIndex = HudBase(C.myhud).CrosshairStyle;
+		if(CrosshairIndex >= 0 && CrosshairIndex < HudBase(C.myhud).Crosshairs.Length)
+		{
+			CrosshairMat = HudBase(C.myhud).Crosshairs[CrosshairIndex].WidgetTexture;
+			// Convert Material to Texture
+			CurrentCrosshairTexture = Texture(CrosshairMat);
+			
+			// Fallback if conversion fails
+			if(CurrentCrosshairTexture == None)
+				CurrentCrosshairTexture = Texture'Crosshairs.HUD.Crosshair_Triad1';
+		}
+		else
+			CurrentCrosshairTexture = Texture'Crosshairs.HUD.Crosshair_Triad1';
+	}
+	else
+		CurrentCrosshairTexture = Texture'Crosshairs.HUD.Crosshair_Triad1';
 }
 
 //Use per-weapon custom crosshairs
