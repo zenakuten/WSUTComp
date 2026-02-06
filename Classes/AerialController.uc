@@ -9,6 +9,59 @@ class AerialController extends xPlayer;
 //Behindview stuff:
 var CrosshairEmitter AerialCrosshair;
 var ConstantColor Transparency;
+var bool bRememberBehindView;
+
+// Add replication block
+replication
+{
+    reliable if(Role == ROLE_Authority)
+        bRememberBehindView;
+}
+
+// Track user preference whenever they manually change camera
+exec function BehindView(bool B)
+{
+    Super.BehindView(B);
+    if(Vehicle(Pawn) == None)
+        bRememberBehindView = B;
+}
+
+// Capture camera state when pawn dies
+function PawnDied(Pawn P)
+{
+    if(P != None && Vehicle(P) == None)
+        bRememberBehindView = bBehindView;
+    
+    Super.PawnDied(P);
+}
+
+// Override ClientRestart
+function ClientRestart(Pawn NewPawn)
+{
+    // Save state before entering vehicle
+    if(NewPawn != None && Vehicle(NewPawn) != None && Pawn != None)
+    {
+        bRememberBehindView = bBehindView;
+        
+        // Clean up aerial crosshair when entering vehicle
+        if(AerialCrosshair != None)
+        {
+            AerialCrosshair.Destroy();
+            AerialCrosshair = None;
+        }
+        if(myHUD != None)
+            myHUD.bCrosshairShow = myHUD.Default.bCrosshairShow;
+    }
+    
+    Super.ClientRestart(NewPawn);
+    
+    // Restore camera after Super call completes
+    if(Vehicle(NewPawn) == None && bRememberBehindView)
+    {
+        bBehindView = true;
+        BehindView(true);
+    }
+}
 
 function ChangedWeapon()
 {
@@ -21,8 +74,8 @@ function UpdateCrosshairs()
 	if(Level.GetLocalPlayerController() != self)
 		return;
 
-	//Spawn a special crosshair.
-	if(bBehindView && AerialCrosshair == None && Pawn != None && !Pawn.IsA('Vehicle'))
+	//Spawn a special crosshair (when not in a vehicle).
+	if(bBehindView && AerialCrosshair == None && Pawn != None && Vehicle(Pawn) == None)
 		AerialCrosshair = Spawn(class'CrosshairEmitter', self);
 
 	//Don't show normal crosshair if a special crosshair exists.
@@ -41,6 +94,14 @@ event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator
 	local float Distance;
 
 	Super.PlayerCalcView(ViewActor, CameraLocation, CameraRotation);
+	
+    // Do not reposition camera when using ToggleBehindView as a free-floating spectator camera
+    if(Pawn == None && (ViewTarget == None || ViewTarget == self))
+        return;
+
+    // Let vehicles use their standard camera system
+    if(Vehicle(Pawn) != None)
+        return;
 
 	if(bBehindView)
 	{
