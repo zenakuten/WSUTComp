@@ -9,31 +9,6 @@ class AerialController extends xPlayer;
 //Behindview stuff:
 var CrosshairEmitter AerialCrosshair;
 var ConstantColor Transparency;
-var bool bRememberBehindView;
-
-// Add replication block
-replication
-{
-    reliable if(Role == ROLE_Authority)
-        bRememberBehindView;
-}
-
-// Track user preference whenever they manually change camera
-exec function BehindView(bool B)
-{
-    Super.BehindView(B);
-    if(Vehicle(Pawn) == None)
-        bRememberBehindView = B;
-}
-
-// Capture camera state when pawn dies
-function PawnDied(Pawn P)
-{
-    if(P != None && Vehicle(P) == None)
-        bRememberBehindView = bBehindView;
-    
-    Super.PawnDied(P);
-}
 
 // Override ClientRestart
 function ClientRestart(Pawn NewPawn)
@@ -41,8 +16,6 @@ function ClientRestart(Pawn NewPawn)
     // Save state before entering vehicle
     if(NewPawn != None && Vehicle(NewPawn) != None && Pawn != None)
     {
-        bRememberBehindView = bBehindView;
-        
         // Clean up aerial crosshair when entering vehicle
         if(AerialCrosshair != None)
         {
@@ -54,12 +27,16 @@ function ClientRestart(Pawn NewPawn)
     }
     
     Super.ClientRestart(NewPawn);
-    
-    // Restore camera after Super call completes
-    if(Vehicle(NewPawn) == None && bRememberBehindView)
+}
+
+function ClientSetBehindView(bool B)
+{
+    super.ClientSetBehindView(B);
+
+    if (UTComp_xPawn(Pawn) != None)
     {
-        bBehindView = true;
-        BehindView(true);
+    	UTComp_xPawn(Pawn).bDesiredBehindView = B;
+    	Pawn.SaveConfig();
     }
 }
 

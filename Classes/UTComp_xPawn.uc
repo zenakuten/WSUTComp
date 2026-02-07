@@ -39,6 +39,8 @@ var Material DeResMatColored0, DeResMatColored1;
 var ColorModifier DeResModifier0;
 var ColorModifier DeResModifier1;
 
+var config bool bDesiredBehindView;
+
 replication
 {
   reliable if (Role==ROLE_Authority)
@@ -1329,6 +1331,12 @@ simulated function Destroyed()
 
     super.Destroyed();
 }
+
+simulated function bool PointOfView()
+{
+	return default.bDesiredBehindView;
+}
+
 
 // Override default giveweapon to pass owner param.
 // The weapon instigator is assigned inside spawn method.
