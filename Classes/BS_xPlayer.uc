@@ -4760,14 +4760,12 @@ function rotator Adjust3pAim()
 {
 	local vector CamLookAt, HitLocation, HitNormal, OffsetVector;
 	local Actor HitActor;
-    local vector x, y, z;
     local vector CameraLocation;
     local UTComp_xPawn bsxPawn;
     local vector FireDir, PawnDir;
     local vector StartTrace,EndTrace;
 
     bsxPawn = UTComp_xPawn(Pawn);
-    GetAxes(Rotation, x, y, z);
 	CamLookAt = bsxPawn.GetCameraLocationStart() + (bsxPawn.TPCamLookat >> bsxPawn.Rotation) + bsxPawn.TPCamWorldOffset;
 
 	OffsetVector = vect(0, 0, 0);
