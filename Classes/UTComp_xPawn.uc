@@ -1424,8 +1424,8 @@ defaultproperties
     DeResMatColored1=FinalBlend'WSUTComp.Shaders.DeRezFinalHead'
 
     // fixes for 3p view aiming
-    TPCamDistance=200.000000
+    TPCamDistance=95.000000
     TPCamLookat=(X=0.000000,Z=0.000000)
-    TPCamWorldOffset=(X=-30.0,Z=30.000000)
+    TPCamWorldOffset=(X=45.0,Z=50.000000)
     bSpecialCalcView=true
 }
