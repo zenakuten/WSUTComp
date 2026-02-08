@@ -8,6 +8,7 @@ var int ScrollIndex;
 var automated wsCheckBox ch_EnableEmoticons;
 var automated GUIEditBox eb_Message;
 var automated GUILabel lbl_Say;
+var int LastEmoticonsLength; // For updating scrollbar
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
@@ -35,7 +36,25 @@ delegate OnRender(Canvas C)
 	local int i,j;
 	local float x, y, w, h;
 	local float iconY;
-	
+
+    // Refresh ERI if it's None or empty (fix empty emotes menu upon reconnecting)
+    if(ERI == None || ERI.Smileys.Length == 0)
+    {
+        if(BS_xPlayer(PlayerOwner()) != None)
+        {
+            ERI = BS_xPlayer(PlayerOwner()).EmoteInfo;
+            if(ERI != None)
+                ScrollBar.ItemCount = ERI.Smileys.Length;
+        }
+    }
+
+    // Update scrollbar if new emoticons have loaded
+    else if(ERI != None && ERI.Smileys.Length != LastEmoticonsLength)
+    {
+        LastEmoticonsLength = ERI.Smileys.Length;
+        ScrollBar.ItemCount = LastEmoticonsLength;
+    }
+
 	x = PageOwner.ActualWidth() * 0.1;
 	y = PageOwner.ActualTop() * 1.75;
 	w = PageOwner.ActualWidth() * 1.00;

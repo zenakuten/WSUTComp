@@ -7,10 +7,11 @@ var array<Emoticons.sSmileyMessageType> Smileys;
 
 var Emoticons EmoteActor;
 var transient int nextIndex;
+//var float SendTimer; // For throttled sending approach
 
 replication
 {
-	unreliable if (Role == ROLE_Authority)
+	unreliable if (Role == ROLE_Authority) // unreliable is necessary here otherwise it fails at high tick rate
 		ClientAddEmoticon;
 }
 
@@ -25,12 +26,23 @@ event Tick(float deltaTime)
 	if (nextIndex == EmoteActor.Smileys.Length) {
         // bTearOff = true;
         Disable('Tick');
-        NetUpdateFrequency=10;
 		return;
     }
 
 	ClientAddEmoticon(EmoteActor.Smileys[nextIndex].Event, string(EmoteActor.Smileys[nextIndex].Icon), string(EmoteActor.Smileys[nextIndex].MatIcon));
 	nextIndex ++;
+
+	// Throttled sending approach (e.g. thousand[s] of emotes)
+	/*
+	SendTimer += deltaTime;
+	// Limit to 50 sends per second to be safe
+	if (SendTimer > 0.02) 
+	{
+		SendTimer = 0;
+		ClientAddEmoticon(EmoteActor.Smileys[nextIndex].Event, string(EmoteActor.Smileys[nextIndex].Icon), string(EmoteActor.Smileys[nextIndex].MatIcon));
+		nextIndex ++;
+	}
+	*/
 }
 
 // Add a smiley on the client array.
@@ -52,5 +64,5 @@ simulated function ClientAddEmoticon(string event, string icon, string matIcon)
 defaultproperties
 {
      bOnlyRelevantToOwner=True
-     NetUpdateFrequency=100
+     NetUpdateFrequency=500 // Emote replication fails at high tick rate so this is required
 }
