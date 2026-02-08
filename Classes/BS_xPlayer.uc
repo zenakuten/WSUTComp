@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-class BS_xPlayer extends AerialController;
+class BS_xPlayer extends xPlayer;
 
 #exec AUDIO IMPORT FILE=Sounds\headshotted.wav     GROUP=Sounds
 
@@ -4754,6 +4754,163 @@ simulated function ClientReceiveAward(Sound awardSound, float delay, float atten
             dsnd.SetTimer(delay, false);
         }
     }
+}
+
+function rotator Adjust3pAim()
+{
+	local vector CamLookAt, HitLocation, HitNormal, OffsetVector;
+	local Actor HitActor;
+    local vector x, y, z;
+    local vector CameraLocation;
+    local UTComp_xPawn bsxPawn;
+    local vector FireDir, PawnDir;
+    local vector StartTrace,EndTrace;
+
+    bsxPawn = UTComp_xPawn(Pawn);
+    GetAxes(Rotation, x, y, z);
+	CamLookAt = bsxPawn.GetCameraLocationStart() + (bsxPawn.TPCamLookat >> bsxPawn.Rotation) + bsxPawn.TPCamWorldOffset;
+
+	OffsetVector = vect(0, 0, 0);
+	OffsetVector.X = -1.0 * bsxPawn.TPCamDistance;
+
+	CameraLocation = CamLookAt + (OffsetVector >> Rotation);
+
+    FireDir=vector(Rotation);
+    StartTrace=CameraLocation;
+    StartTrace.Z-= bsxPawn.BaseEyeHeight;
+    EndTrace=CamLookAt + 10000 * FireDir;
+
+    HitActor = Trace(HitLocation, HitNormal, EndTrace, StartTrace, true);
+    if(HitActor == None)
+       HitLocation=EndTrace;
+
+    PawnDir = Normal(HitLocation - bsxPawn.Location);
+    return rotator(PawnDir);
+}
+
+// override adjust aim to fix 3p view aim
+function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int aimerror)
+{
+    local vector FireDir, AimSpot, HitNormal, HitLocation, OldAim, AimOffset;
+    local actor BestTarget;
+    local float bestAim, bestDist, projspeed;
+    local actor HitActor;
+    local bool bNoZAdjust, bLeading;
+    local rotator AimRot;
+
+    FireDir = vector(Rotation);
+    if ( FiredAmmunition.bInstantHit )
+        HitActor = Trace(HitLocation, HitNormal, projStart + 10000 * FireDir, projStart, true);
+    else
+        HitActor = Trace(HitLocation, HitNormal, projStart + 4000 * FireDir, projStart, true);
+    if ( (HitActor != None) && HitActor.bProjTarget )
+    {
+        BestTarget = HitActor;
+        bNoZAdjust = true;
+        OldAim = HitLocation;
+        BestDist = VSize(BestTarget.Location - Pawn.Location);
+    }
+    else
+    {
+        // adjust aim based on FOV
+        bestAim = 0.90;
+        if ( (Level.NetMode == NM_Standalone) && bAimingHelp )
+        {
+            bestAim = 0.93;
+            if ( FiredAmmunition.bInstantHit )
+                bestAim = 0.97;
+            if ( FOVAngle < DefaultFOV - 8 )
+                bestAim = 0.99;
+        }
+        else if ( FiredAmmunition.bInstantHit )
+                bestAim = 1.0;
+        BestTarget = PickTarget(bestAim, bestDist, FireDir, projStart, FiredAmmunition.MaxRange);
+        if ( BestTarget == None )
+        {
+            // snarf
+            // fix for locked rotation in 3p view 
+            if (bBehindView)
+            {
+                if(Vehicle(Pawn) != None)
+                    return Pawn.Rotation;
+
+                return Adjust3pAim();
+            }
+            else
+				return Rotation;
+        }
+        OldAim = projStart + FireDir * bestDist;
+    }
+	InstantWarnTarget(BestTarget,FiredAmmunition,FireDir);
+	ShotTarget = Pawn(BestTarget);
+    if ( !bAimingHelp || (Level.NetMode != NM_Standalone) )
+    {
+        // snarf
+        //fix for locked rotation in 3p view
+        if (bBehindView)
+        {
+            if(Vehicle(Pawn) != None)
+                return Pawn.Rotation;
+
+            return Adjust3pAim();
+        }
+        else
+            return Rotation;
+    }
+
+    // aim at target - help with leading also
+    if ( !FiredAmmunition.bInstantHit )
+    {
+        projspeed = FiredAmmunition.ProjectileClass.default.speed;
+        BestDist = vsize(BestTarget.Location + BestTarget.Velocity * FMin(1, 0.02 + BestDist/projSpeed) - projStart);
+        bLeading = true;
+        FireDir = BestTarget.Location + BestTarget.Velocity * FMin(1, 0.02 + BestDist/projSpeed) - projStart;
+        AimSpot = projStart + bestDist * Normal(FireDir);
+        // if splash damage weapon, try aiming at feet - trace down to find floor
+        if ( FiredAmmunition.bTrySplash
+            && ((BestTarget.Velocity != vect(0,0,0)) || (BestDist > 1500)) )
+        {
+            HitActor = Trace(HitLocation, HitNormal, AimSpot - BestTarget.CollisionHeight * vect(0,0,2), AimSpot, false);
+            if ( (HitActor != None)
+                && FastTrace(HitLocation + vect(0,0,4),projstart) )
+                return rotator(HitLocation + vect(0,0,6) - projStart);
+        }
+    }
+    else
+    {
+        FireDir = BestTarget.Location - projStart;
+        AimSpot = projStart + bestDist * Normal(FireDir);
+    }
+    AimOffset = AimSpot - OldAim;
+
+    // adjust Z of shooter if necessary
+    if ( bNoZAdjust || (bLeading && (Abs(AimOffset.Z) < BestTarget.CollisionHeight)) )
+        AimSpot.Z = OldAim.Z;
+    else if ( AimOffset.Z < 0 )
+        AimSpot.Z = BestTarget.Location.Z + 0.4 * BestTarget.CollisionHeight;
+    else
+        AimSpot.Z = BestTarget.Location.Z - 0.7 * BestTarget.CollisionHeight;
+
+    if ( !bLeading )
+    {
+        // if not leading, add slight random error ( significant at long distances )
+        if ( !bNoZAdjust )
+        {
+            AimRot = rotator(AimSpot - projStart);
+            if ( FOVAngle < DefaultFOV - 8 )
+                AimRot.Yaw = AimRot.Yaw + 200 - Rand(400);
+            else
+                AimRot.Yaw = AimRot.Yaw + 375 - Rand(750);
+            return AimRot;
+        }
+    }
+    else if ( !FastTrace(projStart + 0.9 * bestDist * Normal(FireDir), projStart) )
+    {
+        FireDir = BestTarget.Location - projStart;
+        AimSpot = projStart + bestDist * Normal(FireDir);
+    }
+
+    return rotator(AimSpot - projStart);
 }
 
 defaultproperties
