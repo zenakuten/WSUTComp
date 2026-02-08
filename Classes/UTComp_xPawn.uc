@@ -41,6 +41,13 @@ var ColorModifier DeResModifier1;
 
 var config bool bDesiredBehindView;
 
+// copy/pasta from vehicle
+var float TPCamDistance;
+var vector   TPCamLookat; // Look at location in vehicle space
+var vector   TPCamWorldOffset; // Applied in world space after vehicle transform.
+var float DesiredTPCamDistance, LastCameraCalcTime, CameraSpeed; //for smoothly interpolating TPCamDistance to new value
+var Range    TPCamDistRange;
+
 replication
 {
   reliable if (Role==ROLE_Authority)
@@ -1337,28 +1344,60 @@ simulated function bool PointOfView()
 	return default.bDesiredBehindView;
 }
 
-
-// Override default giveweapon to pass owner param.
-// The weapon instigator is assigned inside spawn method.
-// There is a bug where sometimes weapon instigator is none
-// due to weapon switch at round start?  It's weird... 
-// GiveTo also assigns the instigator, so not sure how this happens
-// this was fixed in commit 9dfd85a so commenting out here now (not needed and might cause issue?)
-/* 
-function GiveWeapon(string aClassName )
+simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation )
 {
-	local class<Weapon> WeaponClass;
-	local Weapon NewWeapon;
+	local PlayerController player;
 
-	WeaponClass = class<Weapon>(DynamicLoadObject(aClassName, class'Class'));
+	player = PlayerController(Controller);
 
-	if( FindInventoryType(WeaponClass) != None )
-		return;
-	newWeapon = Spawn(WeaponClass, self);  //pass self as owner param
-	if( newWeapon != None )
-		newWeapon.GiveTo(self);
+	// Only do this mode we have a playercontroller
+	if( (player == None) || (player.Viewtarget != self) )
+		return false;
+
+	if( player.bBehindView )
+		SpecialCalcBehindView(player,ViewActor,CameraLocation,CameraRotation);
+	else
+        return false; //regular nonspecial calc view for 1p view
+
+	LastCameraCalcTime = Level.TimeSeconds;
+
+	return true;
 }
-*/
+
+simulated function vector GetCameraLocationStart()
+{
+	return Location;
+}
+
+//copy/pasta from vehicle
+simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActor, out vector CameraLocation, out rotator CameraRotation )
+{
+	local vector CamLookAt, HitLocation, HitNormal, OffsetVector;
+	local Actor HitActor;
+    local vector x, y, z;
+
+	if (DesiredTPCamDistance < TPCamDistance)
+		TPCamDistance = FMax(DesiredTPCamDistance, TPCamDistance - CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));
+	else if (DesiredTPCamDistance > TPCamDistance)
+		TPCamDistance = FMin(DesiredTPCamDistance, TPCamDistance + CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));
+
+    GetAxes(PC.Rotation, x, y, z);
+	ViewActor = self;
+	CamLookAt = GetCameraLocationStart() + (TPCamLookat >> Rotation) + TPCamWorldOffset;
+
+	OffsetVector = vect(0, 0, 0);
+	OffsetVector.X = -1.0 * TPCamDistance;
+
+	CameraLocation = CamLookAt + (OffsetVector >> PC.Rotation);
+
+	HitActor = Trace(HitLocation, HitNormal, CameraLocation, CamLookAt, true, vect(40, 40, 40));
+	if ( HitActor != None
+	     && (HitActor.bWorldGeometry || HitActor == Base || Trace(HitLocation, HitNormal, CameraLocation, CamLookAt, false, vect(40, 40, 40)) != None) )
+			CameraLocation = HitLocation;
+
+    CameraRotation = Normalize(PC.Rotation + PC.ShakeRot);
+    CameraLocation = CameraLocation + PC.ShakeOffset.X * x + PC.ShakeOffset.Y * y + PC.ShakeOffset.Z * z;
+}
 
 defaultproperties
 {
@@ -1383,4 +1422,10 @@ defaultproperties
 
     DeResMatColored0=FinalBlend'WSUTComp.Shaders.DeRezFinalBody'
     DeResMatColored1=FinalBlend'WSUTComp.Shaders.DeRezFinalHead'
+
+    // fixes for 3p view aiming
+    TPCamDistance=95.000000
+    TPCamLookat=(X=0.000000,Z=0.000000)
+    TPCamWorldOffset=(X=45.0,Z=50.000000)
+    bSpecialCalcView=true
 }
