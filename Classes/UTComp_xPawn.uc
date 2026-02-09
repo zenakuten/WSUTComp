@@ -1383,7 +1383,7 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 
     GetAxes(PC.Rotation, x, y, z);
 	ViewActor = self;
-	CamLookAt = GetCameraLocationStart() + (TPCamLookat >> Rotation) + TPCamWorldOffset;
+	CamLookAt = GetCameraLocationStart() + (TPCamWorldOffset >> Rotation);
 
 	OffsetVector = vect(0, 0, 0);
 	OffsetVector.X = -1.0 * TPCamDistance;
@@ -1424,8 +1424,11 @@ defaultproperties
     DeResMatColored1=FinalBlend'WSUTComp.Shaders.DeRezFinalHead'
 
     // fixes for 3p view aiming
-    TPCamDistance=95.000000
+    CameraSpeed=250.0
+    TPCamDistance=300.000000
+    //TPCamLookat=(X=0.000000,Z=0.000000)
+    //TPCamWorldOffset=(X=50.0,Z=50.000000)
     TPCamLookat=(X=0.000000,Z=0.000000)
-    TPCamWorldOffset=(X=45.0,Z=50.000000)
+    TPCamWorldOffset=(X=-45,Y=-32.0,Z=50.000000)
     bSpecialCalcView=true
 }

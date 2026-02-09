@@ -4766,7 +4766,7 @@ function rotator Adjust3pAim()
     local vector StartTrace,EndTrace;
 
     bsxPawn = UTComp_xPawn(Pawn);
-	CamLookAt = bsxPawn.GetCameraLocationStart() + (bsxPawn.TPCamLookat >> bsxPawn.Rotation) + bsxPawn.TPCamWorldOffset;
+	CamLookAt = bsxPawn.GetCameraLocationStart() + (bsxPawn.TPCamWorldOffset >> bsxPawn.Rotation);
 
 	OffsetVector = vect(0, 0, 0);
 	OffsetVector.X = -1.0 * bsxPawn.TPCamDistance;
