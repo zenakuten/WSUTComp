@@ -64,5 +64,5 @@ simulated function ClientAddEmoticon(string event, string icon, string matIcon)
 defaultproperties
 {
      bOnlyRelevantToOwner=True
-     NetUpdateFrequency=500 // Emote replication fails at high tick rate so this is required
+     NetPriority=3.0 // Emote replication fails at high tick rate so this is required
 }
