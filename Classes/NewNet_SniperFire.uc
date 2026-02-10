@@ -179,6 +179,11 @@ function DoFireEffect()
     {
         StartTrace=savedVec;
         R=SavedRot;
+        if(Instigator != None && Instigator.PointOfView())
+        {
+            Aim = AdjustAim(StartTrace, AimError);
+            R = rotator(vector(Aim) + VRand()*FRand()*Spread);
+        }
         bUseReplicatedInfo=false;
 
 	}
