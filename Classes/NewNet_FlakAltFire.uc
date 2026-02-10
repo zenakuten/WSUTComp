@@ -377,7 +377,7 @@ function DoFireEffect()
     if(bUseReplicatedInfo)
     {
         Aim = SavedRot;
-        if(Instigator != None && Instigator.PointOfView())
+        if(Instigator.PointOfView())
         {
             Aim = AdjustAim(StartProj, AimError);
             R = rotator(vector(Aim) + VRand()*FRand()*Spread);
