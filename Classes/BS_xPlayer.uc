@@ -4911,6 +4911,17 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
     return rotator(AimSpot - projStart);
 }
 
+function ClientSetBehindView(bool B)
+{
+    super.ClientSetBehindView(B);
+
+    if (UTComp_xPawn(Pawn) != None)
+    {
+    	UTComp_xPawn(Pawn).bDesiredBehindView = B;
+    	Pawn.SaveConfig();
+    }
+}
+
 defaultproperties
 {
      UTCompMenuClass="WSUTComp.UTComp_Menu_OpenedMenu"

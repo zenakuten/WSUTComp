@@ -43,7 +43,6 @@ var config bool bDesiredBehindView;
 
 // copy/pasta from vehicle
 var float TPCamDistance;
-var vector   TPCamLookat; // Look at location in vehicle space
 var vector   TPCamWorldOffset; // Applied in world space after vehicle transform.
 var float DesiredTPCamDistance, LastCameraCalcTime, CameraSpeed; //for smoothly interpolating TPCamDistance to new value
 var Range    TPCamDistRange;
@@ -1425,10 +1424,8 @@ defaultproperties
 
     // fixes for 3p view aiming
     CameraSpeed=250.0
-    TPCamDistance=300.000000
-    //TPCamLookat=(X=0.000000,Z=0.000000)
+    TPCamDistance=280.000000
     //TPCamWorldOffset=(X=50.0,Z=50.000000)
-    TPCamLookat=(X=0.000000,Z=0.000000)
-    TPCamWorldOffset=(X=-45,Y=-32.0,Z=50.000000)
+    TPCamWorldOffset=(X=-35,Y=-28.0,Z=38.000000)
     bSpecialCalcView=true
 }
