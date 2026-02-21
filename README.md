@@ -5,6 +5,10 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V19
+- Fix crashing from V18 (ty Calypto!)
+- Rewrite 3p view
+
 V18
 - Fix aiming in 3p view (adapted from superaerialview)
 - Possible? fix for shock crash
