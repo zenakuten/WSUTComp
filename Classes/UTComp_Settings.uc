@@ -98,6 +98,9 @@ var config color DeResFXColor;
 
 var config bool bShockCrashFix;
 
+var config float TPCamDistance;
+var config vector TPCamWorldOffset;
+
 var UTComp_Settings instance;
 
 function Save()
@@ -184,6 +187,8 @@ defaultproperties
     DeResFXColor=(R=00,G=70,B=255,A=255)
     bShowKillsOnScoreboard=True
     bShockCrashFix=false
+    TPCamDistance=280.0
+    TPCamWorldOffset=(X=-35,Y=-28.0,Z=38.000000)
 
     instance=none
 }

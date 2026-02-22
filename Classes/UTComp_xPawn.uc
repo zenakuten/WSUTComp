@@ -1374,6 +1374,13 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 	local vector CamLookAt, HitLocation, HitNormal, OffsetVector;
 	local Actor HitActor;
     local vector x, y, z;
+    local float Max3PView;
+
+    if(Settings != None)
+    {
+        TPCamDistance = Settings.TPCamDistance;
+        TPCamWorldOffset = Settings.TPCamWorldOffset;
+    }
 
 	if (DesiredTPCamDistance < TPCamDistance)
 		TPCamDistance = FMax(DesiredTPCamDistance, TPCamDistance - CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));
@@ -1381,7 +1388,6 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 		TPCamDistance = FMin(DesiredTPCamDistance, TPCamDistance + CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));
 
     GetAxes(PC.Rotation, x, y, z);
-	ViewActor = self;
 	CamLookAt = GetCameraLocationStart() + (TPCamWorldOffset >> Rotation);
 
 	OffsetVector = vect(0, 0, 0);
@@ -1389,6 +1395,33 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 
 	CameraLocation = CamLookAt + (OffsetVector >> PC.Rotation);
 
+    if(RepInfo != None)
+        Max3PView = RepInfo.Max3PView;
+    else 
+        Max3PView = class'UTComp_ServerReplicationInfo'.default.Max3PView;
+
+    // check for cam distance too big 
+    if(VSize(CameraLocation - Location) > Max3PView)
+    {
+        // use default 3p view
+        TPCamDistance = default.TPCamDistance;
+        TPCamWorldOffset = default.TPCamWorldOffset;
+
+        if (DesiredTPCamDistance < TPCamDistance)
+            TPCamDistance = FMax(DesiredTPCamDistance, TPCamDistance - CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));
+        else if (DesiredTPCamDistance > TPCamDistance)
+            TPCamDistance = FMin(DesiredTPCamDistance, TPCamDistance + CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));
+
+        GetAxes(PC.Rotation, x, y, z);
+        CamLookAt = GetCameraLocationStart() + (TPCamWorldOffset >> Rotation);
+
+        OffsetVector = vect(0, 0, 0);
+        OffsetVector.X = -1.0 * TPCamDistance;
+
+        CameraLocation = CamLookAt + (OffsetVector >> PC.Rotation);
+    }
+
+	ViewActor = self;
 	HitActor = Trace(HitLocation, HitNormal, CameraLocation, CamLookAt, true, vect(40, 40, 40));
 	if ( HitActor != None
 	     && (HitActor.bWorldGeometry || HitActor == Base || Trace(HitLocation, HitNormal, CameraLocation, CamLookAt, false, vect(40, 40, 40)) != None) )

@@ -125,6 +125,7 @@ var config bool bUseUTCompStats;
 
 var config int StartingHealth;
 var config int StartingArmor;
+var config float Max3PView;
 
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
@@ -931,6 +932,7 @@ function SpawnReplicationClass()
     RepInfo.TeamRadarCullDistance = TeamRadarCullDistance;
 	
 	RepInfo.bDisableCameraShake = bDisableCameraShake;
+    RepInfo.Max3PView = Max3PView;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1687,6 +1689,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadarMap", "Allow players to use minimap or HUD team radar", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "StartingHealth", "Starting health of players", security, weight, "Text", "0;0:199",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "StartingArmor", "Starting armor of players", security, weight, "Text", "0;0:150",, False, False);
+    PlayInfo.AddSetting("UTComp Settings", "Max3PView", "Max allowed 3P view distance (300)", security, weight, "Text", "0;0.0:10000",, False, False);
 
     weight++;
     PlayInfo.AddSetting("UTComp NewNet", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", security, weight, "Check");
@@ -1792,6 +1795,7 @@ static event string GetDescriptionText(string PropName)
         case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
         case "StartingHealth": return "Starting health of players (100)";
         case "StartingArmor": return "Starting armor of players (0)";
+        case "Max3PView": return "Maximum allowed 3P view distance (300)";
     }
 	return Super.GetDescriptionText(PropName);
 }

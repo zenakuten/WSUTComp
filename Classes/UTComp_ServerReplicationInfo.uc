@@ -83,6 +83,7 @@ var bool bAllowTeamRadarMap;
 var float TeamRadarCullDistance;
 
 var bool bDisableCameraShake;
+var float Max3PView;
 
 replication
 {
@@ -102,7 +103,7 @@ replication
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
-		bDisableCameraShake;
+		bDisableCameraShake, Max3PView;
 }
 
 defaultproperties
@@ -162,5 +163,6 @@ defaultproperties
      TeamRadarCullDistance=10000.0
 	 
 	 bDisableCameraShake=false
+     Max3PView=300.0
 }
 
