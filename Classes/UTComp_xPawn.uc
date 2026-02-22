@@ -1,8 +1,8 @@
 
 class UTComp_xPawn extends ModernPawn;
 
-#exec texture import File=textures\purpmark.dds Name=PurpleMarker
-#exec OBJ LOAD FILE=textures\WSDeRez.utx PACKAGE=WSUTComp
+#exec TEXTURE IMPORT FILE=Textures\purpmark.dds Name=PurpleMarker
+#exec OBJ LOAD FILE=Textures\WSDeRez.utx PACKAGE=WSUTComp
 
 var array<Material> SavedSkins;
 var bool bSkinsSaved;

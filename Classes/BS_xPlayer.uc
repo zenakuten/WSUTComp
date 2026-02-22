@@ -124,7 +124,6 @@ var float LastVRequestTime;
 var UTComp_NodeDamageHook NodeDamageHook;
 
 var int PreferredExitPoint;
-var bool bTempSpec;
 var bool bDidWhitelistCheck;
 
 //damage indicator stuff
