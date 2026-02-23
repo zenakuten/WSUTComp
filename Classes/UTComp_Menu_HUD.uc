@@ -7,8 +7,10 @@ var automated GUISlider radarRSlide, radarGSlide, radarBSlide, radarASlide, rada
 var automated GUILabel radarMapScaleLabel, radarMapAlphaLabel, radarMapXLabel, radarMapYLabel;
 var automated GUISlider radarMapScaleSlide, radarMapAlphaSlide, radarMapXSlide, radarMapYSlide;
 
-event Opened(GUIComponent sender)
+function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
+    super.InitComponent(MyController, MyOwner);
+
     ch_EnableMapTeamRadar.Checked(HUDSettings.bEnableMapTeamRadar);
     ch_EnableTeamRadar.Checked(HUDSettings.bEnableTeamRadar);
     MatchSlidersToColors();
@@ -51,6 +53,16 @@ event Opened(GUIComponent sender)
         radarMapYLabel.Hide();
         radarMapYSlide.Hide();
     }
+}
+
+
+
+event Opened(GUIComponent sender)
+{
+    ch_EnableMapTeamRadar.Checked(HUDSettings.bEnableMapTeamRadar);
+    ch_EnableTeamRadar.Checked(HUDSettings.bEnableTeamRadar);
+    MatchSlidersToColors();
+    MatchTextToSliders();
 
     super.Opened(sender);
 }

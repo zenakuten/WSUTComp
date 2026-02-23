@@ -10,6 +10,9 @@ var automated wsCheckBox ch_ColorGhost;
 var automated GUILabel ghost, ghostFX, ghostR, ghostG, ghostB, ghostA, ghostFXR, ghostFXG, ghostFXB, ghostFXA;
 var automated GUISlider ghostRSlide, ghostGSlide, ghostBSlide, ghostASlide, ghostFXRSlide, ghostFXGSlide, ghostFXBSlide, ghostFXASlide;
 
+var automated GUISlider thirdPersonCamDistanceSlide, thirdPersonCamOffsetXSlide, thirdPersonCamOffsetYSlide, thirdPersonCamOffsetZSlide;
+var automated GUILabel thirdPersonCamDistLabel, thirdPersonCamOffsetXLabel, thirdPersonCamOffsetYLabel, thirdPersonCamOffsetZLabel;
+
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
     local UTComp_ServerReplicationInfo RepInfo;
@@ -36,6 +39,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     ch_ColorGhost.Checked(Settings.bColorGhost);
     MatchSlidersToColors();
     MatchTextToSliders();
+    MatchSlidersToThirdPerson();
 }
 
 function InternalOnChange( GUIComponent C )
@@ -88,10 +92,27 @@ function InternalOnChange( GUIComponent C )
         case GhostFXASlide: Settings.DeResFXColor.A = GhostFXASlide.Value;
             MatchTextToSliders();
             break;
+
+        case thirdPersonCamDistanceSlide: Settings.TPCamDistance = thirdPersonCamDistanceSlide.Value;
+            UpdatePawnCamDistance();
+            break;
+
+        case thirdPersonCamOffsetXSlide: Settings.TPCamWorldOffset.X = thirdPersonCamOffsetXSlide.Value;
+            UpdatePawnCamDistance();
+            break;
+
+        case thirdPersonCamOffsetYSlide: Settings.TPCamWorldOffset.Y = thirdPersonCamOffsetYSlide.Value;
+            UpdatePawnCamDistance();
+            break;
+
+        case thirdPersonCamOffsetZSlide: Settings.TPCamWorldOffset.Z = thirdPersonCamOffsetZSlide.Value;
+            UpdatePawnCamDistance();
+            break;
     }
 
     SaveSettings();
     SaveHUDSettings();
+    UpdateServerCamDistance();
 }
 
 function MatchSlidersToColors()
@@ -107,11 +128,102 @@ function MatchSlidersToColors()
     GhostFXASlide.Value = Settings.DeResFXColor.B;
 }
 
+function MatchSettingsToThirdPerson()
+{
+    Settings.TPCamDistance = thirdPersonCamDistanceSlide.Value;
+    Settings.TPCamWorldOffset.X = thirdPersonCamOffsetXSlide.Value;
+    Settings.TPCamWorldOffset.Y = thirdPersonCamOffsetYSlide.Value;
+    Settings.TPCamWorldOffset.Z = thirdPersonCamOffsetZSlide.Value;
+}
+
+function MatchSlidersToThirdPerson()
+{
+    thirdPersonCamDistanceSlide.Value = Settings.TPCamDistance;
+    thirdPersonCamOffsetXSlide.Value = Settings.TPCamWorldOffset.X;
+    thirdPersonCamOffsetYSlide.Value = Settings.TPCamWorldOffset.Y;
+    thirdPersonCamOffsetZSlide.Value = Settings.TPCamWorldOffset.Z;
+}
+
 function MatchTextToSliders()
 {
     ghost.TextColor = Settings.DeResColor;
     ghostFX.TextColor = Settings.DeResFXColor;
 }
+
+function UpdatePawnCamDistance()
+{
+    local UTComp_xPawn P;
+    P = UTComp_xPawn(PlayerOwner().Pawn);
+    if(P != None)
+    {
+        P.TPCamDistance = Settings.TPCamDistance;
+        P.TPCamWorldOffset.X = Settings.TPCamWorldOffset.X;
+        P.TPCamWorldOffset.Y = Settings.TPCamWorldOffset.Y;
+        P.TPCamWorldOffset.Z = Settings.TPCamWorldOffset.Z;
+    }
+}
+
+function UpdateServerCamDistance()
+{
+    local BS_xPlayer bsxplayer;
+    local UTComp_xPawn P;
+
+    bsxplayer = BS_xPlayer(PlayerOwner());
+    if(bsxplayer != None)
+    {
+        P = UTComp_xPawn(bsxplayer.Pawn);
+        if(P != None)
+        {
+            bsxplayer.ServerSetBehindView( 
+                P.TPCamDistance, 
+                P.TPCamWorldOffset.X, 
+                P.TPCamWorldOffset.Y, 
+                P.TPCamWorldOffset.Z);
+        }
+    }
+}
+
+function bool thirdDistanceCaptureMouseMove(float dx, float dy)
+{
+    local bool retval;
+    retval = thirdPersonCamDistanceSlide.InternalCapturedMouseMove(dx, dy);
+    MatchSettingsToThirdPerson();
+    UpdatePawnCamDistance();
+    
+    return retval;
+}
+
+function bool thirdOffsetXCaptureMouseMove(float dx, float dy)
+{
+    local bool retval;
+    retval = thirdPersonCamOffsetXSlide.InternalCapturedMouseMove(dx, dy);
+    MatchSettingsToThirdPerson();
+    UpdatePawnCamDistance();
+    
+    return retval;
+}
+
+function bool thirdOffsetYCaptureMouseMove(float dx, float dy)
+{
+    local bool retval;
+    retval = thirdPersonCamOffsetYSlide.InternalCapturedMouseMove(dx, dy);
+    MatchSettingsToThirdPerson();
+    UpdatePawnCamDistance();
+    
+    return retval;
+}
+
+function bool thirdOffsetZCaptureMouseMove(float dx, float dy)
+{
+    local bool retval;
+    retval = thirdPersonCamOffsetZSlide.InternalCapturedMouseMove(dx, dy);
+    MatchSettingsToThirdPerson();
+    UpdatePawnCamDistance();
+    
+    return retval;
+}
+
+
 
 defaultproperties
 {
@@ -119,9 +231,9 @@ defaultproperties
         Caption="Enable widescreen fixes"
         Hint="Use built-in Fox WSFix"
         OnCreateComponent=EnableWidescreenCheck.InternalOnCreateComponent
-        WinWidth=0.500000
+        WinWidth=0.25000
         WinHeight=0.030000
-        WinLeft=0.250000
+        WinLeft=0.12
         WinTop=0.330000
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
@@ -131,8 +243,8 @@ defaultproperties
          Caption="Damage Indicators:"
          OnCreateComponent=ComboDamageIndicatorType.InternalOnCreateComponent
          WinTop=0.380000
-         WinLeft=0.250000
-         WinWidth=0.500000
+         WinLeft=0.12
+         WinWidth=0.25
          OnChange=UTComp_Menu_Extra.InternalOnChange
      End Object
      co_DamageSelect=wsComboBox'UTComp_Menu_Extra.ComboDamageIndicatorType'
@@ -141,9 +253,9 @@ defaultproperties
         Caption="Enable awards"
         Hint="Play sound for air rocket, impressive shock combo"
         OnCreateComponent=EnableAwardsCheck.InternalOnCreateComponent
-        WinWidth=0.500000
+        WinWidth=0.25
         WinHeight=0.030000
-        WinLeft=0.250000
+        WinLeft=0.12
         WinTop=0.43
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
@@ -153,9 +265,9 @@ defaultproperties
         Caption="Fast ghost"
         Hint="Make dead players turn to ghost immediately"
         OnCreateComponent=FastGhostCheck.InternalOnCreateComponent
-        WinWidth=0.500000
+        WinWidth=0.25
         WinHeight=0.030000
-        WinLeft=0.250000
+        WinLeft=0.12
         WinTop=0.48
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
@@ -165,13 +277,115 @@ defaultproperties
         Caption="Color ghost"
         Hint="Use configured ghost color"
         OnCreateComponent=ColorGhostCheck.InternalOnCreateComponent
-        WinWidth=0.500000
+        WinWidth=0.25
         WinHeight=0.030000
-        WinLeft=0.250000
+        WinLeft=0.12
         WinTop=0.53
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
     ch_ColorGhost=wsCheckBox'UTComp_Menu_Extra.ColorGhostCheck'
+
+     Begin Object Class=GUILabel Name=thirdCamDistLabel
+         Caption="3p Cam Dist"
+         TextColor=(R=255,G=255,B=255)
+         WinTop=0.33
+         WinLeft=0.55
+         WinHeight=20.000000
+     End Object
+     thirdPersonCamDistLabel=GUILabel'UTComp_Menu_Extra.thirdCamDistLabel'
+
+     Begin Object Class=wsGUISlider Name=thirdCamDistanceSlide
+         bIntSlider=True
+         WinTop=0.33
+         WinLeft=0.7500000
+         WinWidth=0.125
+         OnClick=thirdCamDistanceSlide.InternalOnClick
+         OnMousePressed=thirdCamDistanceSlide.InternalOnMousePressed
+         OnMouseRelease=thirdCamDistanceSlide.InternalOnMouseRelease
+         OnChange=UTComp_Menu_Extra.InternalOnChange
+         OnKeyEvent=thirdCamDistanceSlide.InternalOnKeyEvent
+         //OnCapturedMouseMove=thirdCamDistanceSlide.InternalCapturedMouseMove
+         OnCapturedMouseMove=UTComp_Menu_Extra.thirdDistanceCaptureMouseMove
+         MaxValue=200
+     End Object
+     thirdPersonCamDistanceSlide=wsGUISlider'UTComp_Menu_Extra.thirdCamDistanceSlide'
+
+     Begin Object Class=GUILabel Name=thirdCamOffXLabel
+         Caption="3p Cam X"
+         TextColor=(R=255,G=255,B=255)
+         WinTop=0.38
+         WinLeft=0.55
+         WinHeight=20.000000
+     End Object
+     thirdPersonCamOffsetXLabel=GUILabel'UTComp_Menu_Extra.thirdCamOffXLabel'
+
+     Begin Object Class=wsGUISlider Name=thirdCamOffsetX
+         bIntSlider=True
+         WinTop=0.38
+         WinLeft=0.7500000
+         WinWidth=0.125
+         OnClick=thirdCamOffsetX.InternalOnClick
+         OnMousePressed=thirdCamOffsetX.InternalOnMousePressed
+         OnMouseRelease=thirdCamOffsetX.InternalOnMouseRelease
+         OnChange=UTComp_Menu_Extra.InternalOnChange
+         OnKeyEvent=thirdCamOffsetX.InternalOnKeyEvent
+         //OnCapturedMouseMove=thirdCamOffsetX.InternalCapturedMouseMove
+         OnCapturedMouseMove=UTComp_Menu_Extra.thirdOffsetXCaptureMouseMove
+         MinValue=-64
+         MaxValue=64
+     End Object
+     thirdPersonCamOffsetXSlide=wsGUISlider'UTComp_Menu_Extra.thirdCamOffsetX'
+
+     Begin Object Class=GUILabel Name=thirdCamOffYLabel
+         Caption="3p Cam Y"
+         TextColor=(R=255,G=255,B=255)
+         WinTop=0.43
+         WinLeft=0.55
+         WinHeight=20.000000
+     End Object
+     thirdPersonCamOffsetYLabel=GUILabel'UTComp_Menu_Extra.thirdCamOffYLabel'
+
+     Begin Object Class=wsGUISlider Name=thirdCamOffsetY
+         bIntSlider=True
+         WinTop=0.43
+         WinLeft=0.750000
+         WinWidth=0.125
+         OnClick=thirdCamOffsetY.InternalOnClick
+         OnMousePressed=thirdCamOffsetY.InternalOnMousePressed
+         OnMouseRelease=thirdCamOffsetY.InternalOnMouseRelease
+         OnChange=UTComp_Menu_Extra.InternalOnChange
+         OnKeyEvent=thirdCamOffsetY.InternalOnKeyEvent
+         //OnCapturedMouseMove=thirdCamOffsetY.InternalCapturedMouseMove
+         OnCapturedMouseMove=UTComp_Menu_Extra.thirdOffsetYCaptureMouseMove
+         MinValue=-64
+         MaxValue=64
+     End Object
+     thirdPersonCamOffsetYSlide=wsGUISlider'UTComp_Menu_Extra.thirdCamOffsetY'
+
+     Begin Object Class=GUILabel Name=thirdCamOffZLabel
+         Caption="3p Cam Z"
+         TextColor=(R=255,G=255,B=255)
+         WinTop=0.48
+         WinLeft=0.55
+         WinHeight=20.000000
+     End Object
+     thirdPersonCamOffsetZLabel=GUILabel'UTComp_Menu_Extra.thirdCamOffZLabel'
+
+     Begin Object Class=wsGUISlider Name=thirdCamOffsetZ
+         bIntSlider=True
+         WinTop=0.48
+         WinLeft=0.750000
+         WinWidth=0.125
+         OnClick=thirdCamOffsetZ.InternalOnClick
+         OnMousePressed=thirdCamOffsetZ.InternalOnMousePressed
+         OnMouseRelease=thirdCamOffsetZ.InternalOnMouseRelease
+         OnChange=UTComp_Menu_Extra.InternalOnChange
+         OnKeyEvent=thirdCamOffsetZ.InternalOnKeyEvent
+         //OnCapturedMouseMove=thirdCamOffsetZ.InternalCapturedMouseMove
+         OnCapturedMouseMove=UTComp_Menu_Extra.thirdOffsetZCaptureMouseMove
+         MaxValue=64
+     End Object
+     thirdPersonCamOffsetZSlide=wsGUISlider'UTComp_Menu_Extra.thirdCamOffsetZ'
 
     /////////////////////
 

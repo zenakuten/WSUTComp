@@ -148,6 +148,9 @@ var bool bLimitTaunts;
 
 var sound HeadshotSound;
 
+// 3374 conflicts with this
+var bool bTempSpec;
+
 replication
 {
     unreliable if(Role==Role_Authority)
@@ -166,7 +169,7 @@ replication
         serverfindprevnode, servergotonode, ServerGoToWepBase, speclockRed, speclockBlue, ServerGoToTarget, CallVote;
 
     reliable if(Role<Role_Authority)
-        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist, ServerSetTauntCount;
+        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist, ServerSetTauntCount, ServerSetBehindView;
 
     unreliable if(role < Role_Authority)
         RequestStats, RequestCTFStats;
@@ -4918,6 +4921,25 @@ function ClientSetBehindView(bool B)
     {
     	UTComp_xPawn(Pawn).bDesiredBehindView = B;
     	Pawn.SaveConfig();
+        ServerSetBehindView(
+            UTComp_xPawn(Pawn).TPCamDistance, 
+            UTComp_xPawn(Pawn).TPCamWorldOffset.X,
+            UTComp_xPawn(Pawn).TPCamWorldOffset.Y,
+            UTComp_xPawn(Pawn).TPCamWorldOffset.Z);
+    }
+}
+
+// aim will be messed up online if server doesn't know players 3p view
+function ServerSetBehindView(float d, float x, float y, float z)
+{
+    local UTComp_xPawn p;
+    p = UTComp_xPawn(Pawn);
+    if (p != None)
+    {
+        p.TPCamDistance = d;
+        P.TPCamWorldOffset.X = X;
+        P.TPCamWorldOffset.Y = Y;
+        P.TPCamWorldOffset.Z = Z;
     }
 }
 

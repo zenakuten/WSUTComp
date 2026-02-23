@@ -56,14 +56,8 @@ replication
      bShieldActive, bLinkActive, bShockActive, bLGactive, overlayActive;
 }
 
-simulated event PostNetBeginPlay()
+simulated event PostBeginPlay() 
 {
-    super.PostNetBeginPlay();
-    OldBaseEyeHeight = default.BaseEyeHeight;
-    OldLocation = Location;
-}
-
-simulated event PostBeginPlay() {
     super.PostBeginPlay();
 
     foreach AllObjects(class'UTComp_Settings', Settings)
@@ -75,6 +69,13 @@ simulated event PostBeginPlay() {
         break;
     if (HUDSettings == none && Bot(Controller) == None)
         Warn(self@"HUDSettings object not found!");
+}
+
+simulated event PostNetBeginPlay()
+{
+    super.PostNetBeginPlay();
+    OldBaseEyeHeight = default.BaseEyeHeight;
+    OldLocation = Location;
 }
 
 function int ShieldAbsorb( int dam )
@@ -1374,7 +1375,6 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 	local vector CamLookAt, HitLocation, HitNormal, OffsetVector;
 	local Actor HitActor;
     local vector x, y, z;
-    local float Max3PView;
 
     if(Settings != None)
     {
@@ -1395,13 +1395,8 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 
 	CameraLocation = CamLookAt + (OffsetVector >> PC.Rotation);
 
-    if(RepInfo != None)
-        Max3PView = RepInfo.Max3PView;
-    else 
-        Max3PView = class'UTComp_ServerReplicationInfo'.default.Max3PView;
-
     // check for cam distance too big 
-    if(VSize(CameraLocation - Location) > Max3PView)
+    if(VSize(CameraLocation - Location) > 300.0)
     {
         // use default 3p view
         TPCamDistance = default.TPCamDistance;
@@ -1412,7 +1407,6 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
         else if (DesiredTPCamDistance > TPCamDistance)
             TPCamDistance = FMin(DesiredTPCamDistance, TPCamDistance + CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));
 
-        GetAxes(PC.Rotation, x, y, z);
         CamLookAt = GetCameraLocationStart() + (TPCamWorldOffset >> Rotation);
 
         OffsetVector = vect(0, 0, 0);
@@ -1456,7 +1450,7 @@ defaultproperties
     DeResMatColored1=FinalBlend'WSUTComp.Shaders.DeRezFinalHead'
 
     // fixes for 3p view aiming
-    CameraSpeed=250.0
+    CameraSpeed=5.0
     TPCamDistance=280.000000
     //TPCamWorldOffset=(X=50.0,Z=50.000000)
     TPCamWorldOffset=(X=-35,Y=-28.0,Z=38.000000)
