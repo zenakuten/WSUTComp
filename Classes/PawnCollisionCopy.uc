@@ -115,6 +115,14 @@ function GoToPawn()
     }
 
     SetCollision(true);
+	
+	/*
+	// Ensure the pawn actually wants to collide, not strictly required, leaving this in for posterity -Calypto
+	if (CopiedPawn.bCollideActors) 
+	{
+		SetCollision(true);
+	}
+	*/
 }
 
 /*
@@ -232,7 +240,13 @@ function TimeTravelPawn(float dt)
          SetLocation(PawnHistory[Floor].Location);
          SetRotation(PawnHistory[Floor].Rotation);
     }
-    SetCollision(true);
+
+	// Only enable collision if using cylinder collision (infantry) as enabling this
+	// for vehicles forces a cylinder that absorbs traces resulting in noregs. -Calypto
+	if (bUseCylinderCollision && CopiedPawn != None && CopiedPawn.bCollideActors)
+	{
+		SetCollision(true);
+	}
 }
 
 
