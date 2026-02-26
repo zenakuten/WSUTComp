@@ -204,7 +204,7 @@ defaultproperties
          OnPreDraw=ScrollBarObj.GripPreDraw
          OnRendered=UTComp_Menu_Emoticons.OnRender
      End Object
-     ScrollBar=wsGUIVertScrollBar'WSUTComp.UTComp_Menu_Emoticons.ScrollBarObj'
+     ScrollBar=wsGUIVertScrollBar'UTComp_Menu_Emoticons.ScrollBarObj'
 
     Begin Object class=wsCheckBox name=EnableEmoticonsCheck
 		WinWidth=0.150000
