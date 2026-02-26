@@ -327,10 +327,11 @@ event TakeDamage(int Damage, Pawn EventInstigator, vector HitLocation, vector Mo
 
 event destroyed()
 {
-  /* if(!bNormalDestroy)
-      Warn("DESTROYED WITHOUT SETTING UP LIST");     */
+//	if(!bNormalDestroy)
+//		Warn("DESTROYED WITHOUT SETTING UP LIST");
 
-   super.Destroyed();
+	LinkMesh(None);
+	super.Destroyed();
 }
 
 function Identify()
