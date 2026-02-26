@@ -80,7 +80,7 @@ function SetPawn(Pawn Other)
     if(!bUseCylinderCollision)
     {
         //snarf LinkMesh is causing crashes, works ok without it
-        //LinkMesh(CopiedPawn.Mesh);
+        LinkMesh(CopiedPawn.Mesh); // This is required for high pingers to be able to hit vehicles properly; cylinders don't work - Calypto
         SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
     }
     else
@@ -115,14 +115,6 @@ function GoToPawn()
     }
 
     SetCollision(true);
-	
-	/*
-	// Ensure the pawn actually wants to collide, not strictly required, leaving this in for posterity -Calypto
-	if (CopiedPawn.bCollideActors) 
-	{
-		SetCollision(true);
-	}
-	*/
 }
 
 /*
@@ -241,12 +233,21 @@ function TimeTravelPawn(float dt)
          SetRotation(PawnHistory[Floor].Rotation);
     }
 
-	// Only enable collision if using cylinder collision (infantry) as enabling this
-	// for vehicles forces a cylinder that absorbs traces resulting in noregs. -Calypto
-	if (bUseCylinderCollision && CopiedPawn != None && CopiedPawn.bCollideActors)
-	{
-		SetCollision(true);
-	}
+	// Add checks for vehicles to not use cylinders (and use LinkMesh instead), otherwise it causes hitscan noregs on high ping (>70ms)..
+	// Without LinkMesh enabled, this logic will not let you hit the vehicle if the main seat is occupied (if gunner then works fine) - Calypto
+    if (CopiedPawn != None)
+    {
+        // If the copied pawn is a vehicle, and it is attached to another vehicle, it's a passenger seat
+        if (CopiedPawn.IsA('Vehicle') && CopiedPawn.Base != None && CopiedPawn.Base.IsA('Vehicle'))
+        {
+            // Do not enable collision for passenger seats to prevent the phantom cylinder shield
+        }
+        else if (CopiedPawn.bCollideActors)
+        {
+            // Enable collision for infantry and main vehicles
+            SetCollision(true);
+        }
+    }
 }
 
 
