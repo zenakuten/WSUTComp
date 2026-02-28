@@ -148,8 +148,7 @@ var bool bLimitTaunts;
 
 var sound HeadshotSound;
 
-// 3374 conflicts with this
-var bool bTempSpec;
+var bool bIsTempSpec;
 
 replication
 {
@@ -274,6 +273,13 @@ simulated function PostBeginPlay()
     {
         NodeDamageHook = spawn(class'UTComp_NodeDamageHook', self);
         NodeDamageHook.Tag = 'UTComp_ONSNodeDamaged';
+    }
+
+    if(HUDSettings != none)
+    {
+
+        if(Level.NetMode != NM_DedicatedServer && Left(Level.EngineVersion, 4) != "3369")
+            HUDSettings.bEnableWidescreenFix=false;
     }
 }
 
@@ -3877,11 +3883,11 @@ function UTComp_ServerUse(int Dir)
 
 function ServerViewNextPlayer()
 {
-	bTempSpec = True;
+	bIsTempSpec = True;
 
 	Super.ServerViewNextPlayer();
 
-	bTempSpec = False;
+	bIsTempSpec = False;
 }
 
 
@@ -3894,7 +3900,7 @@ function ServerViewPlayer(int PlayerID)
 	if (!IsInState('Spectating'))
 		return;
 
-	bTempSpec = True;
+	bIsTempSpec = True;
 	bRealSpec = PlayerReplicationInfo.bOnlySpectator;
 	bWasSpec = !bBehindView && ViewTarget != Pawn && ViewTarget != self;
 	PlayerReplicationInfo.bOnlySpectator = True;
@@ -3930,7 +3936,7 @@ function ServerViewPlayer(int PlayerID)
 
 	ClientSetBehindView(bBehindView);
 	PlayerReplicationInfo.bOnlySpectator = bRealSpec;
-	bTempSpec = False;
+	bIsTempSpec = False;
 }
 
 simulated function ClientReceiveLoginMenu(string MenuClass, bool bForce)
