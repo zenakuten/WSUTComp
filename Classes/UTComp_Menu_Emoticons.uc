@@ -8,6 +8,7 @@ var int ScrollIndex;
 var automated wsCheckBox ch_EnableEmoticons;
 var automated GUIEditBox eb_Message;
 var automated GUILabel lbl_Say;
+var automated GUILabel lbl_Count; // Smiley count
 var int LastEmoticonsLength; // For updating scrollbar
 
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
@@ -32,7 +33,7 @@ delegate PositionChanged(int NewPos)
 }
 
 delegate OnRender(Canvas C)
-{	
+{
 	local int i,j;
 	local float x, y, w, h;
 	local float iconY;
@@ -44,15 +45,23 @@ delegate OnRender(Canvas C)
         {
             ERI = BS_xPlayer(PlayerOwner()).EmoteInfo;
             if(ERI != None)
+            {
                 ScrollBar.ItemCount = ERI.Smileys.Length;
+                LastEmoticonsLength = ERI.Smileys.Length;
+
+                lbl_Count.Caption = "Loaded:" @ LastEmoticonsLength @ "/" @ ERI.TotalSmileys;
+            }
         }
     }
 
-    // Update scrollbar if new emoticons have loaded
+    // Update scrollbar and label if new emoticons have loaded
     else if(ERI != None && ERI.Smileys.Length != LastEmoticonsLength)
     {
         LastEmoticonsLength = ERI.Smileys.Length;
         ScrollBar.ItemCount = LastEmoticonsLength;
+        
+        // Update the label text
+        lbl_Count.Caption = "Loaded:" @ LastEmoticonsLength @ "/" @ ERI.TotalSmileys;
     }
 
 	x = PageOwner.ActualWidth() * 0.1;
@@ -195,7 +204,7 @@ defaultproperties
          OnPreDraw=ScrollBarObj.GripPreDraw
          OnRendered=UTComp_Menu_Emoticons.OnRender
      End Object
-     ScrollBar=wsGUIVertScrollBar'WSUTComp.UTComp_Menu_Emoticons.ScrollBarObj'
+     ScrollBar=wsGUIVertScrollBar'UTComp_Menu_Emoticons.ScrollBarObj'
 
     Begin Object class=wsCheckBox name=EnableEmoticonsCheck
 		WinWidth=0.150000
@@ -207,6 +216,14 @@ defaultproperties
         OnCreateComponent=EnableEmoticonsCheck.InternalOnCreateComponent
     End Object
     ch_EnableEmoticons=wsCheckBox'UTComp_Menu_Emoticons.EnableEmoticonsCheck'
+
+    Begin Object Class=GUILabel Name=CountLabel
+        Caption="Loaded: 0 / 0"
+        TextColor=(R=255,G=255,B=255,A=255)
+        WinLeft=0.70000
+		WinTop=0.350000
+    End Object
+    lbl_Count=GUILabel'UTComp_Menu_Emoticons.CountLabel'
 
     Begin Object Class=GUILabel Name=SayLabel
         Caption="Say:"
