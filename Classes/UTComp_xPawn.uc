@@ -695,6 +695,10 @@ simulated function int GetColorModeBright()
 
 simulated function material ChangeOnlyColor(material SkinToChange)
 {
+    // If not on a team, force Deathmatch skin
+    if(GetTeamNum() == 255) 
+        return MakeDMSkin(SkinToChange);
+
     switch(GetDefaultEpicColorMode())
     {
         case 1:  return MakeRedSkin(SkinToChange);
@@ -705,6 +709,13 @@ simulated function material ChangeOnlyColor(material SkinToChange)
 
 simulated function material ChangeColorAndBrightness(material SkinToChange, int SkinNum)
 {
+    // If not on a team, force Bright Deathmatch skin
+    if(GetTeamNum() == 255) 
+    {
+        if(SkinNum == 1) return MakeDMSkin(SkinToChange);
+        return MakeBrightDMSkin(SkinToChange);
+    }
+
     switch(GetDefaultBrightColorMode())
     {
         case 5:
@@ -724,6 +735,11 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
     local PlayerController LPC;
 
     if(SkinNum>0) return MakeDMSkin(SkinToChange);
+
+    // In Deathmatch, use default uncolored DM skins only if Enemy Based Skins is off.
+    // If it's on, skip this and proceed to the combiner to colorize enemies.
+    if(GetTeamNum() == 255 && (Settings == None || !Settings.bEnemyBasedSkins))
+        return MakeDMSkin(SkinToChange);
 
     C=New(None)Class'Combiner';
     CC=New(None)Class'ConstantColor';
