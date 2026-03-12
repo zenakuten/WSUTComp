@@ -183,10 +183,21 @@ function InternalOnChange( GUIComponent C )
         return;
     Switch(C)
     {
-        case ch_EnemySkins:  Settings.bEnemyBasedSkins=ch_EnemySkins.IsChecked();
+        /*case ch_EnemySkins:  Settings.bEnemyBasedSkins=ch_EnemySkins.IsChecked();
                              ChangeComboBoxCaption();
                              if(!bUpdatingCrap)
-                                 UpdateAllComponents(); break;
+                                 UpdateAllComponents(); break;*/
+
+        case ch_EnemySkins:  
+             Settings.bEnemyBasedSkins=ch_EnemySkins.IsChecked();
+             ChangeComboBoxCaption();
+             if(!bUpdatingCrap)
+                 UpdateAllComponents(); 
+             class'UTComp_xPawn'.static.StaticSaveConfig();
+             SaveSettings();
+             if(BS_xPlayer(PlayerOwner()) != None)
+                 BS_xPlayer(PlayerOwner()).ReSkinAll();
+             break;
 
         case ch_EnemyModels: Settings.bEnemyBasedModels=ch_EnemyModels.IsChecked();
                              ChangeComboBoxCaption();
@@ -488,6 +499,13 @@ function UpdateAllComponents()
     ch_EnemyModels.Checked(Settings.bEnemyBasedModels);
     ch_DarkSkins.Checked(Settings.bEnableDarkSkinning);
 
+    // Globally enforce strictly absolute colors, ignoring Enemy-Based toggle
+    if (Settings.ClientSkinModeRedTeammate == 1) Settings.PreferredSkinColorRedTeammate = 1; // Red
+    else                                         Settings.PreferredSkinColorRedTeammate = 5; // Brighter Red
+    
+    if (Settings.ClientSkinModeBlueEnemy == 1)   Settings.PreferredSkinColorBlueEnemy = 2; // Blue
+    else                                         Settings.PreferredSkinColorBlueEnemy = 6; // Brighter Blue
+
     if(Team==0)
     {
         co_TypeSkinSelect.EnableMe();
@@ -498,14 +516,23 @@ function UpdateAllComponents()
 
         SkinStyle=co_TypeSkinSelect.GetIndex();
 
-        if(SkinStyle<2)
+        /*if(SkinStyle<2)
         {
             co_EpicSkinSelect.SetIndex(Settings.PreferredSkinColorRedTeammate);
             co_EpicSkinSelect.EnableMe();
             sl_RedSkin.DisableMe();
             sl_GreenSkin.DisableMe();
             sl_BlueSkin.DisableMe();
-
+        }*/
+        if(SkinStyle<2)
+        {
+            if (Team == 0) co_EpicSkinSelect.SetIndex(Settings.PreferredSkinColorRedTeammate);
+            else           co_EpicSkinSelect.SetIndex(Settings.PreferredSkinColorBlueEnemy);
+            
+            co_EpicSkinSelect.DisableMe();
+            sl_RedSkin.DisableMe();
+            sl_GreenSkin.DisableMe();
+            sl_BlueSkin.DisableMe();
         }
         else
         {
@@ -537,14 +564,23 @@ function UpdateAllComponents()
 
         SkinStyle=co_TypeSkinSelect.GetIndex();
 
-        if(SkinStyle<2)
+        /*if(SkinStyle<2)
         {
             co_EpicSkinSelect.SetIndex(Settings.PreferredSkinColorBlueEnemy);
             co_EpicSkinSelect.EnableMe();
             sl_RedSkin.DisableMe();
             sl_GreenSkin.DisableMe();
             sl_BlueSkin.DisableMe();
-
+        }*/
+        if(SkinStyle<2)
+        {
+            if (Team == 0) co_EpicSkinSelect.SetIndex(Settings.PreferredSkinColorRedTeammate);
+            else           co_EpicSkinSelect.SetIndex(Settings.PreferredSkinColorBlueEnemy);
+            
+            co_EpicSkinSelect.DisableMe();
+            sl_RedSkin.DisableMe();
+            sl_GreenSkin.DisableMe();
+            sl_BlueSkin.DisableMe();
         }
         else
         {

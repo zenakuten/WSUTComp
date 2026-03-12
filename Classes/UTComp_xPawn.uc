@@ -683,120 +683,36 @@ simulated function int GetColorMode()
     return 255;
 }
 
-simulated function int GetColorModeBright()
-{
-    local int colormode;
-
-    if(Settings == None)
-        return 0;
-
-    if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
-        ColorMode=Settings.PreferredSkinColorBlueEnemy;
-    else
-        ColorMode=Settings.PreferredSkinColorRedTeammate;
-    return Colormode%4;
-}
-
 simulated function int GetColorModeEpic()
 {
-    local byte ColorMode;
-    local byte OtherColorMode;
+    return GetDefaultEpicColorMode() - 1;
+}
 
-    if(Settings == None)
-        return 0;
-
-    if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
-    {
-        ColorMode=Settings.PreferredSkinColorBlueEnemy;
-        OtherColorMode=Settings.PreferredSkinColorRedTeammate;
-    }
-    else
-    {
-        ColorMode=Settings.PreferredSkinColorRedTeammate;
-        OtherColorMode=Settings.PreferredSkinColorBlueEnemy;
-    }
-    if(ColorMode > 3)
-        ColorMode-=4;
-    if(OtherColorMode > 3)
-        OtherColorMode-=4;
-    switch ColorMode
-    {
-        case 0:  return 0;
-        case 1:  return 1;
-        case 2:  return 2;
-        case 3: if(OtherColorMode<2)
-                     return 2;
-                 else
-                     return 1;
-    }
-    return 255;
+simulated function int GetColorModeBright()
+{
+    return GetDefaultBrightColorMode() % 4;
 }
 
 simulated function material ChangeOnlyColor(material SkinToChange)
 {
-    local byte ColorMode;
-    local byte OtherColorMode;
-
-    if(Settings == None)
-        return SkinToChange;
-
-    if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
+    switch(GetDefaultEpicColorMode())
     {
-        ColorMode=Settings.PreferredSkinColorBlueEnemy;
-        OtherColorMode=Settings.PreferredSkinColorRedTeammate;
-    }
-    else
-    {
-        ColorMode=Settings.PreferredSkinColorRedTeammate;
-        OtherColorMode=Settings.PreferredSkinColorBlueEnemy;
-    }
-    if(ColorMode > 3)
-        ColorMode-=4;
-    if(OtherColorMode > 3)
-        OtherColorMode-=4;
-
-    switch ColorMode
-    {
-        case 0:  return MakeDMSkin(SkinToChange);
         case 1:  return MakeRedSkin(SkinToChange);
         case 2:  return MakeBlueSkin(SkinToChange);
-        case 3:  if(OtherColorMode<2)
-                     return MakeBlueSkin(SkinToChange);
-                 else
-                     return MakeRedSkin(SkinToChange);
     }
     return SkinToChange;
 }
 
 simulated function material ChangeColorAndBrightness(material SkinToChange, int SkinNum)
 {
-    local byte ColorMode;
-
-    if(Settings == None)
-        return SkinToChange;
-
-    if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
-        ColorMode=Settings.PreferredSkinColorBlueEnemy;
-    else
-        ColorMode=Settings.PreferredSkinColorRedTeammate;
-    switch ColorMode
+    switch(GetDefaultBrightColorMode())
     {
-        case 0:  return MakeDMSkin(SkinToChange);  break;
-        case 1:  return MakeRedSkin(SkinToChange); break;
-        case 2:  return MakeBlueSkin(SkinToChange);  break;
-        case 3:  return MakePurpleSkin(SkinToChange);  break;
-        case 4:  if(SkinNum==1)
-                    return MakeDMSkin(SkinToChange);
-                 return MakeBrightDMSkin(SkinToChange);  break;
-        case 5:  if(SkinNum==1)
-                    return MakeRedSkin(SkinToChange);
-                 return MakeBrightRedSkin(SkinToChange);  break;
-        case 6:  if(SkinNum==1)
-                    return MakeBlueSkin(SkinToChange);
-                 return MakeBrightBlueSkin(SkinToChange);  break;
-        case 7:  if(SkinNum==1)
-                    return SkinToChange;
-                 return MakeBrightPurpleSkin(SkinToChange); break;
+        case 5:
+            if(SkinNum==1) return MakeRedSkin(SkinToChange);
+            return MakeBrightRedSkin(SkinToChange);
+        case 6:
+            if(SkinNum==1) return MakeBlueSkin(SkinToChange);
+            return MakeBrightBlueSkin(SkinToChange);
     }
     return SkinToChange;
 }
@@ -807,20 +723,17 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
     local ConstantColor CC;
     local PlayerController LPC;
 
-    if(SkinNum>0)
-        return MakeDMSkin(SkinToChange);
+    if(SkinNum>0) return MakeDMSkin(SkinToChange);
 
     C=New(None)Class'Combiner';
     CC=New(None)Class'ConstantColor';
 
-    if(C == None || CC == None)
-        return SkinToChange;
+    if(C == None || CC == None) return SkinToChange;
 
     C.CombineOperation=CO_Add;
     C.Material1=MakeDMSkin(SkinToChange);
 
-    if(Settings == None)
-        return C;
+    if(Settings == None) return C;
 
     if(IsSpawnProtectionEnabled())
     {
@@ -830,16 +743,16 @@ simulated function material ChangeToUTCompSkin(material SkinToChange, byte SkinN
         else
             CC.Color=MakeClanSkin(Settings.SpawnProtectedUTCompSkinColor);
     }
-    else if(PawnIsEnemyOrBlue(Settings.bEnemyBasedSkins))
-        CC.Color=MakeClanSkin(Settings.BlueEnemyUTCompSkinColor);
-    else
+    // Uses the relational check so Enemy-Based settings apply to the RGB colors
+    else if(IsTeammate())
         CC.Color=MakeClanSkin(Settings.RedTeammateUTCompSkinColor);
+    else
+        CC.Color=MakeClanSkin(Settings.BlueEnemyUTCompSkinColor);
 
     SavedColor=CC.Color;
     C.Material2=CC;
 
-    if(C!=None)
-        return C;
+    if(C!=None) return C;
     return SkinToChange;
 }
 
@@ -1423,6 +1336,64 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 
     CameraRotation = Normalize(PC.Rotation + PC.ShakeRot);
     CameraLocation = CameraLocation + PC.ShakeOffset.X * x + PC.ShakeOffset.Y * y + PC.ShakeOffset.Z * z;
+}
+
+// Helper 1: For Epic/Bright Epic. Strictly Absolute. Ignores the checkbox.
+simulated function bool IsRedTeam()
+{
+    local int PawnTeamNum;
+    PawnTeamNum = GetTeamNum();
+
+    if (PawnTeamNum == 255)
+    {
+        if (Controller == None || PlayerController(Controller) == None || PlayerController(Controller) != Level.GetLocalPlayerController())
+            return false; 
+        return true;  
+    }
+    return (PawnTeamNum == 0); 
+}
+
+// Helper 2: For UTComp Style. Relational. Obeys the "Enemy Based" checkbox.
+simulated function bool IsTeammate()
+{
+    local int LocalPlayerTeamNum, PawnTeamNum;
+    local Pawn P;
+
+    if (Settings == None) return true;
+    if (LocalPC == None) LocalPC = Level.GetLocalPlayerController();
+    if (LocalPC == None) return true;
+
+    LocalPlayerTeamNum = LocalPC.GetTeamNum();
+    PawnTeamNum = GetTeamNum();
+
+    if (PawnTeamNum == 255)
+    {
+        if (Controller == None || PlayerController(Controller) == None || PlayerController(Controller) != LocalPC)
+            return false; // Treat as Enemy
+        return true;  // Treat as Teammate
+    }
+
+    P = Pawn(LocalPC.ViewTarget);
+    if (LocalPC.PlayerReplicationInfo != None && LocalPC.PlayerReplicationInfo.bOnlySpectator && P != None)
+        LocalPlayerTeamNum = P.GetTeamNum();
+
+    if (Settings.bEnemyBasedSkins)
+        return (PawnTeamNum == LocalPlayerTeamNum); // Enemy-Based: True if Teammate
+    else
+        return (PawnTeamNum == 0); // Absolute fallback: True if Red
+}
+
+
+simulated function byte GetDefaultEpicColorMode()
+{
+    if(IsRedTeam()) return 1; // Always Red
+    return 2;                 // Always Blue
+}
+
+simulated function byte GetDefaultBrightColorMode()
+{
+    if(IsRedTeam()) return 5; // Always Brighter Red
+    return 6;                 // Always Brighter Blue
 }
 
 defaultproperties
