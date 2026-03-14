@@ -299,23 +299,127 @@ simulated function DrawHudPassA(Canvas C)
 
 simulated function DrawHudPassC(Canvas C)
 {
-    Super.DrawHudPassC(C);
+    //Super.DrawHudPassC(C);
+	DrawHUDPassCUTComp(C);
     DrawTeamRadar(C);
+}
 
-    /*
-    // debug
-    // TODO lots of stuff...
-    C.DrawColor = C.MakeColor(200,200,200);
-	C.SetPos(1774.19 - 145.81, 253.81 - 145.81);
-	C.DrawTile(RadarBorderMat,
-               145.81 * 2.0,
-               145.81 * 2.0,
-               0,
-               0,
-               256,
-               256);  
-    UTComp_DrawRadarMapPawns(C, 1774.19, 253.81, 145.81, 10000.00, 148.00, 1.0, 0.93);
-    */
+// override "Now viewing" 
+simulated function DrawHudPassCUTComp (Canvas C)
+{
+	local VoiceChatRoom VCR;
+	local float PortraitWidth,PortraitHeight, X, Y, XL, YL, Abbrev, SmallH, NameWidth;
+	local string PortraitString;
+
+	// portrait
+	if ( (bShowPortrait || (bShowPortraitVC && Level.TimeSeconds - LastPlayerIDTalkingTime < 2.0)) && (Portrait != None) )
+	{
+		PortraitWidth = 0.125 * C.ClipY;
+		PortraitHeight = 1.5 * PortraitWidth;
+		C.DrawColor = WhiteColor;
+
+		C.SetPos(-PortraitWidth*PortraitX + 0.025*PortraitWidth,0.5*(C.ClipY-PortraitHeight) + 0.025*PortraitHeight);
+		C.DrawTile( Portrait, PortraitWidth, PortraitHeight, 0, 0, 256, 384);
+
+		C.SetPos(-PortraitWidth*PortraitX,0.5*(C.ClipY-PortraitHeight));
+		C.Font = GetFontSizeIndex(C,-2);
+		
+		if ( PortraitPRI != None )
+		{
+			PortraitString = PortraitPRI.PlayerName;
+			C.StrLen(PortraitString,XL,YL);
+			if ( XL > PortraitWidth )
+			{
+				C.Font = GetFontSizeIndex(C,-4);
+				C.StrLen(PortraitString,XL,YL);
+				if ( XL > PortraitWidth )
+				{
+					Abbrev = float(len(PortraitString)) * PortraitWidth/XL;
+					PortraitString = left(PortraitString,Abbrev);
+					C.StrLen(PortraitString,XL,YL);
+				}
+			}
+		}
+		C.DrawColor = C.static.MakeColor(160,160,160);
+		C.SetPos(-PortraitWidth*PortraitX + 0.025*PortraitWidth,0.5*(C.ClipY-PortraitHeight) + 0.025*PortraitHeight);
+		C.DrawTile( Material'XGameShaders.ModuNoise', PortraitWidth, PortraitHeight, 0.0, 0.0, 512, 512 );
+
+		C.DrawColor = WhiteColor;
+		C.SetPos(-PortraitWidth*PortraitX,0.5*(C.ClipY-PortraitHeight));
+		C.DrawTileStretched(texture 'InterfaceContent.Menu.BorderBoxA1', 1.05 * PortraitWidth, 1.05*PortraitHeight);
+
+		C.DrawColor = WhiteColor;
+
+		X = C.ClipY/256-PortraitWidth*PortraitX;
+		Y = 0.5*(C.ClipY+PortraitHeight) + 0.06*PortraitHeight;
+		C.SetPos( X + 0.5 * (PortraitWidth - XL), Y );
+
+		if ( PortraitPRI != None )
+		{
+			if ( PortraitPRI.Team != None )
+			{
+				if ( PortraitPRI.Team.TeamIndex == 0 )
+					C.DrawColor = RedColor;
+				else
+					C.DrawColor = TurqColor;
+			}
+
+			C.DrawText(PortraitString,true);
+
+			if ( Level.TimeSeconds - LastPlayerIDTalkingTime < 2.0
+				&& PortraitPRI.ActiveChannel != -1
+				&& PlayerOwner.VoiceReplicationInfo != None )
+			{
+				VCR = PlayerOwner.VoiceReplicationInfo.GetChannelAt(PortraitPRI.ActiveChannel);
+				if ( VCR != None )
+				{
+					PortraitString = "(" @ VCR.GetTitle() @ ")";
+					C.StrLen( PortraitString, XL, YL );
+					if ( PortraitX == 0 )
+						C.SetPos( Max(0, X + 0.5 * (PortraitWidth - XL)), Y + YL );
+					else C.SetPos( X + 0.5 * (PortraitWidth - XL), Y + YL );
+					C.DrawText( PortraitString );
+				}
+			}
+		}
+	}
+
+    if( bShowWeaponInfo && (PawnOwner != None) && (PawnOwner.Weapon != None) )
+		PawnOwner.Weapon.NewDrawWeaponInfo(C, 0.86 * C.ClipY);
+
+	if ( (PawnOwner != PlayerOwner.Pawn) && (PawnOwner != None)
+		&& (PawnOwner.PlayerReplicationInfo != None) )
+	{
+		// draw viewed player name
+	    C.Font = GetMediumFontFor(C);
+        C.SetDrawColor(255,255,0,255);
+
+		if(PawnOwner.PlayerReplicationInfo.Team.TeamIndex == 0)
+			C.SetDrawColor(255,39,13,255);
+		else if(PawnOwner.PlayerReplicationInfo.Team.TeamIndex == 1)
+			C.SetDrawColor(0,150,255,255);
+		else
+			C.SetDrawColor(255,243,0,255);
+
+		C.StrLen(PawnOwner.PlayerReplicationInfo.PlayerName,NameWidth,SmallH);
+		NameWidth = FMax(NameWidth, 0.15 * C.ClipX);
+		//snarf move "now viewing" down some
+		if ( C.ClipX >= 640 )
+		{
+			C.Font = GetConsoleFont(C);
+			C.StrLen("W",XL,SmallH);
+			//C.SetPos(79*C.ClipX/80 - NameWidth,C.ClipY * 0.68);
+			C.SetPos(79*C.ClipX/80 - NameWidth,C.ClipY * 0.82);
+			C.DrawText(NowViewing,false);
+		}
+
+        C.Font = GetMediumFontFor(C);
+        //C.SetPos(79*C.ClipX/80 - NameWidth,C.ClipY * 0.68 + SmallH);
+        C.SetPos(79*C.ClipX/80 - NameWidth,C.ClipY * 0.82 + SmallH);
+        C.DrawText(PawnOwner.PlayerReplicationInfo.PlayerName,false);
+	}
+
+     DrawCrosshair(C);
 }
 
 simulated function DrawUDamage(Canvas C)
