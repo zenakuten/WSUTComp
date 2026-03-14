@@ -5,6 +5,14 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V20
+- add gui for 3p view controls and make netcode work with it
+- restore linkmesh behavior for vehicle netcode (ty Calypto)
+- emotes replication fixes
+- disable wsfix for non 3369 versions
+- build with 3374
+- fix bug with low world detail shock rifle (ty YourWaterloo)
+
 V19
 - Fix crashing from V18 (ty Calypto!)
 - Rewrite 3p view

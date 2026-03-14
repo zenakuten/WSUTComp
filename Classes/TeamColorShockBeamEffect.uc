@@ -68,7 +68,7 @@ simulated function SetColors()
 
     if(Level.NetMode != NM_DedicatedServer)
     {
-        if(Settings.bTeamColorShock && !bColorSet && Coil != None)
+        if(Settings.bTeamColorShock && !bColorSet)
         {
             if(CanUseColors())
             {

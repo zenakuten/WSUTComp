@@ -19,6 +19,12 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
 
     super.InitComponent(MyController,MyOwner);
 
+    if(!IsWSFixRelevant())
+    {
+        HUDSettings.bEnableWidescreenFix=false;
+        ch_EnableWidescreenFix.DisableMe();
+    }
+
     ch_EnableWidescreenFix.Checked(HUDSettings.bEnableWidescreenFix);
 
     co_DamageSelect.AddItem("Disabled");
@@ -42,11 +48,20 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     MatchSlidersToThirdPerson();
 }
 
+function bool IsWSFixRelevant()
+{
+    return Left(PlayerOwner().Level.EngineVersion,4) == "3369";
+}
+
 function InternalOnChange( GUIComponent C )
 {
     switch(C)
     {
-        case ch_EnableWidescreenFix: HUDSettings.bEnableWidescreenFix=ch_EnableWidescreenFix.IsChecked(); 
+        case ch_EnableWidescreenFix: 
+                if(IsWSFixRelevant()) 
+                {
+                    HUDSettings.bEnableWidescreenFix=ch_EnableWidescreenFix.IsChecked(); 
+                }
             break;
 
 		case co_DamageSelect: HUDSettings.DamageIndicatorType = co_DamageSelect.GetIndex() + 1;
