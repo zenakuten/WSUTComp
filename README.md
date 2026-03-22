@@ -5,12 +5,15 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V21
+- give FlakFire SS_Line style different behavior, allow deterministic flak
+
 V20
 - add gui for 3p view controls and make netcode work with it
 - restore linkmesh behavior for vehicle netcode (ty Calypto)
 - emotes replication fixes
 - disable wsfix for non 3369 versions
-- build with 3374
+- build with 3374 (reverted)
 - fix bug with low world detail shock rifle (ty YourWaterloo)
 
 V19
