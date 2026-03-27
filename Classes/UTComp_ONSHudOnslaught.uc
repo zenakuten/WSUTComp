@@ -36,7 +36,7 @@ var float LastVInfoUpdate;
 #include Classes\Include\Team\_Internal\ShowVersusIcon.uci
 #include Classes\Include\_DrawDamageIndicators.uci
 
-#include Classes\Include\_HudCommon.p.uci
+//#include Classes\Include\_HudCommon.p.uci
 
 simulated event PostBeginPlay() {
     Super.PostBeginPlay();
@@ -682,4 +682,28 @@ simulated function DrawSpectatingHud (Canvas C)
 
 defaultproperties
 {
+    RadarVehicleData(0)=(Name="Minotaur",RadarColor=(R=255,G=255,B=255,A=255))
+    RadarVehicleData(1)=(Name="Omnitaur",RadarColor=(R=255,G=255,B=255,A=255))
+    RadarVehicleData(2)=(Name="Badgertaur",RadarColor=(R=255,G=255,B=255,A=255))
+    RadarVehicleData(3)=(Name="ONSHoverTank",RadarColor=(R=128,G=0,B=128,A=255))
+    RadarVehicleData(4)=(Name="ONSHoverBike",RadarColor=(R=0,G=128,B=0,A=255))
+    RadarVehicleData(5)=(Name="ONSAttackCraft",RadarColor=(R=128,G=128,B=0,A=255))
+    RadarVehicleData(6)=(Name="ONSDualAttackCraft",RadarColor=(R=128,G=128,B=0,A=255))
+    RadarVehicleData(7)=(Name="ONSPRV",RadarColor=(R=0,G=128,B=128,A=255))
+    RadarVehicleData(8)=(Name="ONSRV",RadarColor=(R=0,G=32,B=32,A=255))
+    RadarBorderMat=Texture'ONSInterface-TX.MapBorderTEX'
+
+    HUDCenterRadarBG=(WidgetTexture=Texture'WSUTComp.Textures.bigcircle',RenderStyle=STY_Alpha,TextureCoords=(X1=255,Y2=255),TextureScale=0.800000,DrawPivot=DP_MiddleMiddle,PosX=0.500000,PosY=0.500000,ScaleMode=SM_Right,Scale=1.000000,Tints[0]=(B=255,G=255,R=255,A=255),Tints[1]=(B=255,G=255,R=255,A=255))
+    HUDCurrentMutantColor=(B=128,R=255,A=255)
+    HUDAboveMutantColor=(B=255,A=255)
+    HUDLevelMutantColor=(B=255,G=255,R=255,A=255)
+    HUDBelowMutantColor=(R=255,A=255)
+    HUDLevelRampRegion=500.000000
+    HUDBigDotSize=0.018750
+    HUDSmallDotSize=0.011250
+    HUDXCen=0.500000
+    HUDXRad=0.150000
+    HUDYCen=0.500000
+    HUDYRad=0.200000
+    HudzaxisTex=Texture'WSUTComp.textures.Hudzaxis'
 }

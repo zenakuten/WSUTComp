@@ -17,7 +17,7 @@ var UTComp_HUDSettings HUDSettings;
 #include Classes\Include\LastManStanding\_Internal\UpdateRankAndSpread.uci
 #include Classes\Include\_DrawDamageIndicators.uci
 
-#include Classes\Include\_HudCommon.p.uci
+//#include Classes\Include\_HudCommon.p.uci
 
 simulated event PostBeginPlay() {
     Super.PostBeginPlay();
