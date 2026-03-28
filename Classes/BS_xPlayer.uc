@@ -158,12 +158,12 @@ replication
 {
     unreliable if(Role==Role_Authority)
         ReceiveHit, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound,
-        ClientDelayedSound, ClientReceiveAward, ClientHeadshotted, EmoteInfo,
-        ClientDamageImpulse;
+        ClientDelayedSound, ClientReceiveAward, ClientHeadshotted, EmoteInfo;
 
     reliable if (Role==Role_Authority)
-        StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
-        SetMenuColor, DenyPlayer, WhitelistCheck, ReceiveStats;
+        StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly,
+        SetMenuColor, DenyPlayer, WhitelistCheck, ReceiveStats,
+        ClientDamageImpulse;
 
     reliable if(Role<Role_Authority)
         SetbStats, TurnOffNetCode, ServerSetEyeHeightAlgorithm, ServerViewPlayer;

@@ -11,6 +11,7 @@ V23
 - Remove PCC rewind delta smoothing — was interfering with shock beam correction search and flak multi-chunk traces. Ping estimator median filter handles smoothing at the right layer.
 - Fix FPM None crash in client-side fake fire functions (rockets, flak, flak alt, bio, link alt, rocket multi)
 - Cap server-side rewind to 75ms (half of 150ms RTT) — prevents high ping players from rewinding low ping players excessively far back
+- Make ClientDamageImpulse reliable — prevents shield jump momentum RPC from being lost during lag spikes, fixing "invisible ceiling" on shield jumps
 
 V22
 - NewNet ping estimator: median-of-5 sliding window, 0.5s polling, 150ms cap, spike rejection
