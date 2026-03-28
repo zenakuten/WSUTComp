@@ -10,6 +10,10 @@ V22
 - Damage impulse replication: server sends momentum to client to prevent desync on taking damage
 - Rewind delta smoothing: cap rewind change per trace to prevent position jumps during ping fluctuation
 - Move error grace period: suppress corrections briefly after damage impulse
+- Fix NewNet_LinkAltFire TimeTravel referencing wrong weapon class (copy-paste bug)
+- Fix fake projectile timer clobbering on rapid fire (rockets, flak, bio, link alt)
+- Fix LockingPawns cleanup skipping consecutive None entries (forward-iteration removal bug)
+- Fix O(n^2) RemoveOutdatedHistory — batch removal instead of per-element shift
 
 V21
 - give FlakFire SS_Line style different behavior, allow deterministic flak
