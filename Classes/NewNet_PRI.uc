@@ -1,6 +1,6 @@
 /*
 UTComp - UT2004 Mutator
-Copyright (C) 2004-2005 Aaron Everitt & Jo�l Moffatt
+Copyright (C) 2004-2005 Aaron Everitt & Joel Moffatt
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -26,6 +26,14 @@ var UTComp_ServerReplicationInfo RepInfo;
 
 var float PingTweenTime;
 
+// Sliding window ping measurement
+const PING_WINDOW_SIZE = 5;
+const MAX_PING = 0.150;           // 150ms cap
+const SPIKE_REJECT_MULT = 2.5;    // reject samples > 2.5x current median
+var float PingWindow[5];           // circular buffer of recent RTT samples
+var int PingWindowIdx;             // next write position
+var int PingWindowCount;           // how many valid samples we have (0..5)
+
 replication
 {
     reliable if(Role<Role_Authority)
@@ -36,12 +44,14 @@ replication
 
 simulated function PostBeginPlay()
 {
+    local int i;
+
     super.PostBeginPlay();
 
     if(RepInfo == None)
         ForEach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
             break;
-    
+
     if(RepInfo != none)
     {
         if(RepInfo.NewNetUpdateFrequency > 0)
@@ -53,8 +63,13 @@ simulated function PostBeginPlay()
         {
             PingTweenTime=RepInfo.PingTweenTime;
         }
-
     }
+
+    // Initialize window to zero
+    for(i = 0; i < PING_WINDOW_SIZE; i++)
+        PingWindow[i] = 0.0;
+    PingWindowIdx = 0;
+    PingWindowCount = 0;
 }
 
 simulated function Ping()
@@ -64,12 +79,89 @@ simulated function Ping()
 
 simulated function Pong()
 {
+    local float RawPing;
+    local float CurrentMedian;
+
     bPingReceived = true;
-    PredictedPing = (2.0*PredictedPing + (Level.TimeSeconds - PingSendTime))/PingTweenTime;
-    default.predictedping=predictedping;
+    RawPing = Level.TimeSeconds - PingSendTime;
+
+    // Cap at max ping
+    if(RawPing > MAX_PING)
+        RawPing = MAX_PING;
+
+    // Spike rejection: if we have enough samples, reject wild outliers
+    if(PingWindowCount >= 3)
+    {
+        CurrentMedian = GetMedianPing();
+        if(CurrentMedian > 0.005 && RawPing > CurrentMedian * SPIKE_REJECT_MULT)
+            RawPing = CurrentMedian;  // clamp spike to current median
+    }
+
+    // Write into circular buffer
+    PingWindow[PingWindowIdx] = RawPing;
+    PingWindowIdx = (PingWindowIdx + 1) % PING_WINDOW_SIZE;
+    if(PingWindowCount < PING_WINDOW_SIZE)
+        PingWindowCount++;
+
     numPings++;
-    if(NumPings < 8)
-        default.PredictedPing = (Level.TimeSeconds - PingSendTime);
+
+    // Use median for stability — converges in ~2.5s (5 samples x 0.5s)
+    PredictedPing = GetMedianPing();
+    default.PredictedPing = PredictedPing;
+}
+
+// Sort-free median of up to 5 samples using pairwise comparisons
+simulated function float GetMedianPing()
+{
+    local float A, B, C, D, E, Tmp;
+
+    if(PingWindowCount <= 0)
+        return 0.0;
+    if(PingWindowCount == 1)
+        return PingWindow[0];
+    if(PingWindowCount == 2)
+        return (PingWindow[0] + PingWindow[1]) * 0.5;
+
+    // For 3+ samples, do a partial sort to find the median
+    // Copy valid samples into locals
+    A = PingWindow[0];
+    B = PingWindow[1];
+    C = PingWindow[2];
+
+    if(PingWindowCount == 3)
+    {
+        // Median of 3: sort and return middle
+        if(A > B) { Tmp = A; A = B; B = Tmp; }
+        if(B > C) { Tmp = B; B = C; C = Tmp; }
+        if(A > B) { Tmp = A; A = B; B = Tmp; }
+        return B;
+    }
+
+    D = PingWindow[3];
+
+    if(PingWindowCount == 4)
+    {
+        // Median of 4: average of 2nd and 3rd
+        if(A > B) { Tmp = A; A = B; B = Tmp; }
+        if(C > D) { Tmp = C; C = D; D = Tmp; }
+        if(A > C) { Tmp = A; A = C; C = Tmp; }
+        if(B > D) { Tmp = B; B = D; D = Tmp; }
+        if(B > C) { Tmp = B; B = C; C = Tmp; }
+        return (B + C) * 0.5;
+    }
+
+    // Median of 5
+    E = PingWindow[4];
+    // Sorting network for 5 elements — find the 3rd smallest
+    if(A > B) { Tmp = A; A = B; B = Tmp; }
+    if(C > D) { Tmp = C; C = D; D = Tmp; }
+    if(A > C) { Tmp = A; A = C; C = Tmp; Tmp = B; B = D; D = Tmp; }
+    // Now A <= C, A is smallest of {A,B,C,D}. E is unsorted.
+    if(B > E) { Tmp = B; B = E; E = Tmp; }
+    if(B > C) { Tmp = B; B = C; C = Tmp; }
+    if(D > E) { Tmp = D; D = E; E = Tmp; }
+    if(C > D) { Tmp = C; C = D; D = Tmp; }
+    return C;
 }
 
 simulated function Tick(float deltatime)
@@ -90,5 +182,5 @@ defaultproperties
      bPingReceived=True
      NetUpdateFrequency=200.000000
      NetPriority=5.000000
-     PingTweenTime=3.0
+     PingTweenTime=0.5
 }

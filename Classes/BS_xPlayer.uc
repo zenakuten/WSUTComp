@@ -148,13 +148,18 @@ var bool bLimitTaunts;
 
 var sound HeadshotSound;
 
+// Damage impulse grace period — suppress move error corrections briefly after damage
+var float LastDamageImpulseTime;
+const DAMAGE_IMPULSE_GRACE = 0.200;   // 200ms grace after damage impulse
+
 var bool bIsTempSpec;
 
 replication
 {
     unreliable if(Role==Role_Authority)
-        ReceiveHit, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, 
-        ClientDelayedSound, ClientReceiveAward, ClientHeadshotted, EmoteInfo;
+        ReceiveHit, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound,
+        ClientDelayedSound, ClientReceiveAward, ClientHeadshotted, EmoteInfo,
+        ClientDamageImpulse;
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
@@ -4676,7 +4681,8 @@ function ServerMove
     }
 
     // If client has accumulated a noticeable positional error, correct him.
-    if ( ClientErr > 3 )
+    // After a damage impulse, allow a grace period for in-flight moves to catch up.
+    if ( ClientErr > 3 && (Level.TimeSeconds - LastDamageImpulseTime > DAMAGE_IMPULSE_GRACE) )
     {
         if ( Pawn == None )
         {
@@ -4939,6 +4945,17 @@ function ServerSetBehindView(float d, float x, float y, float z)
         P.TPCamWorldOffset.X = X;
         P.TPCamWorldOffset.Y = Y;
         P.TPCamWorldOffset.Z = Z;
+    }
+}
+
+// Server calls this when the pawn takes damage with momentum.
+// Client applies the impulse to predicted velocity so the next server
+// correction doesn't cause a desync snap.
+simulated function ClientDamageImpulse(vector ImpulseVel)
+{
+    if(Pawn != None && Level.NetMode == NM_Client)
+    {
+        Pawn.Velocity += ImpulseVel;
     }
 }
 
