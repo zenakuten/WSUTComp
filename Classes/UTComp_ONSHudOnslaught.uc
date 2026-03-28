@@ -1,11 +1,8 @@
-
-
 class UTComp_ONSHudOnslaught extends ONSHudOnslaught config (WSUTComp);
 
+
 var UTComp_HUDSettings HUDSettings;
-
 var UTComp_ONSPlayerReplicationInfo OPPRI;
-
 var color TempColour;
 
 struct NodeData
@@ -21,22 +18,7 @@ var float RadarWidth, CenterRadarPosX, CenterRadarPosY;
 var float LastCoreCheck;
 var float LastVInfoUpdate;
 
-#include Classes\Include\_HudCommon.h.uci
 #include Classes\Include\_HudCommon.uci
-
-#include Classes\Include\_Internal\DrawAdrenaline.uci
-#include Classes\Include\_Internal\DrawChargeBar.uci
-#include Classes\Include\_Internal\DrawCrosshair.uci
-#include Classes\Include\Team\_Internal\DrawHudPassA.uci
-#include Classes\Include\_Internal\DrawTimer.uci
-#include Classes\Include\_Internal\DrawUDamage.uci
-#include Classes\Include\_Internal\DrawVehicleChargeBar.uci
-#include Classes\Include\_Internal\DrawWeaponBar.uci
-#include Classes\Include\Team\Onslaught\_Internal\ShowTeamScorePassA.uci
-#include Classes\Include\Team\_Internal\ShowVersusIcon.uci
-#include Classes\Include\_DrawDamageIndicators.uci
-
-//#include Classes\Include\_HudCommon.p.uci
 
 simulated event PostBeginPlay() {
     Super.PostBeginPlay();
@@ -194,7 +176,7 @@ simulated function OldDrawCrosshair(Canvas C)
     HudScale=1;
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
-    DrawSpriteTileWidget (C, CHTexture);
+    DrawSpriteWidget (C, CHTexture);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
     CHTexture.TextureScale = NormalScale;
@@ -225,9 +207,9 @@ simulated function DrawTimer(Canvas C)
 	TimerBackground.Tints[TeamIndex] = HudColorBlack;
     TimerBackground.Tints[TeamIndex].A = 150;
 
-	DrawSpriteTileWidget( C, TimerBackground);
-	DrawSpriteTileWidget( C, TimerBackgroundDisc);
-	DrawSpriteTileWidget( C, TimerIcon);
+	DrawSpriteWidget( C, TimerBackground);
+	DrawSpriteWidget( C, TimerBackgroundDisc);
+	DrawSpriteWidget( C, TimerIcon);
 
 	TimerMinutes.OffsetX = default.TimerMinutes.OffsetX - 80;
 	TimerSeconds.OffsetX = default.TimerSeconds.OffsetX - 80;
@@ -239,7 +221,7 @@ simulated function DrawTimer(Canvas C)
         Hours = Seconds / 3600;
         Seconds -= Hours * 3600;
 
-		DrawNumericTileWidget( C, TimerHours, DigitsBig);
+		DrawNumericWidget( C, TimerHours, DigitsBig);
         TimerHours.Value = Hours;
 
 		if(Hours>9)
@@ -254,9 +236,9 @@ simulated function DrawTimer(Canvas C)
 			TimerDigitSpacer[0].OffsetX = Default.TimerDigitSpacer[0].OffsetX - 32;
 			TimerDigitSpacer[1].OffsetX = Default.TimerDigitSpacer[1].OffsetX - 32;
 		}
-		DrawSpriteTileWidget( C, TimerDigitSpacer[0]);
+		DrawSpriteWidget( C, TimerDigitSpacer[0]);
 	}
-	DrawSpriteTileWidget( C, TimerDigitSpacer[1]);
+	DrawSpriteWidget( C, TimerDigitSpacer[1]);
 
 	Minutes = Seconds / 60;
     Seconds -= Minutes * 60;
@@ -264,8 +246,8 @@ simulated function DrawTimer(Canvas C)
     TimerMinutes.Value = Min(Minutes, 60);
 	TimerSeconds.Value = Min(Seconds, 60);
 
-	DrawNumericTileWidget( C, TimerMinutes, DigitsBig);
-	DrawNumericTileWidget( C, TimerSeconds, DigitsBig);
+	DrawNumericWidget( C, TimerMinutes, DigitsBig);
+	DrawNumericWidget( C, TimerSeconds, DigitsBig);
 }
 
 // Not the in play map, this is when the player has the menu open
@@ -591,66 +573,10 @@ simulated function Actor LocateSpawnArea(float PosX, float PosY, float RadarWidt
 	return BestSpawnArea;
 }
 
-simulated function DrawAdrenaline(Canvas C)
-{
-    if (HUDSettings.bEnableWidescreenFix)
-        WideDrawAdrenaline(C);
-    else
-        Super.DrawAdrenaline(C);
-}
-
-simulated function DrawChargeBar(Canvas C)
-{
-    if (HUDSettings.bEnableWidescreenFix)
-        WideDrawChargeBar(C);
-    else
-        Super.DrawChargeBar(C);
-}
-
-simulated function DrawHudPassA(Canvas C)
-{
-    if (HUDSettings.bEnableWidescreenFix)
-        TeamWideDrawHudPassA(C);
-    else
-        Super.DrawHudPassA(C);
-}
-
 simulated function DrawHudPassC(Canvas C)
 {
   Super.DrawHudPassC(C);
   DrawTeamRadar(C);
-}
-
-simulated function DrawUDamage(Canvas C)
-{
-    if (HUDSettings.bEnableWidescreenFix)
-        WideDrawUDamage(C);
-    else
-        Super.DrawUDamage(C);
-}
-
-simulated function DrawVehicleChargeBar(Canvas C)
-{
-    if (HUDSettings.bEnableWidescreenFix)
-        WideDrawVehicleChargeBar(C);
-    else
-        Super.DrawVehicleChargeBar(C);
-}
-
-simulated function DrawWeaponBar(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		WideDrawWeaponBar(C);
-	else
-		Super.DrawWeaponBar(C);
-}
-
-simulated function ShowTeamScorePassA(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		TeamOnslaughtWideShowTeamScorePassA(C);
-	else
-		Super.ShowTeamScorePassA(C);
 }
 
 simulated function ShowTeamScorePassC(Canvas C)
@@ -664,14 +590,6 @@ simulated function ShowTeamScorePassC(Canvas C)
         CRadarPosY = (RadarPosY * C.ClipY) + RWidth;
         UTComp_DrawRadarMap(C, CRadarPosX, CRadarPosY, RWidth, false, false);
     }
-}
-
-simulated function ShowVersusIcon(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		TeamWideShowVersusIcon(C);
-	else
-		Super.ShowVersusIcon(C);
 }
 
 simulated function DrawSpectatingHud (Canvas C)

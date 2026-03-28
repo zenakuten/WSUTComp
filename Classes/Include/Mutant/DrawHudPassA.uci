@@ -1,5 +1,0 @@
-#include Classes\Include\Mutant\_Internal\DrawHudPassA.uci
-simulated function DrawHudPassA(Canvas C)
-{
-	MutantWideDrawHudPassA(C);
-}

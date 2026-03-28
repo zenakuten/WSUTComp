@@ -4,21 +4,7 @@ class UTComp_Hud_Assault extends HUD_Assault;
 
 var UTComp_HUDSettings HUDSettings;
 
-#include Classes\Include\_HudCommon.h.uci
 #include Classes\Include\_HudCommon.uci
-
-#include Classes\Include\_Internal\DrawChargeBar.uci
-#include Classes\Include\_Internal\DrawCrosshair.uci
-#include Classes\Include\Team\Assault\_Internal\DrawHudPassA.uci
-#include Classes\Include\Team\Assault\_Internal\DrawTeamVS.uci
-#include Classes\Include\_Internal\DrawUDamage.uci
-#include Classes\Include\_Internal\DrawVehicleChargeBar.uci
-#include Classes\Include\_Internal\DrawWeaponBar.uci
-#include Classes\Include\Team\Assault\_Internal\ShowTeamScorePassA.uci
-#include Classes\Include\Team\_Internal\ShowVersusIcon.uci
-#include Classes\Include\_DrawDamageIndicators.uci
-
-//#include Classes\Include\_HudCommon.p.uci
 
 simulated event PostBeginPlay() {
     Super.PostBeginPlay();
@@ -98,7 +84,7 @@ simulated function DrawUTCompCrosshair (Canvas C)
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
     for(i=0; i<CHTexture.Length; i++)
-        DrawSpriteTileWidget (C, CHTexture[i]);
+        DrawSpriteWidget (C, CHTexture[i]);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
 
@@ -188,7 +174,7 @@ simulated function OldDrawCrosshair(Canvas C)
     HudScale=1;
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
-    DrawSpriteTileWidget (C, CHTexture);
+    DrawSpriteWidget (C, CHTexture);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
     CHTexture.TextureScale = NormalScale;
@@ -196,75 +182,10 @@ simulated function OldDrawCrosshair(Canvas C)
 	DrawEnemyName(C);
 }
 
-simulated function DrawChargeBar(Canvas C)
-{
-    if(HUDSettings.bEnableWidescreenFix)
-        WideDrawChargeBar(C);
-    else
-        Super.DrawChargeBar(C);
-}
-
-
-simulated function DrawHudPassA(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		TeamAssaultWideDrawHudPassA(C);
-	else
-		Super.DrawHudPassA(C);
-}
-
 simulated function DrawHudPassC(Canvas C)
 {
   Super.DrawHudPassC(C);
   DrawTeamRadar(C);
-}
-
-simulated function DrawTeamVS(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		TeamAssaultWideDrawTeamVS(C);
-	else
-		Super.DrawTeamVS(C);
-}
-
-simulated function DrawUDamage(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		WideDrawUDamage(C);
-	else
-		Super.DrawUDamage(C);
-}
-
-simulated function DrawVehicleChargeBar(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		WideDrawVehicleChargeBar(C);
-	else
-		Super.DrawVehicleChargeBar(C);
-}
-
-simulated function DrawWeaponBar(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		WideDrawWeaponBar(C);
-	else
-		Super.DrawWeaponBar(C);
-}
-
-simulated function ShowTeamScorePassA(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		TeamAssaultWideShowTeamScorePassA(C);
-	else
-		Super.ShowTeamScorePassA(C);
-}
-
-simulated function ShowVersusIcon(Canvas C)
-{
-	if (HUDSettings.bEnableWidescreenFix)
-		TeamWideShowVersusIcon(C);
-	else
-		Super.ShowVersusIcon(C);
 }
 
 simulated function DrawSpectatingHud (Canvas C)
@@ -275,5 +196,28 @@ simulated function DrawSpectatingHud (Canvas C)
 
 DefaultProperties
 {
+    RadarVehicleData(0)=(Name="Minotaur",RadarColor=(R=255,G=255,B=255,A=255))
+    RadarVehicleData(1)=(Name="Omnitaur",RadarColor=(R=255,G=255,B=255,A=255))
+    RadarVehicleData(2)=(Name="Badgertaur",RadarColor=(R=255,G=255,B=255,A=255))
+    RadarVehicleData(3)=(Name="ONSHoverTank",RadarColor=(R=128,G=0,B=128,A=255))
+    RadarVehicleData(4)=(Name="ONSHoverBike",RadarColor=(R=0,G=128,B=0,A=255))
+    RadarVehicleData(5)=(Name="ONSAttackCraft",RadarColor=(R=128,G=128,B=0,A=255))
+    RadarVehicleData(6)=(Name="ONSDualAttackCraft",RadarColor=(R=128,G=128,B=0,A=255))
+    RadarVehicleData(7)=(Name="ONSPRV",RadarColor=(R=0,G=128,B=128,A=255))
+    RadarVehicleData(8)=(Name="ONSRV",RadarColor=(R=0,G=32,B=32,A=255))
+    RadarBorderMat=Texture'ONSInterface-TX.MapBorderTEX'
 
+    HUDCenterRadarBG=(WidgetTexture=Texture'WSUTComp.Textures.bigcircle',RenderStyle=STY_Alpha,TextureCoords=(X1=255,Y2=255),TextureScale=0.800000,DrawPivot=DP_MiddleMiddle,PosX=0.500000,PosY=0.500000,ScaleMode=SM_Right,Scale=1.000000,Tints[0]=(B=255,G=255,R=255,A=255),Tints[1]=(B=255,G=255,R=255,A=255))
+    HUDCurrentMutantColor=(B=128,R=255,A=255)
+    HUDAboveMutantColor=(B=255,A=255)
+    HUDLevelMutantColor=(B=255,G=255,R=255,A=255)
+    HUDBelowMutantColor=(R=255,A=255)
+    HUDLevelRampRegion=500.000000
+    HUDBigDotSize=0.018750
+    HUDSmallDotSize=0.011250
+    HUDXCen=0.500000
+    HUDXRad=0.150000
+    HUDYCen=0.500000
+    HUDYRad=0.200000
+    HudzaxisTex=Texture'WSUTComp.textures.Hudzaxis'	
 }

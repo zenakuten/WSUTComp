@@ -10,6 +10,7 @@ V21
 - fix bug with weaponbar rendering in 3374
 - add server config for linkmesh behavior
 - hardcode the shock crash fix
+- completely remove fox wsfix integration.  use 3374 for ws support
 
 V20
 - add gui for 3p view controls and make netcode work with it

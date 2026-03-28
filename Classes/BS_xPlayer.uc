@@ -274,13 +274,6 @@ simulated function PostBeginPlay()
         NodeDamageHook = spawn(class'UTComp_NodeDamageHook', self);
         NodeDamageHook.Tag = 'UTComp_ONSNodeDamaged';
     }
-
-    if(HUDSettings != none)
-    {
-
-        if(Level.NetMode != NM_DedicatedServer && Left(Level.EngineVersion, 4) != "3369")
-            HUDSettings.bEnableWidescreenFix=false;
-    }
 }
 
 simulated function PostNetBeginPlay()

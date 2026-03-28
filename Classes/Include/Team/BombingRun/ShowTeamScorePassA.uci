@@ -1,5 +1,0 @@
-#include Classes\Include\Team\BombingRun\_Internal\ShowTeamScorePassA.uci
-simulated function ShowTeamScorePassA(Canvas C)
-{
-	TeamBombingRunWideShowTeamScorePassA(C);
-}

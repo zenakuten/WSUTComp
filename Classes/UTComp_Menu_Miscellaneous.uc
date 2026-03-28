@@ -217,7 +217,7 @@ defaultproperties
         Caption="Use view smoothing"
         Hint="Smooth the view when using new Eyeheight algorithm"
         OnCreateComponent=HudColorCheck.InternalOnCreateComponent
-        WinWidth=0.250000
+        WinWidth=0.500000
         WinHeight=0.030000
         WinLeft=0.250000
         WinTop=0.690000

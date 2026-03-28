@@ -1,5 +1,0 @@
-#include Classes\Include\Team\Onslaught\_Internal\ShowTeamScorePassA.uci
-simulated function ShowTeamScorePassA(Canvas C)
-{
-	TeamOnslaughtWideShowTeamScorePassA(C);
-}

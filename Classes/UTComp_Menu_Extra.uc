@@ -1,7 +1,6 @@
 
 class UTComp_Menu_Extra extends UTComp_Menu_MainMenu;
 
-var automated wsCheckBox ch_EnableWidescreenFix;
 var automated wsComboBox co_DamageSelect;
 var automated GUILabel lb_DamageSelect;
 var automated wsCheckBox ch_EnableAwards;
@@ -18,14 +17,6 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     local UTComp_ServerReplicationInfo RepInfo;
 
     super.InitComponent(MyController,MyOwner);
-
-    if(!IsWSFixRelevant())
-    {
-        HUDSettings.bEnableWidescreenFix=false;
-        ch_EnableWidescreenFix.DisableMe();
-    }
-
-    ch_EnableWidescreenFix.Checked(HUDSettings.bEnableWidescreenFix);
 
     co_DamageSelect.AddItem("Disabled");
 	co_DamageSelect.AddItem("Centered");
@@ -57,13 +48,6 @@ function InternalOnChange( GUIComponent C )
 {
     switch(C)
     {
-        case ch_EnableWidescreenFix: 
-                if(IsWSFixRelevant()) 
-                {
-                    HUDSettings.bEnableWidescreenFix=ch_EnableWidescreenFix.IsChecked(); 
-                }
-            break;
-
 		case co_DamageSelect: HUDSettings.DamageIndicatorType = co_DamageSelect.GetIndex() + 1;
 			break;
 
@@ -242,18 +226,6 @@ function bool thirdOffsetZCaptureMouseMove(float dx, float dy)
 
 defaultproperties
 {
-    Begin Object Class=wsCheckBox Name=EnableWidescreenCheck
-        Caption="Enable widescreen fixes"
-        Hint="Use built-in Fox WSFix"
-        OnCreateComponent=EnableWidescreenCheck.InternalOnCreateComponent
-        WinWidth=0.25000
-        WinHeight=0.030000
-        WinLeft=0.12
-        WinTop=0.330000
-        OnChange=UTComp_Menu_Extra.InternalOnChange
-    End Object
-    ch_EnableWidescreenFix=wsCheckBox'UTComp_Menu_Extra.EnableWidescreenCheck'
-
     Begin Object Class=wsComboBox Name=ComboDamageIndicatorType
          Caption="Damage Indicators:"
          OnCreateComponent=ComboDamageIndicatorType.InternalOnCreateComponent

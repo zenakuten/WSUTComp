@@ -14,7 +14,6 @@ struct SpecialCrosshair
 var config array<SpecialCrosshair> UTCompCrosshairs;
 var config bool bEnableUTCompCrosshairs;
 var config bool bEnableCrosshairSizing;
-var config bool bEnableWidescreenFix;
 var config int DamageIndicatorType; // 1 = Disabled, 2 = Centered, 3 = Floating
 
 var config bool bMatchHudColor;
@@ -34,7 +33,6 @@ var config float MapTeamRadarY;
 defaultproperties
 {
     bEnableCrosshairSizing=True
-    bEnableWidescreenFix=False
     DamageIndicatorType=2
     bEnableEmoticons=True
     bEnableMapTeamRadar=False

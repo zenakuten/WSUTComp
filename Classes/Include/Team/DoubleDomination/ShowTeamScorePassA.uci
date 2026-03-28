@@ -1,5 +1,0 @@
-#include Classes\Include\Team\DoubleDomination\_Internal\ShowTeamScorePassA.uci
-simulated function ShowTeamScorePassA(Canvas C)
-{
-	TeamDoubleDominationWideShowTeamScorePassA(C);
-}

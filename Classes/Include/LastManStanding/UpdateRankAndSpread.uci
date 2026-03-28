@@ -1,5 +1,0 @@
-#include Classes\Include\LastManStanding\_Internal\UpdateRankAndSpread.uci
-simulated function UpdateRankAndSpread(Canvas C)
-{
-	LastManStandingWideUpdateRankAndSpread(C);
-}

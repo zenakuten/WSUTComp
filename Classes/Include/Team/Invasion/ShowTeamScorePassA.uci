@@ -1,5 +1,0 @@
-#include Classes\Include\Team\Invasion\_Internal\ShowTeamScorePassA.uci
-simulated function ShowTeamScorePassA(Canvas C)
-{
-	TeamInvasionWideShowTeamScorePassA(C);
-}

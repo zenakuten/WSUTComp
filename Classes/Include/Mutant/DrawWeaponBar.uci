@@ -1,5 +1,0 @@
-#include Classes\Include\Mutant\_Internal\DrawWeaponBar.uci
-simulated function DrawWeaponBar(Canvas C)
-{
-	MutantWideDrawWeaponBar(C);
-}
