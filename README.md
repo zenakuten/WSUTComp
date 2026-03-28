@@ -7,7 +7,8 @@ Release Notes
 
 V23
 - Fix Y/Z axis assignment bug in delayed fake projectiles (rockets, flak, bio, link alt) — all three axes were set to X, breaking projectile spawn orientation on higher ping
-- Fix None dereference crash in CheckForFakeProj when FakeProjectileManager not found (rocket, link, shock, seeking rocket projectiles)
+- Fix None dereference crash in CheckForFakeProj when FakeProjectileManager not found (rocket, link, shock, seeking rocket, flak chunk projectiles)
+- Fix flak rewind consistency: reset PCC smoothing between chunk traces so all 9 chunks get the same rewind baseline
 
 V22
 - NewNet ping estimator: median-of-5 sliding window, 0.5s polling, 150ms cap, spike rejection

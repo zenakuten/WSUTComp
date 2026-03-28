@@ -272,6 +272,9 @@ function TimeTravelPawn(float dt)
 function TurnOffCollision()
 {
     SetCollision(false);
+    // Reset smoothing so the next trace (e.g. next flak chunk)
+    // starts from the same baseline, not a drifted smooth value
+    bHasRewindDT = false;
 }
 
 function AddPawnToList(Pawn Other)
