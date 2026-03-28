@@ -117,7 +117,7 @@ simulated function DoTimedClientFireEffect()
             R = NewNet_FlakCannon(Weapon).GetRandRot();
             if(FPM==None)
                 FindFPM();
-            if(FPM.AllowFakeProjectile(FakeProjectileClass, p))
+            if(FPM != None && FPM.AllowFakeProjectile(FakeProjectileClass, p))
             {
                 FPM.RegisterFakeProjectile(FlakChunk(SpawnFakeProjectile(StartProj, Rotator(X >> R))), p);
             }
@@ -176,7 +176,7 @@ simulated function DoClientFireEffect()
             R = NewNet_FlakCannon(Weapon).GetRandRot();
             if(FPM==None)
                 FindFPM();
-            if(FPM.AllowFakeProjectile(FakeProjectileClass, p))
+            if(FPM != None && FPM.AllowFakeProjectile(FakeProjectileClass, p))
                 FPM.RegisterFakeProjectile(FlakChunk(SpawnFakeProjectile(StartProj, Rotator(X >> R))), p);
         }
         break;

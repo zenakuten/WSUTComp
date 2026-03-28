@@ -279,6 +279,8 @@ simulated function projectile SpawnFakeProjectile(Vector Start, Rotator Dir, int
 
     if(FPM==None)
         FindFPM();
+    if(FPM == None)
+        return None;
     if(FPM.AllowFakeProjectile(FakeProjectileClass, index))
         p = Weapon.Spawn(FakeProjectileClass,Weapon.Owner,, Start, Dir);
 

@@ -315,6 +315,8 @@ simulated function projectile SpawnFakeProjectile(Vector Start, Rotator Dir)
 
     if(FPM==None)
         FindFPM();
+    if(FPM == None)
+        return None;
 
     if(FPM.AllowFakeProjectile(FakeProjectileClass, NewNet_BioRifle(Weapon).CurIndex) && class'NewNet_PRI'.default.predictedping >= 0.050)
     {

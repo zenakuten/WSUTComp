@@ -116,7 +116,7 @@ simulated function DoTimedClientFireEffect()
             R.Roll = Spread * (FRand()-0.5);
             if(FPM==None)
                 FindFPM();
-            if(FPM.AllowFakeProjectile(FakeProjectileClass, p))
+            if(FPM != None && FPM.AllowFakeProjectile(FakeProjectileClass, p))
             {
                 FPM.RegisterFakeProjectile(FlakChunk(SpawnFakeProjectile(StartProj, Rotator(X >> R))), p);
             }
@@ -200,7 +200,8 @@ simulated function projectile SpawnFakeProjectile(Vector Start, Rotator Dir)
     p = FakeSuperSpawnProjectile(Start,Dir);
     if(FPM==None)
        FindFPM();
-    FPM.RegisterFakeProjectile(p);
+    if(FPM != None)
+        FPM.RegisterFakeProjectile(p);
 	return p;
 }
 
