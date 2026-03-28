@@ -7,6 +7,9 @@ Release Notes
 
 V21
 - give FlakFire SS_Line style different behavior, allow deterministic flak
+- fix bug with weaponbar rendering in 3374
+- add server config for linkmesh behavior
+- hardcode the shock crash fix
 
 V20
 - add gui for 3p view controls and make netcode work with it

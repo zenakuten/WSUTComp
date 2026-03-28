@@ -96,8 +96,6 @@ var config bool bColorGhost;
 var config color DeResColor;
 var config color DeResFXColor;
 
-var config bool bShockCrashFix;
-
 var config float TPCamDistance;
 var config vector TPCamWorldOffset;
 
@@ -186,7 +184,6 @@ defaultproperties
     DeResColor=(R=00,G=70,B=255,A=255)
     DeResFXColor=(R=00,G=70,B=255,A=255)
     bShowKillsOnScoreboard=True
-    bShockCrashFix=false
     TPCamDistance=280.0
     TPCamWorldOffset=(X=-35,Y=-28.0,Z=38.000000)
 

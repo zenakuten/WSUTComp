@@ -56,13 +56,8 @@ simulated function bool ReadyToFire(int Mode)
 
 simulated event RenderOverlays( Canvas Canvas )
 {
-    if(class'UTComp_Settings'.default.Instance != None && class'UTComp_Settings'.default.Instance.bShockCrashFix)
-    {
-        super(Weapon).RenderOverlays(Canvas);
-        return;
-    }
-
-	Super.RenderOverlays(Canvas);
+	// I am hardcoding this fix, no special shockrifle rendering 
+	super(Weapon).RenderOverlays(Canvas);
 }
 
 DefaultProperties

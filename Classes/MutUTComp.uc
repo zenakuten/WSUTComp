@@ -126,6 +126,8 @@ var config bool bUseUTCompStats;
 var config int StartingHealth;
 var config int StartingArmor;
 
+var config bool bUseLinkMesh;
+
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
 var bool bWarmupDisabled;
@@ -1687,6 +1689,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bAllowTeamRadarMap", "Allow players to use minimap or HUD team radar", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "StartingHealth", "Starting health of players", security, weight, "Text", "0;0:199",, False, False);
     PlayInfo.AddSetting("UTComp Settings", "StartingArmor", "Starting armor of players", security, weight, "Text", "0;0:150",, False, False);
+    PlayInfo.AddSetting("UTComp Settings", "bUseLinkMesh", "Use linkmesh logic for vehicle netcode collision", security, weight,"Check");
 
     weight++;
     PlayInfo.AddSetting("UTComp NewNet", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", security, weight, "Check");
@@ -1792,6 +1795,7 @@ static event string GetDescriptionText(string PropName)
         case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
         case "StartingHealth": return "Starting health of players (100)";
         case "StartingArmor": return "Starting armor of players (0)";
+        case "bUseLinkMesh": return "Use linkmesh logic for vehicle netcode (true)";
     }
 	return Super.GetDescriptionText(PropName);
 }
@@ -2233,4 +2237,5 @@ defaultproperties
 
      StartingHealth=100
      StartingArmor=0
+	 bUseLinkMesh=true
 }

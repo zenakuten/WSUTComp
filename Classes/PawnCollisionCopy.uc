@@ -77,7 +77,7 @@ function SetPawn(Pawn Other)
     bCrouched=CopiedPawn.bIsCrouched;
 
     //If we cant use simple collisions, set up the mesh
-    if(!bUseCylinderCollision)
+    if(!bUseCylinderCollision && M != None && M.bUseLinkMesh)
     {
         //snarf LinkMesh is causing crashes, works ok without it
         LinkMesh(CopiedPawn.Mesh); // This is required for high pingers to be able to hit vehicles properly; cylinders don't work - Calypto

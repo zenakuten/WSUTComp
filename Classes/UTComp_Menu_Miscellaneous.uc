@@ -16,7 +16,6 @@ var automated wsCheckBox ch_MatchHudColor;
 var automated wsCheckBox ch_UseEyeHeightAlgo;
 var automated wsCheckBox ch_UseNewNet;
 var automated wsCheckBox ch_ViewSmoothing;
-var automated wsCheckBox ch_ShockCrashFix;
 
 var automated GUIButton bu_adren;
 
@@ -39,7 +38,6 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     ch_UseEyeHeightAlgo.Checked(Settings.bUseNewEyeHeightAlgorithm);
     ch_UseNewNet.Checked(Settings.bEnableEnhancedNetCode);
     ch_ViewSmoothing.Checked(Settings.bViewSmoothing);
-    ch_ShockCrashFix.Checked(Settings.bShockCrashFix);
 
     if(RepInfo != None && !RepInfo.bEnableEnhancedNetCode)
     {
@@ -76,8 +74,6 @@ function InternalOnChange( GUIComponent C )
         case ch_UseNewNet:  Settings.bEnableEnhancedNetCode=ch_UseNewNet.IsChecked();
                             BS_xPlayer(PlayerOwner()).TurnOffNetCode(); break;
         case ch_ViewSmoothing:  Settings.bViewSmoothing=ch_ViewSmoothing.IsChecked(); 
-            break;
-        case ch_ShockCrashFix:  Settings.bShockCrashFix=ch_ShockCrashFix.IsChecked(); 
             break;
     }
     class'UTComp_Overlay'.static.StaticSaveConfig();
@@ -229,17 +225,6 @@ defaultproperties
     End Object
     ch_ViewSmoothing=wsCheckBox'UTComp_Menu_Miscellaneous.UseViewSmoothing'
 
-    Begin Object Class=wsCheckBox Name=ShockCrashFix
-        Caption="Shock crash fix"
-        Hint="Fix crash for shock overlay error"
-        OnCreateComponent=HudColorCheck.InternalOnCreateComponent
-        WinWidth=0.150000
-        WinHeight=0.030000
-        WinLeft=0.600000
-        WinTop=0.690000
-        OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
-    End Object
-    ch_ShockCrashFix=wsCheckBox'UTComp_Menu_Miscellaneous.ShockCrashFix'
 
     Begin Object Class=GUILabel Name=NewNetLabel
         Caption="-----------Net Code-----------"
