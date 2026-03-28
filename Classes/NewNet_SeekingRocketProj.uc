@@ -62,6 +62,8 @@ simulated function bool CheckForFakeProj()
 
      if(FPM == none)
         FindFPM();
+     if(FPM == none)
+        return false;
      FP = FPM.GetFP(class'NewNet_Fake_RocketProj', index);
      if(FP != none)
      {

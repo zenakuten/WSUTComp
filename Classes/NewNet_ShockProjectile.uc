@@ -68,6 +68,8 @@ simulated function bool CheckForFakeProj()
      ping = FMax(0.0, class'NewNet_PRI'.default.PredictedPing - 1.50*class'TimeStamp'.default.AverDT);
      if(FPM == none)
         FindFPM();
+     if(FPM == none)
+        return false;
      FP = FPM.GetFP(class'NewNet_Fake_ShockProjectile');
      if(FP != none)
      {

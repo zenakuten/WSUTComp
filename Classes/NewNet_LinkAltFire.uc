@@ -231,8 +231,8 @@ simulated function DoTimedClientFireEffect()
     Instigator.MakeNoise(1.0);
    // Weapon.GetViewAxes(X,Y,Z);
     X = OldXaxis;
-    Y = OldXaxis;
-    Z = OldXaxis;
+    Y = OldYaxis;
+    Z = OldZaxis;
 
   //  StartTrace = Instigator.Location + Instigator.EyePosition();// + X*Instigator.CollisionRadius;
     StartTrace = OldInstigatorLocation + OldInstigatorEyePosition;

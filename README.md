@@ -5,6 +5,10 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V23
+- Fix Y/Z axis assignment bug in delayed fake projectiles (rockets, flak, bio, link alt) — all three axes were set to X, breaking projectile spawn orientation on higher ping
+- Fix None dereference crash in CheckForFakeProj when FakeProjectileManager not found (rocket, link, shock, seeking rocket projectiles)
+
 V22
 - NewNet ping estimator: median-of-5 sliding window, 0.5s polling, 150ms cap, spike rejection
 - Damage impulse replication: server sends momentum to client to prevent desync on taking damage
