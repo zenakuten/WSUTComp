@@ -37,6 +37,8 @@ var float MAX_HISTORY_LENGTH;
 
 var bool bCrouched;
 
+const MAX_REWIND = 0.075;        // 75ms max rewind (half of 150ms RTT cap)
+
 var InterpCurve LocCurveX, LocCurveY,LocCurveZ;
 
 function PostBeginPlay()
@@ -131,6 +133,8 @@ function TimeTravelPawn(float dt)
 
     if(CopiedPawn == none || CopiedPawn.DrivenVehicle!=None)
        return;
+    if(dt > MAX_REWIND)
+        dt = MAX_REWIND;
     StampDT = M.ClientTimeStamp - dt;
     SetCollision(false);
 
