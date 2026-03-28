@@ -5,6 +5,12 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V22
+- NewNet ping estimator: median-of-5 sliding window, 0.5s polling, 150ms cap, spike rejection
+- Damage impulse replication: server sends momentum to client to prevent desync on taking damage
+- Rewind delta smoothing: cap rewind change per trace to prevent position jumps during ping fluctuation
+- Move error grace period: suppress corrections briefly after damage impulse
+
 V21
 - give FlakFire SS_Line style different behavior, allow deterministic flak
 - fix bug with weaponbar rendering in 3374
