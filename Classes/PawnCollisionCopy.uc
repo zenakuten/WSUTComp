@@ -37,11 +37,6 @@ var float MAX_HISTORY_LENGTH;
 
 var bool bCrouched;
 
-// Rewind delta smoothing (Fix 3)
-var float SmoothedRewindDT;       // smoothed rewind delta for this PCC
-var bool bHasRewindDT;            // whether we have a prior rewind delta
-const MAX_DT_CHANGE = 0.010;     // max 10ms change per trace
-
 var InterpCurve LocCurveX, LocCurveY,LocCurveZ;
 
 function PostBeginPlay()
@@ -136,21 +131,7 @@ function TimeTravelPawn(float dt)
 
     if(CopiedPawn == none || CopiedPawn.DrivenVehicle!=None)
        return;
-
-    // Smooth the rewind delta to prevent sudden jumps
-    if(!bHasRewindDT)
-    {
-        SmoothedRewindDT = dt;
-        bHasRewindDT = true;
-    }
-    else if(dt > SmoothedRewindDT + MAX_DT_CHANGE)
-        SmoothedRewindDT += MAX_DT_CHANGE;
-    else if(dt < SmoothedRewindDT - MAX_DT_CHANGE)
-        SmoothedRewindDT -= MAX_DT_CHANGE;
-    else
-        SmoothedRewindDT = dt;
-
-    StampDT = M.ClientTimeStamp - SmoothedRewindDT;
+    StampDT = M.ClientTimeStamp - dt;
     SetCollision(false);
 
     //We cant backtrack, too recent, just go straight to the pawn
@@ -272,9 +253,6 @@ function TimeTravelPawn(float dt)
 function TurnOffCollision()
 {
     SetCollision(false);
-    // Reset smoothing so the next trace (e.g. next flak chunk)
-    // starts from the same baseline, not a drifted smooth value
-    bHasRewindDT = false;
 }
 
 function AddPawnToList(Pawn Other)

@@ -8,12 +8,11 @@ Release Notes
 V23
 - Fix Y/Z axis assignment bug in delayed fake projectiles (rockets, flak, bio, link alt) — all three axes were set to X, breaking projectile spawn orientation on higher ping
 - Fix None dereference crash in CheckForFakeProj when FakeProjectileManager not found (rocket, link, shock, seeking rocket, flak chunk projectiles)
-- Fix flak rewind consistency: reset PCC smoothing between chunk traces so all 9 chunks get the same rewind baseline
+- Remove PCC rewind delta smoothing — was interfering with shock beam correction search and flak multi-chunk traces. Ping estimator median filter handles smoothing at the right layer.
 
 V22
 - NewNet ping estimator: median-of-5 sliding window, 0.5s polling, 150ms cap, spike rejection
 - Damage impulse replication: server sends momentum to client to prevent desync on taking damage
-- Rewind delta smoothing: cap rewind change per trace to prevent position jumps during ping fluctuation
 - Move error grace period: suppress corrections briefly after damage impulse
 - Fix NewNet_LinkAltFire TimeTravel referencing wrong weapon class (copy-paste bug)
 - Fix fake projectile timer clobbering on rapid fire (rockets, flak, bio, link alt)
