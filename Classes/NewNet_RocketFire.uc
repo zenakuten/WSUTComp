@@ -44,9 +44,8 @@ function CheckFireEffect()
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
        {
-           // Fire any pending delayed effect before clobbering the timer
-           if(bFakeFirePending)
-               DoTimedClientFireEffect();
+           // Clear stale pending effect — don't fire it, the aim/position data is old
+           bFakeFirePending = false;
            OldInstigatorLocation = Instigator.Location;
            OldInstigatorEyePosition = Instigator.EyePosition();
            Weapon.GetViewAxes(OldXAxis,OldYAxis,OldZAxis);
