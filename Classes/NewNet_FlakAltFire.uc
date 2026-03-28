@@ -7,6 +7,7 @@ class NewNet_FlakAltFire extends UTComp_FlakAltFire;
 var float PingDT;
 var bool bUseEnhancedNetCode;
 var bool bSkipNextEffect;
+var bool bFakeFirePending;
 
 var bool bUseReplicatedInfo;
 var rotator savedRot;
@@ -45,10 +46,13 @@ function CheckFireEffect()
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
        {
+           if(bFakeFirePending)
+               DoTimedClientFireEffect();
            OldInstigatorLocation = Instigator.Location;
            OldInstigatorEyePosition = Instigator.EyePosition();
            Weapon.GetViewAxes(OldXAxis,OldYAxis,OldZAxis);
            OldAim=AdjustAim(OldInstigatorLocation+OldInstigatorEyePosition, AimError);
+           bFakeFirePending = true;
            SetTimer(class'NewNet_PRI'.default.PredictedPing - SLACK - MAX_PROJECTILE_FUDGE, false);
        }
        else
@@ -58,6 +62,7 @@ function CheckFireEffect()
 
 function Timer()
 {
+   bFakeFirePending = false;
    DoTimedClientFireEffect();
 }
 

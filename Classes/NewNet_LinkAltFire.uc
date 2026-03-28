@@ -6,6 +6,7 @@ class NewNet_LinkAltFire extends UTComp_LinkAltFire;
 
 var float PingDT;
 var bool bUseEnhancedNetCode;
+var bool bFakeFirePending;
 
 const PROJ_TIMESTEP = 0.0201;
 const MAX_PROJECTILE_FUDGE = 0.075;
@@ -162,7 +163,7 @@ function TimeTravel(float delta)
     local PawnCollisionCopy PCC;
 
     if(NewNet_LinkGun(Weapon).M == none)
-        foreach Weapon.DynamicActors(class'MutUTComp',NewNet_FlakCannon(Weapon).M)
+        foreach Weapon.DynamicActors(class'MutUTComp',NewNet_LinkGun(Weapon).M)
             break;
 
     for(PCC = NewNet_LinkGun(Weapon).M.PCC; PCC!=None; PCC=PCC.Next)
@@ -183,10 +184,13 @@ function CheckFireEffect()
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
        {
+           if(bFakeFirePending)
+               DoTimedClientFireEffect();
            OldInstigatorLocation = Instigator.Location;
            OldInstigatorEyePosition = Instigator.EyePosition();
            Weapon.GetViewAxes(OldXAxis,OldYAxis,OldZAxis);
            OldAim=AdjustAim(OldInstigatorLocation+OldInstigatorEyePosition, AimError);
+           bFakeFirePending = true;
            SetTimer(class'NewNet_PRI'.default.PredictedPing - SLACK - MAX_PROJECTILE_FUDGE, false);
        }
        else
@@ -196,6 +200,7 @@ function CheckFireEffect()
 
 function Timer()
 {
+   bFakeFirePending = false;
    DoTimedClientFireEffect();
 }
 

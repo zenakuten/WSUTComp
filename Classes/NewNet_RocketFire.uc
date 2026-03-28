@@ -17,6 +17,7 @@ var class<Projectile> FakeProjectileClass;
 var FakeProjectileManager FPM;
 var MutUTComp MNN;
 var bool bSkipNextEffect;
+var bool bFakeFirePending;
 
 const PROJ_TIMESTEP = 0.0201;
 const MAX_PROJECTILE_FUDGE = 0.075;
@@ -43,10 +44,14 @@ function CheckFireEffect()
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
        {
+           // Fire any pending delayed effect before clobbering the timer
+           if(bFakeFirePending)
+               DoTimedClientFireEffect();
            OldInstigatorLocation = Instigator.Location;
            OldInstigatorEyePosition = Instigator.EyePosition();
            Weapon.GetViewAxes(OldXAxis,OldYAxis,OldZAxis);
            OldAim=AdjustAim(OldInstigatorLocation+OldInstigatorEyePosition, AimError);
+           bFakeFirePending = true;
            SetTimer(class'NewNet_PRI'.default.PredictedPing - SLACK - MAX_PROJECTILE_FUDGE, false);
        }
        else
@@ -56,6 +61,7 @@ function CheckFireEffect()
 
 function Timer()
 {
+   bFakeFirePending = false;
    DoTimedClientFireEffect();
 }
 

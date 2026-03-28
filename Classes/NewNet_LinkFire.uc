@@ -50,7 +50,7 @@ simulated function ModeTick(float dt)
     ls = LinkScale[Min(LinkGun.Links,5)];
     
     // Clean out the lockingpawns list
-	for (i=0; i<LinkGun.LockingPawns.Length; i++)
+	for (i=LinkGun.LockingPawns.Length-1; i>=0; i--)
 		if (LinkGun.LockingPawns[i] == none)
 			LinkGun.LockingPawns.Remove(i, 1);
 

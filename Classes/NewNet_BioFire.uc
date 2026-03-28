@@ -3,6 +3,7 @@ class NewNet_BioFire extends UTComp_BioFire;
 
 var float PingDT;
 var bool bUseEnhancedNetCode;
+var bool bFakeFirePending;
 
 const PROJ_TIMESTEP = 0.0201;
 const MAX_PROJECTILE_FUDGE = 0.07500;
@@ -197,10 +198,13 @@ function CheckFireEffect()
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
        {
+           if(bFakeFirePending)
+               DoTimedClientFireEffect();
            OldInstigatorLocation = Instigator.Location;
            OldInstigatorEyePosition = Instigator.EyePosition();
            Weapon.GetViewAxes(OldXAxis,OldYAxis,OldZAxis);
            OldAim=AdjustAim(OldInstigatorLocation+OldInstigatorEyePosition, AimError);
+           bFakeFirePending = true;
            SetTimer(class'NewNet_PRI'.default.PredictedPing - SLACK - MAX_PROJECTILE_FUDGE, false);
        }
        else
@@ -210,6 +214,7 @@ function CheckFireEffect()
 
 function Timer()
 {
+   bFakeFirePending = false;
    DoTimedClientFireEffect();
 }
 
