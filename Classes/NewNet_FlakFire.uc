@@ -75,8 +75,8 @@ simulated function DoTimedClientFireEffect()
     local Rotator R, Aim;
     local Vector HitLocation, HitNormal;
     local Actor Other;
-    local int p;
-    local int SpawnCount;
+    local int p, oddeven;
+    local int SpawnCount, SpawnPerLine;
     local float theta;
 
     Instigator.MakeNoise(1.0);
@@ -102,6 +102,10 @@ simulated function DoTimedClientFireEffect()
    // Aim = AdjustAim(StartProj, AimError);
      Aim = OldAim;
     SpawnCount = Max(1, ProjPerFire * int(Load));
+	SpawnPerLine = SpawnCount / 3; // three lines
+	oddeven = 0;
+	if(ProjPerFire % 2 == 0)
+		oddeven = 1;	
 
     switch (SpreadStyle)
     {
@@ -119,6 +123,7 @@ simulated function DoTimedClientFireEffect()
         }
         break;
     case SS_Line:
+		/*
         for (p = 0; p < SpawnCount; p++)
         {
             theta = Spread*PI/32768*(p - float(SpawnCount-1)/2.0);
@@ -127,6 +132,37 @@ simulated function DoTimedClientFireEffect()
             X.Z = 0.0;
             SpawnFakeProjectile(StartProj, Rotator(X >> Aim));
         }
+		*/
+        for (p = 0; p < SpawnPerLine; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+			R.Pitch -= 200;
+            SpawnFakeProjectile(StartProj, R);
+        }
+        for (p = 0; p < SpawnPerLine+oddeven; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine+oddeven-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+            SpawnFakeProjectile(StartProj, R);
+        }
+        for (p = 0; p < SpawnPerLine; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+			R.Pitch += 200;
+            SpawnFakeProjectile(StartProj, R);
+        }
+
         break;
     default:
         SpawnFakeProjectile(StartProj, Aim);
@@ -139,8 +175,8 @@ simulated function DoClientFireEffect()
     local Rotator R, Aim;
     local Vector HitLocation, HitNormal;
     local Actor Other;
-    local int p;
-    local int SpawnCount;
+    local int p, oddeven;
+    local int SpawnCount, SpawnPerLine;
     local float theta;
 
     Instigator.MakeNoise(1.0);
@@ -161,6 +197,10 @@ simulated function DoClientFireEffect()
     Aim = AdjustAim(StartProj, AimError);
 
     SpawnCount = Max(1, ProjPerFire * int(Load));
+	SpawnPerLine = SpawnCount / 3; // three lines
+	oddeven = 0;
+	if(ProjPerFire % 2 == 0)
+		oddeven = 1;	
 
     switch (SpreadStyle)
     {
@@ -176,6 +216,7 @@ simulated function DoClientFireEffect()
         }
         break;
     case SS_Line:
+	/*
         for (p = 0; p < SpawnCount; p++)
         {
             theta = Spread*PI/32768*(p - float(SpawnCount-1)/2.0);
@@ -184,6 +225,36 @@ simulated function DoClientFireEffect()
             X.Z = 0.0;
             SpawnFakeProjectile(StartProj, Rotator(X >> Aim));
         }
+		*/
+       for (p = 0; p < SpawnPerLine; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+			R.Pitch -= 200;
+            SpawnFakeProjectile(StartProj, R);
+        }
+        for (p = 0; p < SpawnPerLine+oddeven; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine+oddeven-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+            SpawnFakeProjectile(StartProj, R);
+        }
+        for (p = 0; p < SpawnPerLine; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+			R.Pitch += 200;
+            SpawnFakeProjectile(StartProj, R);
+        }		
         break;
     default:
         SpawnFakeProjectile(StartProj, Aim);
@@ -224,8 +295,8 @@ function DoFireEffect()
     local Rotator R, Aim;
     local Vector HitLocation, HitNormal;
     local Actor Other;
-    local int p;
-    local int SpawnCount;
+    local int p, oddeven;
+    local int SpawnCount, SpawnPerLine;
     local float theta;
     local projectile proj;
 
@@ -271,6 +342,10 @@ function DoFireEffect()
         Aim = AdjustAim(StartProj, AimError);
 
     SpawnCount = Max(1, ProjPerFire * int(Load));
+	SpawnPerLine = SpawnCount / 3; // three lines
+	oddeven = 0;
+	if(ProjPerFire % 2 == 0)
+		oddeven = 1;		
 
     switch (SpreadStyle)
     {
@@ -285,6 +360,7 @@ function DoFireEffect()
         }
         break;
     case SS_Line:
+	/*
         for (p = 0; p < SpawnCount; p++)
         {
             theta = Spread*PI/32768*(p - float(SpawnCount-1)/2.0);
@@ -293,6 +369,37 @@ function DoFireEffect()
             X.Z = 0.0;
             SpawnProjectile(StartProj, Rotator(X >> Aim));
         }
+		*/
+       for (p = 0; p < SpawnPerLine; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+			R.Pitch -= 200;
+            SpawnProjectile(StartProj, R);
+        }
+        for (p = 0; p < SpawnPerLine+oddeven; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine+oddeven-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+            SpawnProjectile(StartProj, R);
+        }
+        for (p = 0; p < SpawnPerLine; p++)
+        {
+            theta = Spread*PI/32768*(p - float(SpawnPerLine-1)/2.0);
+            X.X = Cos(theta);
+            X.Y = Sin(theta);
+            X.Z = 0.0;
+			R = Rotator(X >> Aim);
+			R.Pitch += 200;
+            SpawnProjectile(StartProj, R);
+        }		
+		
         break;
     default:
         SpawnProjectile(StartProj, Aim);
