@@ -1694,7 +1694,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     weight++;
     PlayInfo.AddSetting("UTComp NewNet", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", security, weight, "Check");
     PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (200)", security, weight, "Text","0;0:1000",,False,False);
-    PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Tween Time (3.0)", security, weight, "Text","0;0.0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Poll Interval (0.5)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionHistoryLength", "NewNet Pawn Collision History Length (0.35)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
     PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
@@ -1775,7 +1775,7 @@ static event string GetDescriptionText(string PropName)
 		case "bShowTeamScoresInServerBrowser": return "Check this to show team scores in the server browser";
 
         case "NewNetUpdateFrequency": return "NewNet Update Frequency (200)";
-        case "PingTweenTime": return "NewNet Ping Tween Time (3.0)";
+        case "PingTweenTime": return "NewNet Ping Poll Interval (0.5)";
         case "PawnCollisionHistoryLength": return "NewNet Pawn Collision History Length (0.35)";
         
         case "NodeIsolateBonusPct": return "Power Node Isolate Bonus Pct (20)";
@@ -2042,7 +2042,7 @@ defaultproperties
 
 
      NewNetUpdateFrequency=200
-     PingTweenTime=3.0
+     PingTweenTime=0.5
 
      bEnableAdvancedVotingOptions=True
      bForceMapVoteMatchPrefix=True

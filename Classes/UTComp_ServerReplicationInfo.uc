@@ -128,7 +128,7 @@ defaultproperties
      bEnableTimedOvertimeVoting=True
      bEnableTimedOvertime=False
      NewNetUpdateFrequency=200
-     PingTweenTime=3.0
+     PingTweenTime=0.5
 
      NodeIsolateBonusPct=20
      VehicleHealScore=500

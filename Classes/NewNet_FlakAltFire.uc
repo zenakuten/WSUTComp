@@ -7,6 +7,7 @@ class NewNet_FlakAltFire extends UTComp_FlakAltFire;
 var float PingDT;
 var bool bUseEnhancedNetCode;
 var bool bSkipNextEffect;
+var bool bFakeFirePending;
 
 var bool bUseReplicatedInfo;
 var rotator savedRot;
@@ -45,10 +46,12 @@ function CheckFireEffect()
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
        {
+           bFakeFirePending = false;
            OldInstigatorLocation = Instigator.Location;
            OldInstigatorEyePosition = Instigator.EyePosition();
            Weapon.GetViewAxes(OldXAxis,OldYAxis,OldZAxis);
            OldAim=AdjustAim(OldInstigatorLocation+OldInstigatorEyePosition, AimError);
+           bFakeFirePending = true;
            SetTimer(class'NewNet_PRI'.default.PredictedPing - SLACK - MAX_PROJECTILE_FUDGE, false);
        }
        else
@@ -58,6 +61,7 @@ function CheckFireEffect()
 
 function Timer()
 {
+   bFakeFirePending = false;
    DoTimedClientFireEffect();
 }
 
@@ -74,8 +78,8 @@ simulated function DoTimedClientFireEffect()
     Instigator.MakeNoise(1.0);
    // Weapon.GetViewAxes(X,Y,Z);
     X = OldXaxis;
-    Y = OldXaxis;
-    Z = OldXaxis;
+    Y = OldYaxis;
+    Z = OldZaxis;
 
   //  StartTrace = Instigator.Location + Instigator.EyePosition();// + X*Instigator.CollisionRadius;
     StartTrace = OldInstigatorLocation + OldInstigatorEyePosition;
@@ -333,6 +337,8 @@ simulated function projectile SpawnFakeProjectile(Vector Start, Rotator Dir)
 
     if(FPM==None)
         FindFPM();
+    if(FPM == None)
+        return None;
     if(FPM.AllowFakeProjectile(FakeProjectileClass))
     {
         p = Weapon.Spawn(FakeProjectileClass,Weapon.Owner,, Start, Dir);

@@ -37,6 +37,7 @@ var float MAX_HISTORY_LENGTH;
 
 var bool bCrouched;
 
+const MAX_REWIND = 0.075;        // 75ms max rewind (half of 150ms RTT cap)
 
 var InterpCurve LocCurveX, LocCurveY,LocCurveZ;
 
@@ -132,6 +133,8 @@ function TimeTravelPawn(float dt)
 
     if(CopiedPawn == none || CopiedPawn.DrivenVehicle!=None)
        return;
+    if(dt > MAX_REWIND)
+        dt = MAX_REWIND;
     StampDT = M.ClientTimeStamp - dt;
     SetCollision(false);
 
@@ -367,33 +370,41 @@ function AddHistory()
     PawnHistory[i].Rotation = CopiedPawn.Rotation;
     PawnHistory[i].bCrouched = CopiedPawn.bIsCrouched;
     PawnHistory[i].TimeStamp = M.ClientTimeStamp;
-    //PawnHistory[i].Physics = CopiedPawn.Physics;
 
     XPoint.InVal = M.ClientTimeStamp;
     XPoint.OutVal = CopiedPawn.Location.X;
-    LocCurveX.Points.Insert(LocCurveX.Points.Length,1);
-    LocCurveX.Points[LocCurveX.Points.Length-1]=XPoint;
+    LocCurveX.Points.Length = LocCurveX.Points.Length + 1;
+    LocCurveX.Points[LocCurveX.Points.Length-1] = XPoint;
 
     YPoint.InVal = M.ClientTimeStamp;
     YPoint.OutVal = CopiedPawn.Location.Y;
-    LocCurveY.Points.Insert(LocCurveY.Points.Length,1);
-    LocCurveY.Points[LocCurveY.Points.Length-1]=YPoint;
+    LocCurveY.Points.Length = LocCurveY.Points.Length + 1;
+    LocCurveY.Points[LocCurveY.Points.Length-1] = YPoint;
 
     ZPoint.InVal = M.ClientTimeStamp;
     ZPoint.OutVal = CopiedPawn.Location.Z;
-    LocCurveZ.Points.Insert(LocCurveZ.Points.Length,1);
-    LocCurveZ.Points[LocCurveZ.Points.Length-1]=ZPoint;
+    LocCurveZ.Points.Length = LocCurveZ.Points.Length + 1;
+    LocCurveZ.Points[LocCurveZ.Points.Length-1] = ZPoint;
 }
 
 function RemoveOutdatedHistory()
 {
-    while(PawnHistory.Length > 0 && PawnHistory[0].TimeStamp + MAX_HISTORY_LENGTH < M.ClientTimeStamp )
-       PawnHistory.Remove(0,1);
-    while(LocCurveX.Points.Length > 0 &&  LocCurveX.Points[0].InVal + MAX_HISTORY_LENGTH < M.ClientTimeStamp)
+    local int NumToRemove;
+
+    NumToRemove = 0;
+    while(NumToRemove < PawnHistory.Length && PawnHistory[NumToRemove].TimeStamp + MAX_HISTORY_LENGTH < M.ClientTimeStamp)
+        NumToRemove++;
+    if(NumToRemove > 0)
+        PawnHistory.Remove(0, NumToRemove);
+
+    NumToRemove = 0;
+    while(NumToRemove < LocCurveX.Points.Length && LocCurveX.Points[NumToRemove].InVal + MAX_HISTORY_LENGTH < M.ClientTimeStamp)
+        NumToRemove++;
+    if(NumToRemove > 0)
     {
-        LocCurveX.Points.Remove(0,1);
-        LocCurveY.Points.Remove(0,1);
-        LocCurveZ.Points.Remove(0,1);
+        LocCurveX.Points.Remove(0, NumToRemove);
+        LocCurveY.Points.Remove(0, NumToRemove);
+        LocCurveZ.Points.Remove(0, NumToRemove);
     }
 }
 

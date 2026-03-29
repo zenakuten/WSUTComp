@@ -17,6 +17,7 @@ var class<Projectile> FakeProjectileClass;
 var FakeProjectileManager FPM;
 var MutUTComp MNN;
 var bool bSkipNextEffect;
+var bool bFakeFirePending;
 
 const PROJ_TIMESTEP = 0.0201;
 const MAX_PROJECTILE_FUDGE = 0.075;
@@ -43,10 +44,13 @@ function CheckFireEffect()
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
        {
+           // Clear stale pending effect — don't fire it, the aim/position data is old
+           bFakeFirePending = false;
            OldInstigatorLocation = Instigator.Location;
            OldInstigatorEyePosition = Instigator.EyePosition();
            Weapon.GetViewAxes(OldXAxis,OldYAxis,OldZAxis);
            OldAim=AdjustAim(OldInstigatorLocation+OldInstigatorEyePosition, AimError);
+           bFakeFirePending = true;
            SetTimer(class'NewNet_PRI'.default.PredictedPing - SLACK - MAX_PROJECTILE_FUDGE, false);
        }
        else
@@ -56,6 +60,7 @@ function CheckFireEffect()
 
 function Timer()
 {
+   bFakeFirePending = false;
    DoTimedClientFireEffect();
 }
 
@@ -78,8 +83,8 @@ simulated function DoTimedClientFireEffect()
     Instigator.MakeNoise(1.0);
     //Weapon.GetViewAxes(X,Y,Z);
     X = OldXAxis;
-    Y = OldXAxis;
-    Z = OldXAxis;
+    Y = OldYAxis;
+    Z = OldZAxis;
 
    // StartTrace = Instigator.Location + Instigator.EyePosition();// + X*Instigator.CollisionRadius;
     StartTrace = OldInstigatorLocation + OldInstigatorEyePosition;
@@ -110,7 +115,7 @@ simulated function DoTimedClientFireEffect()
             R.Roll = Spread * (FRand()-0.5);
             if(FPM==None)
                 FindFPM();
-            if(FPM.AllowFakeProjectile(FakeProjectileClass, p))
+            if(FPM != None && FPM.AllowFakeProjectile(FakeProjectileClass, p))
             {
                 FPM.RegisterFakeProjectile(FlakChunk(SpawnFakeProjectile(StartProj, Rotator(X >> R))), p);
             }
@@ -194,7 +199,8 @@ simulated function projectile SpawnFakeProjectile(Vector Start, Rotator Dir)
     p = FakeSuperSpawnProjectile(Start,Dir);
     if(FPM==None)
        FindFPM();
-    FPM.RegisterFakeProjectile(p);
+    if(FPM != None)
+        FPM.RegisterFakeProjectile(p);
 	return p;
 }
 

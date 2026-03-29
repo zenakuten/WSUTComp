@@ -63,6 +63,8 @@ simulated function bool CheckForFakeProj()
 
      if(FPM == none)
         FindFPM();
+     if(FPM == none)
+        return false;
      FP = FPM.GetFP(class'NewNet_Fake_LinkProjectile', index);
      if(FP != none)
      {

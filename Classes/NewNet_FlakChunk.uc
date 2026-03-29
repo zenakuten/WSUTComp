@@ -58,6 +58,8 @@ simulated function bool CheckForFakeProj()
 
      if(FPM == none)
         FindFPM();
+     if(FPM == none)
+        return false;
      FP = FPM.GetFP(class'NewNet_Fake_FlakChunk', ChunkNum);
      if(FP != none)
      {

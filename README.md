@@ -5,6 +5,23 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V23
+- Fix Y/Z axis assignment bug in delayed fake projectiles (rockets, flak, bio, link alt) — all three axes were set to X, breaking projectile spawn orientation on higher ping
+- Fix None dereference crash in CheckForFakeProj when FakeProjectileManager not found (rocket, link, shock, seeking rocket, flak chunk projectiles)
+- Remove PCC rewind delta smoothing — was interfering with shock beam correction search and flak multi-chunk traces. Ping estimator median filter handles smoothing at the right layer.
+- Fix FPM None crash in client-side fake fire functions (rockets, flak, flak alt, bio, link alt, rocket multi)
+- Cap server-side rewind to 75ms (half of 150ms RTT) — prevents high ping players from rewinding low ping players excessively far back
+- Make ClientDamageImpulse reliable — prevents shield jump momentum RPC from being lost during lag spikes, fixing "invisible ceiling" on shield jumps
+
+V22
+- NewNet ping estimator: median-of-5 sliding window, 0.5s polling, 150ms cap, spike rejection
+- Damage impulse replication: server sends momentum to client to prevent desync on taking damage
+- Move error grace period: suppress corrections briefly after damage impulse
+- Fix NewNet_LinkAltFire TimeTravel referencing wrong weapon class (copy-paste bug)
+- Fix fake projectile timer clobbering on rapid fire (rockets, flak, bio, link alt)
+- Fix LockingPawns cleanup skipping consecutive None entries (forward-iteration removal bug)
+- Fix O(n^2) RemoveOutdatedHistory — batch removal instead of per-element shift
+
 V21
 - give FlakFire SS_Line style different behavior, allow deterministic flak
 - fix bug with weaponbar rendering in 3374
