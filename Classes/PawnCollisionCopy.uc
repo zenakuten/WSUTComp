@@ -77,11 +77,21 @@ function SetPawn(Pawn Other)
     bCrouched=CopiedPawn.bIsCrouched;
 
     //If we cant use simple collisions, set up the mesh
-    if(!bUseCylinderCollision && M != None && M.bUseLinkMesh)
+    if(!bUseCylinderCollision)
     {
         //snarf LinkMesh is causing crashes, works ok without it
-        LinkMesh(CopiedPawn.Mesh); // This is required for high pingers to be able to hit vehicles properly; cylinders don't work - Calypto
-        SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
+		if(M != None && M.bUseLinkMesh)
+			LinkMesh(CopiedPawn.Mesh); // This is required for high pingers to be able to hit vehicles properly; cylinders don't work - Calypto
+
+		// for weapon pawn, we need the vehicle's collision radius, not the turret
+		if(ONSWeaponPawn(CopiedPawn) != None)
+		{
+			SetCollisionSize(ONSWeaponPawn(CopiedPawn).VehicleBase.CollisionRadius, ONSWeaponPawn(CopiedPawn).VehicleBase.CollisionHeight);
+		}
+		else
+		{
+			SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
+		}
     }
     else
     {
