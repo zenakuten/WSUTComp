@@ -5,6 +5,9 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V22
+- alternate fix for unregs on passenger seat
+
 V21
 - give FlakFire SS_Line style different behavior, allow deterministic flak
 - fix bug with weaponbar rendering in 3374
