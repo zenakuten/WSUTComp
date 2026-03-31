@@ -4949,14 +4949,16 @@ function ServerSetBehindView(float d, float x, float y, float z)
 }
 
 // Server calls this when the pawn takes damage with momentum.
-// Client sets velocity to the server's post-damage velocity directly.
-// Using absolute velocity (not delta) prevents double-applying the impulse
-// when the normal server position correction arrives shortly after.
-simulated function ClientDamageImpulse(vector NewVel)
+// Client syncs full state (position + velocity + physics) in one step.
+// This eliminates the position error that builds up between server-side
+// damage and this RPC arriving, so no delayed correction snap is needed.
+simulated function ClientDamageImpulse(vector NewLoc, vector NewVel, EPhysics NewPhysics)
 {
     if(Pawn != None && Level.NetMode == NM_Client)
     {
+        Pawn.SetLocation(NewLoc);
         Pawn.Velocity = NewVel;
+        Pawn.SetPhysics(NewPhysics);
     }
 }
 
