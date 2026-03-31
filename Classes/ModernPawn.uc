@@ -57,28 +57,12 @@ State Dying
 	}   
 }
 
-// Notify the owning client about damage momentum so client-side prediction
-// stays in sync. Sends absolute post-damage velocity so the client predicts
-// correctly going forward. Position converges naturally — no SetLocation
-// needed (which would cause a physics reset hitch).
+// Damage impulse replication DISABLED for testing.
+// Letting engine handle corrections natively while we test other netcode changes.
+// TODO: Revisit with interpolated correction approach instead of snap/teleport.
 function TakeDamage(int Damage, Pawn instigatedBy, Vector hitlocation, Vector momentum, class<DamageType> damageType)
 {
-    local vector VelBefore;
-    local BS_xPlayer PC;
-
-    VelBefore = Velocity;
     super.TakeDamage(Damage, instigatedBy, hitlocation, momentum, damageType);
-
-    // Send absolute velocity to client
-    if(Role == ROLE_Authority && Controller != None)
-    {
-        PC = BS_xPlayer(Controller);
-        if(PC != None && Velocity != VelBefore)
-        {
-            PC.ClientDamageImpulse(Velocity);
-            PC.LastDamageImpulseTime = Level.TimeSeconds;
-        }
-    }
 }
 
 defaultproperties

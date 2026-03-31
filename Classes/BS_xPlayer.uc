@@ -148,13 +148,9 @@ var bool bLimitTaunts;
 
 var sound HeadshotSound;
 
-// Damage impulse grace period — suppress move error corrections after damage.
-// Velocity is synced immediately via ClientDamageImpulse so prediction is correct
-// going forward. The position error from pre-impulse frames is tiny and converges
-// naturally — no snap correction needed. Grace period just needs to outlast the
-// in-flight saved moves.
+// Damage impulse grace period — currently disabled (impulse sync bypassed for testing).
 var float LastDamageImpulseTime;
-const DAMAGE_IMPULSE_GRACE = 0.500;   // 500ms grace — enough for saved moves to flush
+const DAMAGE_IMPULSE_GRACE = 0.200;   // 200ms grace (default)
 
 var bool bIsTempSpec;
 
