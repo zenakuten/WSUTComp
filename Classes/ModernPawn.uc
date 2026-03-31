@@ -60,6 +60,8 @@ State Dying
 // Notify the owning client about damage momentum so client-side prediction
 // stays in sync. Without this, the client predicts with old velocity and
 // the next server correction causes a snap/hiccup.
+// Sends absolute post-damage velocity (not delta) to avoid double-applying
+// impulse when server correction arrives near the same time.
 function TakeDamage(int Damage, Pawn instigatedBy, Vector hitlocation, Vector momentum, class<DamageType> damageType)
 {
     local vector VelBefore;
@@ -68,13 +70,13 @@ function TakeDamage(int Damage, Pawn instigatedBy, Vector hitlocation, Vector mo
     VelBefore = Velocity;
     super.TakeDamage(Damage, instigatedBy, hitlocation, momentum, damageType);
 
-    // Send the velocity delta to the owning client
+    // Send absolute velocity to the owning client
     if(Role == ROLE_Authority && Controller != None)
     {
         PC = BS_xPlayer(Controller);
         if(PC != None && Velocity != VelBefore)
         {
-            PC.ClientDamageImpulse(Velocity - VelBefore);
+            PC.ClientDamageImpulse(Velocity);
             PC.LastDamageImpulseTime = Level.TimeSeconds;
         }
     }
