@@ -148,9 +148,13 @@ var bool bLimitTaunts;
 
 var sound HeadshotSound;
 
-// Damage impulse grace period — suppress move error corrections briefly after damage
+// Damage impulse grace period — suppress move error corrections after damage.
+// Velocity is synced immediately via ClientDamageImpulse so prediction is correct
+// going forward. The position error from pre-impulse frames is tiny and converges
+// naturally — no snap correction needed. Grace period just needs to outlast the
+// in-flight saved moves.
 var float LastDamageImpulseTime;
-const DAMAGE_IMPULSE_GRACE = 0.200;   // 200ms grace after damage impulse
+const DAMAGE_IMPULSE_GRACE = 0.500;   // 500ms grace — enough for saved moves to flush
 
 var bool bIsTempSpec;
 
@@ -4949,16 +4953,15 @@ function ServerSetBehindView(float d, float x, float y, float z)
 }
 
 // Server calls this when the pawn takes damage with momentum.
-// Client syncs full state (position + velocity + physics) in one step.
-// This eliminates the position error that builds up between server-side
-// damage and this RPC arriving, so no delayed correction snap is needed.
-simulated function ClientDamageImpulse(vector NewLoc, vector NewVel, EPhysics NewPhysics)
+// Only syncs velocity — no SetLocation (which causes physics reset hitch).
+// The position error from the few pre-impulse prediction frames is small
+// and converges naturally. The extended grace period (500ms) prevents the
+// server from snap-correcting during convergence.
+simulated function ClientDamageImpulse(vector NewVel)
 {
     if(Pawn != None && Level.NetMode == NM_Client)
     {
-        Pawn.SetLocation(NewLoc);
         Pawn.Velocity = NewVel;
-        Pawn.SetPhysics(NewPhysics);
     }
 }
 

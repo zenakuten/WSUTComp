@@ -58,8 +58,9 @@ State Dying
 }
 
 // Notify the owning client about damage momentum so client-side prediction
-// stays in sync. Sends both position and velocity so the client can fully
-// sync in one step — no delayed correction snap needed.
+// stays in sync. Sends absolute post-damage velocity so the client predicts
+// correctly going forward. Position converges naturally — no SetLocation
+// needed (which would cause a physics reset hitch).
 function TakeDamage(int Damage, Pawn instigatedBy, Vector hitlocation, Vector momentum, class<DamageType> damageType)
 {
     local vector VelBefore;
@@ -68,13 +69,13 @@ function TakeDamage(int Damage, Pawn instigatedBy, Vector hitlocation, Vector mo
     VelBefore = Velocity;
     super.TakeDamage(Damage, instigatedBy, hitlocation, momentum, damageType);
 
-    // Send full state to client: position + velocity + physics mode
+    // Send absolute velocity to client
     if(Role == ROLE_Authority && Controller != None)
     {
         PC = BS_xPlayer(Controller);
         if(PC != None && Velocity != VelBefore)
         {
-            PC.ClientDamageImpulse(Location, Velocity, Physics);
+            PC.ClientDamageImpulse(Velocity);
             PC.LastDamageImpulseTime = Level.TimeSeconds;
         }
     }
