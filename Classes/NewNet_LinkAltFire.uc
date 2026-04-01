@@ -162,7 +162,7 @@ function TimeTravel(float delta)
     local PawnCollisionCopy PCC;
 
     if(NewNet_LinkGun(Weapon).M == none)
-        foreach Weapon.DynamicActors(class'MutUTComp',NewNet_FlakCannon(Weapon).M)
+        foreach Weapon.DynamicActors(class'MutUTComp',NewNet_LinkGun(Weapon).M)
             break;
 
     for(PCC = NewNet_LinkGun(Weapon).M.PCC; PCC!=None; PCC=PCC.Next)
