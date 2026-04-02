@@ -5015,4 +5015,6 @@ defaultproperties
     SavedMovesWarningInterval=5.0
     LastSavedMovesWarning=0     
     TauntCount=0
+
+	VoiceChatCodec="CODEC_96WB"
 }
