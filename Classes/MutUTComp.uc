@@ -997,7 +997,7 @@ function PostBeginPlay()
 // use 96WB
 function FixVoice()
 {
-	if(Level.Game.VoiceChatReplicationInfo != None)
+	if(Level.Game.VoiceReplicationInfo != None)
 	{
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[0]="CODEC_96WB";
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[1]="CODEC_48NB";
