@@ -88,7 +88,11 @@ function DoTrace(Vector Start, Rotator Dir)
 
             if(ReflectNum==0)
             {
-                f = 0.02;
+                // Search in 10ms steps (was 20ms) for better accuracy during
+                // rapid direction changes (dodges). The finer granularity catches
+                // hits that fall between the coarser steps. Only runs on unreg
+                // attempts so the extra traces don't affect normal gameplay.
+                f = 0.01;
                 while(abs(f) < (0.04 + 2.0*AverDT))
                 {
 
@@ -117,7 +121,7 @@ function DoTrace(Vector Start, Rotator Dir)
                     if(f > 0.00)
                         f = -1.0*f;
                     else
-                        f = -1.0*f+0.02;
+                        f = -1.0*f+0.01;
                 }
               //  if(abs(f)<9.0)
                 //   log("Failed to fix");
