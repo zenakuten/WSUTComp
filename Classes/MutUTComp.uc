@@ -964,6 +964,7 @@ function PostBeginPlay()
     SetupTeamOverlay();
     SetupWarmup();
     SpawnReplicationClass();
+	FixVoice();
 
     G = spawn(class'UTComp_GameRules');
     G.UTCompMutator=self;
@@ -991,6 +992,16 @@ function PostBeginPlay()
     }
     class'GrenadeAmmo'.default.InitialAmount = NumGrenadesOnSpawn;
     if (bDebugLogging) log("Finished PostBeginPlay...",'MutUTComp');
+}
+
+// use 96WB
+function FixVoice()
+{
+	if(Level.Game.VoiceChatReplicationInfo != None)
+	{
+		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[0]="CODEC_96WB";
+		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[1]="CODEC_48NB";
+	}
 }
 
 simulated function bool InStrNonCaseSensitive(String S, string S2)
