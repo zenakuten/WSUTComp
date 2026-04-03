@@ -1268,10 +1268,12 @@ simulated function Destroyed()
     super.Destroyed();
 }
 
+/* Temporarily disable until behindview is sorted out
 simulated function bool PointOfView()
 {
 	return default.bDesiredBehindView;
 }
+*/
 
 simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation )
 {

@@ -86,11 +86,16 @@ function SetPawn(Pawn Other)
 		// for weapon pawn, we need the vehicle's collision radius, not the turret
 		if(ONSWeaponPawn(CopiedPawn) != None)
 		{
-			SetCollisionSize(ONSWeaponPawn(CopiedPawn).VehicleBase.CollisionRadius, ONSWeaponPawn(CopiedPawn).VehicleBase.CollisionHeight);
-		}
-		else
-		{
-			SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
+			// Check if the VehicleBase actually exists before accessing its properties
+			if (ONSWeaponPawn(CopiedPawn).VehicleBase != None)
+			{
+				SetCollisionSize(ONSWeaponPawn(CopiedPawn).VehicleBase.CollisionRadius, ONSWeaponPawn(CopiedPawn).VehicleBase.CollisionHeight);
+			}
+			else
+			{
+				// Fallback to the turret's own collision if VehicleBase is missing
+				SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
+			}
 		}
     }
     else
