@@ -39,6 +39,8 @@ var Material DeResMatColored0, DeResMatColored1;
 var ColorModifier DeResModifier0;
 var ColorModifier DeResModifier1;
 
+var config bool bDesiredBehindView;
+
 // copy/pasta from vehicle
 var float TPCamDistance;
 var vector   TPCamWorldOffset; // Applied in world space after vehicle transform.
@@ -1265,6 +1267,13 @@ simulated function Destroyed()
 
     super.Destroyed();
 }
+
+/* Temporarily disable until behindview is sorted out
+simulated function bool PointOfView()
+{
+	return default.bDesiredBehindView;
+}
+*/
 
 simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation )
 {

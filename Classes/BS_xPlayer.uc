@@ -4918,6 +4918,8 @@ function ClientSetBehindView(bool B)
 
     if (UTComp_xPawn(Pawn) != None)
     {
+    	UTComp_xPawn(Pawn).bDesiredBehindView = B;
+    	Pawn.SaveConfig();
         ServerSetBehindView(
             UTComp_xPawn(Pawn).TPCamDistance, 
             UTComp_xPawn(Pawn).TPCamWorldOffset.X,
