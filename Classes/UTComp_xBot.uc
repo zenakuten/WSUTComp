@@ -326,12 +326,8 @@ simulated function Destroyed()
             LPRI.Destroy();
             LPRI = Next;
         }
-
         PlayerReplicationInfo.CustomReplicationInfo = None;
-        PlayerReplicationInfo.Destroy();
-        PlayerReplicationInfo = None;
     }
-
     super.Destroyed();
 }
 
