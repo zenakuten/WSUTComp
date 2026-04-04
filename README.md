@@ -8,6 +8,8 @@ Release Notes
 V22
 - alternate fix for unregs on passenger seat
 - try force 96WB
+- use 1p view on round start
+- fix bots join/leave (ty Calypto)
 
 V21
 - give FlakFire SS_Line style different behavior, allow deterministic flak
