@@ -10,6 +10,7 @@ V22
 - try force 96WB
 - use 1p view on round start
 - fix bots join/leave (ty Calypto)
+- apply some netcode fixes from grahamslam
 
 V21
 - give FlakFire SS_Line style different behavior, allow deterministic flak
