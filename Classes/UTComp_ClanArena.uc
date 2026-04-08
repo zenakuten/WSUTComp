@@ -662,14 +662,23 @@ function CheckScore(PlayerReplicationInfo Scorer)
 
 function EndRound(int TeamThatWon, PlayerReplicationInfo Winner)
 {
+    local float ScoreDiff;
+
     if(Winner==None)
     {
         Teams[TeamThatWon].Score +=1;
         Teams[TeamThatWon].NetUpdateTime = Level.TimeSeconds - 1;
         if(Teams[TeamThatWon].Score >= GoalScore)
         {
-            EndGame(Winner, "FragLimit");
-            return;
+            // Win by 2: check score difference before ending
+            ScoreDiff = Teams[0].Score - Teams[1].Score;
+            if(ScoreDiff < 0) ScoreDiff = -ScoreDiff;
+            if(!class'MutUTComp'.default.bWinByTwo || ScoreDiff >= 2)
+            {
+                EndGame(Winner, "FragLimit");
+                return;
+            }
+            BroadcastLocalizedMessage(class'UTComp_WinByTwoMessage', 0);
         }
     }
     else
@@ -678,8 +687,14 @@ function EndRound(int TeamThatWon, PlayerReplicationInfo Winner)
         Winner.Team.NetUpdateTime = Level.TimeSeconds - 1;
         if(Winner.Team.Score >= GoalScore)
         {
-            EndGame(Winner, "FragLimit");
-            return;
+            ScoreDiff = Teams[0].Score - Teams[1].Score;
+            if(ScoreDiff < 0) ScoreDiff = -ScoreDiff;
+            if(!class'MutUTComp'.default.bWinByTwo || ScoreDiff >= 2)
+            {
+                EndGame(Winner, "FragLimit");
+                return;
+            }
+            BroadcastLocalizedMessage(class'UTComp_WinByTwoMessage', 0);
         }
     }
 

@@ -383,9 +383,40 @@ function bool CheckEndGame(PlayerReplicationInfo Winner, string Reason)
             return false;
     }
 
+    // Win by 2: block game end if score difference < 2
+    // Works for CTF and all team games (ClanArena handles its own check in EndRound)
+    if(UTCompMutator.bWinByTwo && !Level.Game.IsA('UTComp_ClanArena'))
+    {
+        if(!TeamLeadsByTwo())
+        {
+            Level.Game.BroadcastLocalizedMessage(class'UTComp_WinByTwoMessage', 0);
+            // Team_GameBase (WS3SPN) sets EndGameCalled=true BEFORE CheckEndGame
+            // runs, so we must reset it or EndGame() will never fire again.
+            // Use SetPropertyText since Team_GameBase is in a later package.
+            Level.Game.SetPropertyText("EndGameCalled", "False");
+            return false;
+        }
+    }
+
     if ( NextGameRules != None )
 		return NextGameRules.CheckEndGame(Winner,Reason);
 	return true;
+}
+
+function bool TeamLeadsByTwo()
+{
+    local TeamGame TG;
+    local float Diff;
+
+    TG = TeamGame(Level.Game);
+    if(TG == None || TG.Teams[0] == None || TG.Teams[1] == None)
+        return true;
+
+    Diff = TG.Teams[0].Score - TG.Teams[1].Score;
+    if(Diff < 0)
+        Diff = -Diff;
+
+    return (Diff >= 2);
 }
 
 function bool OvertimeOver()
