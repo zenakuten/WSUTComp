@@ -48,6 +48,15 @@ var int MaxNetSpeed;
 var int NewNetUpdateFrequency;
 var float PingTweenTime;
 
+// Smoothed render offset (client-side visual correction smoothing)
+var bool  bWinByTwo;
+
+var bool  bEnableCorrectionSmoothing;
+var float CorrectionHalfLife;
+var float CorrectionJumpThreshold;
+var float MaxVisualOffset;
+var bool  bSmoothCameraOffset;
+
 var int NodeIsolateBonusPct;
 var int VehicleHealScore;
 var int VehicleDamagePoints;
@@ -102,7 +111,10 @@ replication
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
-		bDisableCameraShake;
+		bDisableCameraShake,
+        bWinByTwo,
+        bEnableCorrectionSmoothing, CorrectionHalfLife, CorrectionJumpThreshold,
+        MaxVisualOffset, bSmoothCameraOffset;
 }
 
 defaultproperties
@@ -129,6 +141,12 @@ defaultproperties
      bEnableTimedOvertime=False
      NewNetUpdateFrequency=200
      PingTweenTime=0.5
+     bWinByTwo=false
+     bEnableCorrectionSmoothing=true
+     CorrectionHalfLife=0.050
+     CorrectionJumpThreshold=30.0
+     MaxVisualOffset=400.0
+     bSmoothCameraOffset=true
 
      NodeIsolateBonusPct=20
      VehicleHealScore=500
