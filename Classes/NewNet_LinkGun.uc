@@ -6,7 +6,7 @@ class NewNet_LinkGun extends UTComp_LinkGun
 var TimeStamp_Pawn T;
 var MutUTComp M;
 
-const MAX_PROJECTILE_FUDGE = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
 
 var int CurIndex;
 

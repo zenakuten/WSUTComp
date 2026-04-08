@@ -6,7 +6,7 @@ class NewNet_AssaultRifle extends UTComp_AssaultRifle
 var TimeStamp_Pawn T;
 var MutUTComp M;
 
-const MAX_PROJECTILE_FUDGE = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
 
 replication
 {

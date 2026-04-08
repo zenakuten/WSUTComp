@@ -6,8 +6,8 @@ class NewNet_FlakCannon extends UTComp_FlakCannon
     HideDropDown
 	CacheExempt;
 
-const MAX_PROJECTILE_FUDGE = 0.075;
-const MAX_PROJECTILE_FUDGE_ALT = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
+const MAX_PROJECTILE_FUDGE_ALT = 0.100;
 
 struct ReplicatedRotator
 {

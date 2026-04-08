@@ -6,7 +6,7 @@ var Vector OldInstigatorEyePosition;
 var vector OldXAxis,OldYAxis, OldZAxis;
 var rotator OldAim;
 var float OldLoad;
-const MAX_PROJECTILE_FUDGE = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
 
 var class<Projectile> FakeProjectileClass;
 var FakeProjectileManager FPM;

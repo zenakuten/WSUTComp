@@ -3,7 +3,7 @@ class NewNet_BioRifle extends UTComp_BioRifle
 	HideDropDown
 	CacheExempt;
 
-const MAX_PROJECTILE_FUDGE = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
 
 var TimeStamp_Pawn T;
 var MutUTComp M;

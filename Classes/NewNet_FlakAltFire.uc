@@ -17,7 +17,7 @@ var class<Projectile> FakeProjectileClass;
 var FakeProjectileManager FPM;
 
 const PROJ_TIMESTEP = 0.0201;
-const MAX_PROJECTILE_FUDGE = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
 const SLACK = 0.035;
 
 var vector OldInstigatorLocation;

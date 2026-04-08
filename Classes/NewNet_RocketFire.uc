@@ -20,7 +20,7 @@ var bool bSkipNextEffect;
 var bool bFakeFirePending;
 
 const PROJ_TIMESTEP = 0.0201;
-const MAX_PROJECTILE_FUDGE = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
 const SLACK = 0.035;
 
 function PlayFiring()

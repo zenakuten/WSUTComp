@@ -37,7 +37,7 @@ var float MAX_HISTORY_LENGTH;
 
 var bool bCrouched;
 
-const MAX_REWIND = 0.075;        // 75ms max rewind (half of 150ms RTT cap)
+var float MAX_REWIND;             // configurable via MutUTComp.PawnCollisionMaxRewind (default 0.240)
 
 var InterpCurve LocCurveX, LocCurveY,LocCurveZ;
 
@@ -51,6 +51,8 @@ function PostBeginPlay()
     if(M != None)
     {
         MAX_HISTORY_LENGTH = M.PawnCollisionHistoryLength;
+        if(M.PawnCollisionMaxRewind > 0)
+            MAX_REWIND = M.PawnCollisionMaxRewind;
     }
 }
 
@@ -434,4 +436,5 @@ defaultproperties
     CrouchHeight=29.000000   //Direct copies from xPawn
     CrouchRadius=25.000000
     MAX_HISTORY_LENGTH=0.35
+    MAX_REWIND=0.240
 }

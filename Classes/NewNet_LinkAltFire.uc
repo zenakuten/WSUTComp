@@ -9,7 +9,7 @@ var bool bUseEnhancedNetCode;
 var bool bFakeFirePending;
 
 const PROJ_TIMESTEP = 0.0201;
-const MAX_PROJECTILE_FUDGE = 0.075;
+const MAX_PROJECTILE_FUDGE = 0.100;
 const SLACK = 0.025;
 
 var class<Projectile> FakeProjectileClass;

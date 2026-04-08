@@ -115,7 +115,18 @@ var config bool bEnableEnhancedNetCode;
 var config bool bEnableEnhancedNetCodeVoting;
 var config bool bUseDefaultScoreboardColor;
 var config float PawnCollisionHistoryLength;
+var config float PawnCollisionMaxRewind;
 var config array<string> IgnoredHitSounds;
+
+// Smoothed render offset (client-side visual correction smoothing)
+var config bool  bEnableCorrectionSmoothing;
+var config float CorrectionHalfLife;
+var config float CorrectionJumpThreshold;
+var config float MaxVisualOffset;
+var config bool  bSmoothCameraOffset;
+
+// Win by 2 — team must lead by 2+ points to end the game at GoalScore
+var config bool bWinByTwo;
 
 var config bool bNoTeamBoosting;
 var config bool bNoTeamBoostingVehicles;
@@ -900,6 +911,12 @@ function SpawnReplicationClass()
 
     RepInfo.NewNetUpdateFrequency = NewNetUpdateFrequency;
     RepInfo.PingTweenTime = PingTweenTime;
+    RepInfo.bWinByTwo = bWinByTwo;
+    RepInfo.bEnableCorrectionSmoothing = bEnableCorrectionSmoothing;
+    RepInfo.CorrectionHalfLife         = CorrectionHalfLife;
+    RepInfo.CorrectionJumpThreshold    = CorrectionJumpThreshold;
+    RepInfo.MaxVisualOffset            = MaxVisualOffset;
+    RepInfo.bSmoothCameraOffset        = bSmoothCameraOffset;
     RepInfo.NodeIsolateBonusPct=NodeIsolateBonusPct;
     RepInfo.VehicleHealScore=VehicleHealScore;
     RepInfo.VehicleDamagePoints=VehicleDamagePoints;
@@ -1673,6 +1690,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", security, weight, "Text", "0;0:1800",, False, False);
 	PlayInfo.AddSetting("UTComp Settings", "bDisableCameraShake", "Disable Camera Shake", security, weight, "Check");
 	PlayInfo.AddSetting("UTComp Settings", "bShowTeamScoresInServerBrowser", "Show team scores in server browser", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Settings", "bWinByTwo", "Team must lead by 2 to win at GoalScore", security, weight, "Check");
     
     weight++;
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
@@ -1696,6 +1714,12 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (200)", security, weight, "Text","0;0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Poll Interval (0.5)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionHistoryLength", "NewNet Pawn Collision History Length (0.35)", security, weight, "Text","0;0.0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionMaxRewind", "NewNet Max Rewind in sec (0.240)", security, weight, "Text","0;0.0:1.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "bEnableCorrectionSmoothing", "Smooth visual on server position corrections", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp NewNet", "CorrectionHalfLife", "Correction smoothing half-life in sec (default 0.05)", security, weight, "Text","0;0.0:1.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "CorrectionJumpThreshold", "Min position jump in UU to smooth (default 30)", security, weight, "Text","0;0.0:500.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "MaxVisualOffset", "Max smoothed offset in UU, bigger = teleport (default 400)", security, weight, "Text","0;0.0:2000.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "bSmoothCameraOffset", "Also smooth first-person camera on corrections", security, weight, "Check");
     PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
     PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
 
@@ -1777,6 +1801,13 @@ static event string GetDescriptionText(string PropName)
         case "NewNetUpdateFrequency": return "NewNet Update Frequency (200)";
         case "PingTweenTime": return "NewNet Ping Poll Interval (0.5)";
         case "PawnCollisionHistoryLength": return "NewNet Pawn Collision History Length (0.35)";
+        case "PawnCollisionMaxRewind": return "NewNet Max Rewind in sec — how far back hitscan traces check (0.240)";
+        case "bEnableCorrectionSmoothing": return "Smooth visual on server position corrections (reduces damage hitch)";
+        case "CorrectionHalfLife": return "Correction smoothing half-life in seconds (default 0.05 - ~150ms converge)";
+        case "CorrectionJumpThreshold": return "Min position jump in UU to trigger smoothing (default 30)";
+        case "MaxVisualOffset": return "Max accumulated smoothed offset; jumps larger skip smoothing (default 400)";
+        case "bSmoothCameraOffset": return "Also smooth first-person camera on corrections (default true)";
+        case "bWinByTwo": return "Team must lead by 2+ points to win when GoalScore is reached (default false)";
         
         case "NodeIsolateBonusPct": return "Power Node Isolate Bonus Pct (20)";
         case "VehicleHealScore": return "Vehicle Heal Score (200)";
@@ -2052,6 +2083,15 @@ defaultproperties
      bEnableEnhancedNetCode=true
      bEnableEnhancedNetCodeVoting=false
      PawnCollisionHistoryLength=0.35
+     PawnCollisionMaxRewind=0.240
+
+     bEnableCorrectionSmoothing=true
+     CorrectionHalfLife=0.050
+     CorrectionJumpThreshold=30.0
+     MaxVisualOffset=400.0
+     bSmoothCameraOffset=true
+
+     bWinByTwo=false
 
      //original weapons
      WeaponClassNames(0)="XWeapons.ShockRifle"
