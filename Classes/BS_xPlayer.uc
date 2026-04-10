@@ -4083,8 +4083,8 @@ function ReplicateMove
         && PendingMove.SavedPhysics == PHYS_Walking
         && (Level.TimeSeconds - LastQueuedMoveTime) * Level.TimeDilation < NetMoveDelta
         && !PendingMove.bPressedJump && !bPressedJump
-        && PendingMove.bDuck == bDuck
-        && PendingMove.DoubleClickMove == 0       // 0 = DCLICK_None (byte field on SavedMove)
+        && PendingMove.bDuck == (bDuck != 0)      // bDuck is byte on PC, bool on SavedMove
+        && PendingMove.DoubleClickMove == DCLICK_None
         && DoubleClickMove == DCLICK_None
         && Level.TimeDilation >= 0.9
         && (NewAccel == vect(0,0,0)
