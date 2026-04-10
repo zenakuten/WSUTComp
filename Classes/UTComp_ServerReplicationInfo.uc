@@ -141,6 +141,9 @@ defaultproperties
      bEnableTimedOvertime=False
      NewNetUpdateFrequency=200
      PingTweenTime=0.5
+     // 10Hz so initial replication and any state changes propagate fast.
+     // Default ReplicationInfo NetUpdateFrequency is 1.0 — way too slow.
+     NetUpdateFrequency=10.000000
      bWinByTwo=false
      bEnableCorrectionSmoothing=true
      CorrectionHalfLife=0.050

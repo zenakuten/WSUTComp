@@ -592,15 +592,19 @@ function SetMaxSavedMoves()
 }
 
 // Configured MaxSavedMoves doesn't get replicated to clients without this -Calypto
-// BS_xPlayer: Exceeded max saved moves (250), consider increasing
+// BS_xPlayer: Exceeded max saved moves, consider increasing
 simulated event PostNetReceive()
 {
     Super.PostNetReceive();
 
+    // Proactively discover RepInfo if we don't have it yet — InitializeClient
+    // gates on RepInfo being non-None, but PostNetReceive can fire before that.
+    if (RepInfo == None)
+        foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+
     if (RepInfo != None && MaxSavedMoves != RepInfo.MaxSavedMoves)
-    {
         SetMaxSavedMoves();
-    }
 }
 
 function SetTauntCount()
@@ -4255,23 +4259,18 @@ function SavedMove GetFreeMoveEx() {
             {
                 if (Level.TimeSeconds > LastSavedMovesWarning + SavedMovesWarningInterval)
                 {
-                    log("Exceeded max saved moves ("$MaxSavedMoves$"), consider increasing", Class.Name);
+                    log("Exceeded max saved moves ("$MaxSavedMoves$"), dropping oldest move", Class.Name);
                     LastSavedMovesWarning = Level.TimeSeconds;
                 }
 
+                // Drop only the oldest move and reuse its slot.
+                // The previous behaviour nuked the entire SavedMoves list,
+                // destroying all in-flight prediction history and causing
+                // catastrophic rubberbanding on a single overflow event.
                 first = SavedMoves;
                 SavedMoves = SavedMoves.NextMove;
                 first.Clear();
                 first.NextMove = None;
-                // clear out all the moves
-                While ( SavedMoves != None )
-                {
-                    s = SavedMoves;
-                    SavedMoves = SavedMoves.NextMove;
-                    s.Clear();
-                    s.NextMove = FreeMoves;
-                    FreeMoves = s;
-                }
                 return first;
             }
         }
@@ -5042,7 +5041,7 @@ defaultproperties
      PreferredExitPoint=-1
      bDidWhitelistCheck=False
 
-    MaxSavedMoves=300
+    MaxSavedMoves=500
     SavedMovesWarningInterval=5.0
     LastSavedMovesWarning=0     
     TauntCount=0
