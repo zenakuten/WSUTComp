@@ -3994,6 +3994,18 @@ event ClientSetViewTarget(Actor a)
     }
 }
 
+// Configured MaxSavedMoves doesn't get replicated to clients without this -Calypto
+// BS_xPlayer: Exceeded max saved moves (250), consider increasing
+simulated event PostNetReceive()
+{
+	Super.PostNetReceive();
+	
+	if (RepInfo != None && MaxSavedMoves != RepInfo.MaxSavedMoves)
+	{
+		SetMaxSavedMoves();
+	}
+}
+
 // From ModernPlayer by kokuei
 // See PlayerController.uc on how this function works.
 //
