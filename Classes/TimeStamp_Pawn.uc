@@ -35,6 +35,11 @@ simulated event tick(float deltatime)
    }
 }
 
+simulated event FellOutOfWorld(eKillZType KillType)
+{
+	//ignore
+}
+
 DefaultProperties
 {
     ControllerClass = class'TimeStamp_Controller'
@@ -50,6 +55,5 @@ DefaultProperties
     bBlockPlayers=false
     bDisturbFluidSurface=false
     Physics=Phys_None
-
     bstasis=false
 }
