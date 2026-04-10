@@ -95,6 +95,7 @@ var config float NetMoveDelta;
 var config float MaxResponseTime;
 var config bool bMoveErrorAccumFix;
 var config float MoveErrorAccumFixValue;
+var config bool bCoalesceMoves;  // Xonotic-style per-frame input coalescing
 
 var config bool bLimitTaunts;
 var config int TauntCount;
@@ -941,6 +942,7 @@ function SpawnReplicationClass()
     RepInfo.MaxResponseTime = MaxResponseTime;
     RepInfo.bMoveErrorAccumFix = bMoveErrorAccumFix;
     RepInfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
+    RepInfo.bCoalesceMoves = bCoalesceMoves;
 
     RepInfo.bLimitTaunts = bLimitTaunts;
     RepInfo.TauntCount = TauntCount;
@@ -1740,6 +1742,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Movement", "MaxResponseTime", "delay for client move update (default 0.125)", security, weight, "Text","0.125;0.001:0.250",,False,False);
     PlayInfo.AddSetting("UTComp Movement", "bMoveErrorAccumFix", "use move accum fix (default false)", security, weight, "Check");
     PlayInfo.AddSetting("UTComp Movement", "MoveErrorAccumFixValue", "move accum fix value (default 0.009)", security, weight, "Text", "0.009:0.001:0.018",,false, false);
+    PlayInfo.AddSetting("UTComp Movement", "bCoalesceMoves", "Coalesce per-frame inputs (Xonotic-style, prevents high-fps queue overflow)", security, weight, "Check");
 
     weight++;
     PlayInfo.AddSetting("UTComp Voting", "bEnableVoting", "Enable Voting", security, weight, "Check");
@@ -1824,6 +1827,7 @@ static event string GetDescriptionText(string PropName)
         case "MaxResponseTime": return "server delay for client move update before setting position (default 0.125)";
         case "bMoveErrorAccumFix": return "use server define movement accumulation (default false)";
         case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
+        case "bCoalesceMoves": return "Coalesce per-frame inputs into network-tick batches (Xonotic-style). Prevents SavedMove queue overflow at high fps. Toggle off to revert to per-frame allocation.";
         case "StartingHealth": return "Starting health of players (100)";
         case "StartingArmor": return "Starting armor of players (0)";
         case "bUseLinkMesh": return "Use linkmesh logic for vehicle netcode (true)";
@@ -2263,6 +2267,7 @@ defaultproperties
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
+     bCoalesceMoves=false
 
      bLimitTaunts=false
      TauntCount=10

@@ -146,6 +146,14 @@ var float LastSavedMovesWarning;
 var int TauntCount;
 var bool bLimitTaunts;
 
+// Move coalescing — when true, multiple render frames between network ticks
+// share a single SavedMove (Xonotic-style). Prevents queue overflow at high
+// fps by decoupling SavedMove allocation rate from framerate. Button state
+// changes still force immediate allocation so jump-tap responsiveness is
+// preserved. Toggle off to revert to per-frame allocation.
+var bool bCoalesceMoves;
+var float LastQueuedMoveTime;
+
 var sound HeadshotSound;
 
 // Damage impulse grace period — currently disabled (impulse sync bypassed for testing).
@@ -588,7 +596,10 @@ function SetBStats(bool b)
 function SetMaxSavedMoves()
 {
     if(RepInfo != None)
-        MaxSavedMoves = RepInfo.MaxSavedMoves;
+    {
+        MaxSavedMoves   = RepInfo.MaxSavedMoves;
+        bCoalesceMoves  = RepInfo.bCoalesceMoves;
+    }
 }
 
 // Configured MaxSavedMoves doesn't get replicated to clients without this -Calypto
@@ -603,7 +614,9 @@ simulated event PostNetReceive()
         foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
             break;
 
-    if (RepInfo != None && MaxSavedMoves != RepInfo.MaxSavedMoves)
+    if (RepInfo != None
+        && (MaxSavedMoves != RepInfo.MaxSavedMoves
+            || bCoalesceMoves != RepInfo.bCoalesceMoves))
         SetMaxSavedMoves();
 }
 
@@ -4052,6 +4065,47 @@ function ReplicateMove
 	MaxResponseTime = Default.MaxResponseTime * Level.TimeDilation;
 	DeltaTime = FMin(DeltaTime, MaxResponseTime);
 
+    // -----------------------------------------------------------------------
+    // COALESCE PATH (Xonotic-style): if enabled, decouple SavedMove allocation
+    // from render framerate. Multiple frames between network ticks share a
+    // single SavedMove that gets its Delta extended and Acceleration updated.
+    // Prevents queue overflow at high fps. Important input changes (jump,
+    // duck, dodge) bypass coalescing and force a fresh allocation.
+    // -----------------------------------------------------------------------
+    NetMoveDelta = 0.011;
+    if (RepInfo != None && RepInfo.NetMoveDelta > 0)
+        NetMoveDelta = RepInfo.NetMoveDelta;
+
+    if (bCoalesceMoves
+        && PendingMove != None
+        && Pawn != None
+        && Pawn.Physics == PHYS_Walking
+        && PendingMove.SavedPhysics == PHYS_Walking
+        && (Level.TimeSeconds - LastQueuedMoveTime) * Level.TimeDilation < NetMoveDelta
+        && !PendingMove.bPressedJump && !bPressedJump
+        && PendingMove.bDuck == bDuck
+        && PendingMove.DoubleClickMove == DCLICK_None
+        && DoubleClickMove == DCLICK_None
+        && Level.TimeDilation >= 0.9
+        && (NewAccel == vect(0,0,0)
+            || PendingMove.Acceleration == vect(0,0,0)
+            || (Normal(NewAccel) Dot Normal(PendingMove.Acceleration)) > 0.97))
+    {
+        // Extend the pending move instead of allocating a new SavedMove.
+        // The PendingMove now represents (original Delta + this frame's Delta)
+        // worth of input with the latest Acceleration.
+        PendingMove.Delta = FMin(PendingMove.Delta + DeltaTime, MaxResponseTime);
+        PendingMove.Acceleration = NewAccel;
+
+        // Local prediction still runs every frame so the player sees smooth motion
+        bDoubleJump = false;
+        ProcessMove(DeltaTime, NewAccel, DCLICK_None, DeltaRot);
+        if (Pawn != None)
+            Pawn.AutonomousPhysics(DeltaTime);
+
+        return;
+    }
+
 	// find the most recent move, and the most recent interesting move
     if ( SavedMoves != None )
     {
@@ -4102,6 +4156,7 @@ function ReplicateMove
 	if ( NewMove == None )
 		return;
 	NewMove.SetMoveFor(self, DeltaTime, NewAccel, DoubleClickMove);
+	LastQueuedMoveTime = Level.TimeSeconds;
 
     // Simulate the movement locally.
     bDoubleJump = false;

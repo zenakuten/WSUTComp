@@ -83,6 +83,7 @@ var float NetMoveDelta;
 var float MaxResponseTime;
 var bool bMoveErrorAccumFix;
 var float MoveErrorAccumFixValue;
+var bool bCoalesceMoves;
 
 var bool bLimitTaunts;
 var int TauntCount;
@@ -108,8 +109,8 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
-        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta,
+        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bCoalesceMoves, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
 		bDisableCameraShake,
         bWinByTwo,
@@ -175,6 +176,7 @@ defaultproperties
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
+     bCoalesceMoves=false
 
      bLimitTaunts=false
      TauntCount=10
