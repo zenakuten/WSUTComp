@@ -4084,7 +4084,7 @@ function ReplicateMove
         && (Level.TimeSeconds - LastQueuedMoveTime) * Level.TimeDilation < NetMoveDelta
         && !PendingMove.bPressedJump && !bPressedJump
         && PendingMove.bDuck == bDuck
-        && PendingMove.DoubleClickMove == DCLICK_None
+        && PendingMove.DoubleClickMove == 0       // 0 = DCLICK_None (byte field on SavedMove)
         && DoubleClickMove == DCLICK_None
         && Level.TimeDilation >= 0.9
         && (NewAccel == vect(0,0,0)
