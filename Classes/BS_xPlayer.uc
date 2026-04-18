@@ -152,6 +152,9 @@ var bool bIsTempSpec;
 
 replication
 {
+	reliable if( bNetDirty && bNetOwner && Role==ROLE_Authority )
+        RepInfo;
+
     unreliable if(Role==Role_Authority)
         ReceiveHit, ReceiveHitSound, DamageIndicatorHit, ClientGroupDamageSound, 
         ClientDelayedSound, ClientReceiveAward, ClientHeadshotted, EmoteInfo;
