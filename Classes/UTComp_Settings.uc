@@ -98,6 +98,7 @@ var config color DeResFXColor;
 
 var config float TPCamDistance;
 var config vector TPCamWorldOffset;
+var config bool bDebug;
 
 var UTComp_Settings instance;
 
@@ -186,6 +187,7 @@ defaultproperties
     bShowKillsOnScoreboard=True
     TPCamDistance=280.0
     TPCamWorldOffset=(X=-35,Y=-28.0,Z=38.000000)
+	bDebug=false
 
     instance=none
 }

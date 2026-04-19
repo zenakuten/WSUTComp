@@ -194,6 +194,12 @@ replication
         Ready, NotReady;
 }
 
+simulated function DbgLog(coerce string msg)
+{
+	if(Settings != None && Settings.bDebug)
+		Log(msg);
+}
+
 simulated function SaveSettings()
 {
     Settings.Save();
@@ -583,7 +589,10 @@ function SetBStats(bool b)
 function SetMaxSavedMoves()
 {
     if(RepInfo != None)
+	{
         MaxSavedMoves = RepInfo.MaxSavedMoves;
+		DbgLog("Set MaxSavedMoves="$MaxSavedMoves);
+	}
 }
 
 function SetTauntCount()
