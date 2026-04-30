@@ -194,6 +194,12 @@ replication
         Ready, NotReady;
 }
 
+simulated function DbgLog(coerce string msg)
+{
+	if(Settings != None && Settings.bDebug)
+		Log(msg);
+}
+
 simulated function SaveSettings()
 {
     Settings.Save();
@@ -583,7 +589,10 @@ function SetBStats(bool b)
 function SetMaxSavedMoves()
 {
     if(RepInfo != None)
+	{
         MaxSavedMoves = RepInfo.MaxSavedMoves;
+		DbgLog("Set MaxSavedMoves="$MaxSavedMoves);
+	}
 }
 
 function SetTauntCount()
@@ -805,68 +814,57 @@ state GameEnded
     }
 }
 
-/*
-snarf commenting out these states from ONSPlus
-// onsplus
 state RoundEnded
 {
 ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeChange, NotifyPhysicsVolumeChange, Falling, TakeDamage, Suicide;
 
-	function BeginState()
-	{
-		local Pawn P;
+    function BeginState()
+    {
+        local Pawn P;
 
-		EndZoom();
+        EndZoom();
 		CameraDist = Default.CameraDist;
-		FOVAngle = DesiredFOV;
-		bFire = 0;
-		bAltFire = 0;
+        FOVAngle = DesiredFOV;
+        bFire = 0;
+        bAltFire = 0;
 
-		if (Pawn != None)
-		{
-			if (Vehicle(Pawn) != None)
-				Pawn.StopWeaponFiring();
+        if ( Pawn != None )
+        {
+       	    if ( Vehicle(Pawn) != None )
+	    		Pawn.StopWeaponFiring();
 
 			Pawn.TurnOff();
 			Pawn.bSpecialHUD = false;
-			Pawn.SimAnim.AnimRate = 0;
-
-			if (Pawn.Weapon != None)
+            Pawn.SimAnim.AnimRate = 0;
+            if ( Pawn.Weapon != None )
 			{
 				Pawn.Weapon.StopFire(0);
 				Pawn.Weapon.StopFire(1);
 				Pawn.Weapon.bEndOfRound = true;
 			}
-		}
+        }
 
-
-		// Shambler: Here is the attempted fix
-		if (PlayerReplicationInfo == none || !PlayerReplicationInfo.bOnlySpectator)
-			bFrozen = true;
-
+        bFrozen = true;
 		bBehindView = true;
 
-		if (!bFixedCamera)
-			FindGoodView();
+		// reset config value to 1p view (but leave bBehindView above alone)
+		class'UTComp_xPawn'.default.bDesiredBehindView=false;
+		class'UTComp_xPawn'.static.StaticSaveConfig();
 
-		SetTimer(5, false);
+        if ( !bFixedCamera )
+            FindGoodView();
 
-
-		ForEach DynamicActors(class'Pawn', P)
-		{
-			if (P.Role == ROLE_Authority)
+        SetTimer(5, false);
+        ForEach DynamicActors(class'Pawn', P)
+        {
+			if ( P.Role == ROLE_Authority )
 				P.RemoteRole = ROLE_DumbProxy;
-
 			P.TurnOff();
-		}
-
-
+        }
 		StopForceFeedback();
-	}
-}
-//end onsplus
-*/
 
+    }
+}
 
 //====================================
 // Stats / Hitsounds
@@ -4930,6 +4928,8 @@ function ClientSetBehindView(bool B)
 
     if (UTComp_xPawn(Pawn) != None)
     {
+    	UTComp_xPawn(Pawn).bDesiredBehindView = B;
+    	Pawn.SaveConfig();
         ServerSetBehindView(
             UTComp_xPawn(Pawn).TPCamDistance, 
             UTComp_xPawn(Pawn).TPCamWorldOffset.X,

@@ -303,7 +303,7 @@ function DoTrace(Vector Start, Rotator Dir)
         {
             if(ArcsRemaining == NumArcs)
             {
-                f = 0.02;
+                f = 0.01;
                 while(abs(f) < (0.04 + 2.0*AverDT))
                 {
 
@@ -334,7 +334,7 @@ function DoTrace(Vector Start, Rotator Dir)
                     if(f > 0.00)
                         f = -1.0*f;
                     else
-                        f = -1.0*f+0.02;
+                        f = -1.0*f+0.01;
                 }
             //    if(abs(f)<9.0)
             //       log("Failed to fix");
@@ -344,7 +344,7 @@ function DoTrace(Vector Start, Rotator Dir)
         {
             if(ArcsRemaining == NumArcs)
             {
-                f = 0.02;
+                f = 0.01;
                 while(abs(f) < (0.04 + 2.0*AverDT))
                 {
                     AltOther=None;
@@ -375,7 +375,7 @@ function DoTrace(Vector Start, Rotator Dir)
                     if(f > 0.00)
                         f = -1.0*f;
                     else
-                        f = -1.0*f+0.02;
+                        f = -1.0*f+0.01;
                 }
               //  if(abs(f)<9.0)
               //     log("Failed to reverse fix");
