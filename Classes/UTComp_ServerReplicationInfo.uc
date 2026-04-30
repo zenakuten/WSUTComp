@@ -83,6 +83,7 @@ var bool bAllowTeamRadarMap;
 var float TeamRadarCullDistance;
 
 var bool bDisableCameraShake;
+var bool bAllowTerrainDodge;
 
 replication
 {
@@ -102,7 +103,7 @@ replication
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
-		bDisableCameraShake;
+		bDisableCameraShake, bAllowTerrainDodge;
 }
 
 defaultproperties
@@ -162,5 +163,6 @@ defaultproperties
      TeamRadarCullDistance=10000.0
 	 
 	 bDisableCameraShake=false
+	 bAllowTerrainDodge=false
 }
 
