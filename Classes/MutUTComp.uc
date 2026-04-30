@@ -211,6 +211,7 @@ var UTComp_Whitelist Whitelist;
 var string OriginalStatsClass;
 
 var config bool bDisableCameraShake;
+var config bool bAllowTerrainDodge;
 
 function PreBeginPlay()
 {
@@ -933,6 +934,7 @@ function SpawnReplicationClass()
     RepInfo.TeamRadarCullDistance = TeamRadarCullDistance;
 	
 	RepInfo.bDisableCameraShake = bDisableCameraShake;
+	RepInfo.bAllowTerrainDodge = bAllowTerrainDodge;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1684,6 +1686,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", security, weight, "Text", "0;0:1800",, False, False);
 	PlayInfo.AddSetting("UTComp Settings", "bDisableCameraShake", "Disable Camera Shake", security, weight, "Check");
 	PlayInfo.AddSetting("UTComp Settings", "bShowTeamScoresInServerBrowser", "Show team scores in server browser", security, weight, "Check");
+	PlayInfo.AddSetting("UTComp Movement", "bAllowTerrainDodge", "Allow dodging off terrain", security, weight, "Check");
     
     weight++;
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
@@ -1784,6 +1787,7 @@ static event string GetDescriptionText(string PropName)
         case "bAllowTeamRadarMap": return "Allow players to use minimap team radar";
 		case "bDisableCameraShake": return "Disable camera shake effects";
 		case "bShowTeamScoresInServerBrowser": return "Check this to show team scores in the server browser";
+		case "bAllowTerrainDodge": return "Allow players to dodge off terrain.";
 
         case "NewNetUpdateFrequency": return "NewNet Update Frequency (200)";
         case "PingTweenTime": return "NewNet Ping Tween Time (3.0)";
@@ -2243,6 +2247,7 @@ defaultproperties
      bAllowTeamRadarMap=false
 	 
 	 bDisableCameraShake=false
+	 bAllowTerrainDodge=false
 
      bUseUTCompStats=true
 
