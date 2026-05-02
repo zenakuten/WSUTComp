@@ -1270,7 +1270,7 @@ simulated function Destroyed()
 
 simulated function bool PointOfView()
 {
-	return default.bDesiredBehindView;
+	return bDesiredBehindView;
 }
 
 simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation )

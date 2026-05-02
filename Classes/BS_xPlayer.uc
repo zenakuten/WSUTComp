@@ -595,6 +595,7 @@ function SetMaxSavedMoves()
 	}
 }
 
+
 function SetTauntCount()
 {
     if(RepInfo != None)
@@ -613,6 +614,13 @@ function SetMaxResponseTime()
         Default.MaxResponseTime = RepInfo.MaxResponseTime;
 }
 
+function SetInitialDesiredBehindView()
+{
+	class'UTComp_xPawn'.default.bDesiredBehindView=false;
+    if(UTComp_xPawn(Pawn) != None)
+		UTComp_xPawn(Pawn).bDesiredBehindView=false;
+}
+
 simulated function InitializeClient()
 {
     InitializeScoreboard();
@@ -623,6 +631,7 @@ simulated function InitializeClient()
     SetMaxSavedMoves();
     SetTauntCount();
     SetMaxResponseTime();
+	SetInitialDesiredBehindView();
     if(Settings.bFirstRun)
     {
         Settings.bFirstRun=False;
