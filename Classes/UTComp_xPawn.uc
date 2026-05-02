@@ -1412,6 +1412,62 @@ simulated function byte GetDefaultBrightColorMode()
     return 6;                 // Always Brighter Blue
 }
 
+// Terrain dodging
+function bool Dodge(eDoubleClickDir DoubleClickMove)
+{
+    local vector X, Y, Z, Dir, Cross, TraceDir;
+    local vector TraceStart, TraceEnd, HitLocation, HitNormal;
+    local Actor HitActor;
+    local EPhysics SavedPhysics;
+    local bool bDidDodge;
+
+    if (RepInfo == None)
+    {
+        foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+    }
+
+    // Apply custom terrain logic when falling (sliding off steep slopes)
+    if (RepInfo != None && RepInfo.bAllowTerrainDodge && Physics == PHYS_Falling)
+    {
+        GetAxes(Rotation, X, Y, Z);
+        
+        // Determine the dodge direction and cast the trace in the opposite direction
+        if (DoubleClickMove == DCLICK_Forward) { Dir = X; Cross = Y; TraceDir = -X; }
+        else if (DoubleClickMove == DCLICK_Back) { Dir = -X; Cross = Y; TraceDir = X; }
+        else if (DoubleClickMove == DCLICK_Left) { Dir = -Y; Cross = X; TraceDir = Y; }
+        else if (DoubleClickMove == DCLICK_Right) { Dir = Y; Cross = X; TraceDir = -Y; }
+
+        if (AIController(Controller) != None)
+            Cross = vect(0,0,0);
+
+        // Trace horizontally from the feet
+        TraceStart = Location - vect(0,0,1) * (CollisionHeight - 4.0); 
+        TraceEnd = TraceStart + TraceDir * (CollisionRadius + 32.0);
+
+        // false = ignore actors, only trace world geometry (Terrain)
+        HitActor = Trace(HitLocation, HitNormal, TraceEnd, TraceStart, false);
+
+        // If we hit terrain, verify the angle opposes the dodge direction.
+        // (Dir Dot HitNormal > 0 ensures we are dodging away from the slope's face)
+        if (HitActor != None && HitActor.IsA('TerrainInfo') && (Dir Dot HitNormal) > 0)
+        {
+            SavedPhysics = Physics;
+            SetPhysics(PHYS_Falling);
+            
+            bDidDodge = PerformDodge(DoubleClickMove, Dir, Cross);
+            
+            // Restore physics state if the dodge failed or didn't lift us
+            if (!bDidDodge || Physics == PHYS_Walking)
+                SetPhysics(SavedPhysics);
+
+            return bDidDodge;
+        }
+    }
+
+    return Super.Dodge(DoubleClickMove);
+}
+
 defaultproperties
 {
     bAlwaysRelevant=True
