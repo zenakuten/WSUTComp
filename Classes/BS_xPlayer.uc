@@ -5009,7 +5009,7 @@ defaultproperties
      PreferredExitPoint=-1
      bDidWhitelistCheck=False
 
-    MaxSavedMoves=300
+    MaxSavedMoves=750
     SavedMovesWarningInterval=5.0
     LastSavedMovesWarning=0     
     TauntCount=0

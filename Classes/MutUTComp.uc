@@ -2233,7 +2233,7 @@ defaultproperties
      bChargedWeaponsNoSpawnProtection=false
 
      bKeepMomentumOnLanding=true
-     MaxSavedMoves=300
+     MaxSavedMoves=750
      NetMoveDelta=0.011
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
