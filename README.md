@@ -5,6 +5,12 @@ Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCo
 
 Release Notes
 
+V23
+- fix felloutofworld issue with timestamp pawn
+- add terrain dodge option (Calypto)
+- bump max saved moves
+- use 1p view on join
+
 V22
 - alternate fix for unregs on passenger seat
 - try force 96WB
