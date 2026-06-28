@@ -10,6 +10,7 @@ V23
 - add terrain dodge option (Calypto)
 - bump max saved moves
 - use 1p view on join
+- fix for flak SS_line & fake projectile
 
 V22
 - alternate fix for unregs on passenger seat
