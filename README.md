@@ -1,6 +1,9 @@
 # WSUTComp
 
-Wicked Sick UTComp, based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCompOmni)
+Wicked Sick UTComp
+
+based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCompOmni) 
+which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 
 Release Notes
