@@ -56,6 +56,30 @@ simulated function Projectile GetFP(class<Projectile> CP, optional int index)
    return none;
 }
 
+// Like GetFP, but when multiple fakes share an index (e.g. a lingering fake from a
+// previous shot that hasn't expired yet), return the one nearest to loc. This is the
+// just-fired fake, keeping reconciliation deltas small for ordered spreads (SS_Line).
+simulated function Projectile GetClosestFP(class<Projectile> CP, int index, vector loc)
+{
+   local int i, best;
+   local float bestDist, d;
+
+   best = -1;
+   for(i=0; i<FP.Length; i++)
+      if(FP[i].FP!=None && FP[i].FP.class == CP && FP[i].index == index)
+      {
+         d = VSize(FP[i].FP.Location - loc);
+         if(best < 0 || d < bestDist)
+         {
+            best = i;
+            bestDist = d;
+         }
+      }
+   if(best >= 0)
+      return FP[best].FP;
+   return none;
+}
+
 defaultproperties
 {
      bHidden=True

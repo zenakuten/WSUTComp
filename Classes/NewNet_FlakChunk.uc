@@ -28,7 +28,7 @@ simulated function PostNetBeginPlay()
 
     PC = Level.GetLocalPlayerController();
     if (CheckOwned())
-       CheckForFakeProj();
+        CheckForFakeProj();
 }
 
 simulated function DoMove(Vector V)
@@ -58,7 +58,10 @@ simulated function bool CheckForFakeProj()
 
      if(FPM == none)
         FindFPM();
-     FP = FPM.GetFP(class'NewNet_Fake_FlakChunk', ChunkNum);
+     // ChunkNum resets to 0 each shot, so during rapid fire a lingering fake from
+     // the previous shot can share this ChunkNum. Match the nearest fake to keep
+     // reconciliation deltas small (matters for ordered SS_Line spreads).
+     FP = FPM.GetClosestFP(class'NewNet_Fake_FlakChunk', ChunkNum, Location);
      if(FP != none)
      {
          bInterpFake=true;

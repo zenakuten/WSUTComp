@@ -20,6 +20,7 @@ var class<Projectile> FakeProjectileClass;
 var FakeProjectileManager FPM;
 var MutUTComp MNN;
 var bool bSkipNextEffect;
+var int SpawnIdx;
 
 const PROJ_TIMESTEP = 0.0251;
 const MAX_PROJECTILE_FUDGE = 0.075;
@@ -43,6 +44,13 @@ function PlayFiring()
 
 function CheckFireEffect()
 {
+   // Weapon-config sets class defaults, but this fire-mode instance may have been
+   // created on the client before the config replicated in, leaving stale values.
+   // Refresh from the (now-correct) class defaults so predicted fakes use the same
+   // spread as the server's real chunks.
+   SpreadStyle = default.SpreadStyle;
+   ProjPerFire = default.ProjPerFire;
+   Spread = default.Spread;
    if(Level.NetMode == NM_Client && Instigator.IsLocallyControlled())
    {
        if(class'NewNet_PRI'.default.PredictedPing - SLACK > MAX_PROJECTILE_FUDGE)
@@ -80,6 +88,7 @@ simulated function DoTimedClientFireEffect()
     local float theta;
 
     Instigator.MakeNoise(1.0);
+    SpawnIdx = 0;
     //Weapon.GetViewAxes(X,Y,Z);
     X = OldXAxis;
     Y = OldYAxis;
@@ -180,6 +189,7 @@ simulated function DoClientFireEffect()
     local float theta;
 
     Instigator.MakeNoise(1.0);
+    SpawnIdx = 0;
     Weapon.GetViewAxes(X,Y,Z);
 
     StartTrace = Instigator.Location + Instigator.EyePosition();// + X*Instigator.CollisionRadius;
@@ -267,6 +277,11 @@ simulated function projectile SpawnFakeProjectile(Vector Start, Rotator Dir)
     local Projectile p;
 
     p = FakeSuperSpawnProjectile(Start,Dir);
+    if(FPM == None)
+        FindFPM();
+    if(p != None && FPM.AllowFakeProjectile(FakeProjectileClass, SpawnIdx))
+        FPM.RegisterFakeProjectile(FlakChunk(p), SpawnIdx);
+    SpawnIdx++;
 	return p;
 }
 
@@ -305,6 +320,8 @@ function DoFireEffect()
        super.DoFireEffect();
        return;
     }
+
+    SpawnIdx = 0;
 
     Instigator.MakeNoise(1.0);
     Weapon.GetViewAxes(X,Y,Z);
@@ -469,10 +486,13 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
         }
     }
 
-    if( p == None )
-        return None;
-
-    p.Damage *= DamageAtten;
+    if( p != None )
+    {
+        if(NewNet_FlakChunk(p) != None)
+            NewNet_FlakChunk(p).ChunkNum = SpawnIdx;
+        p.Damage *= DamageAtten;
+    }
+    SpawnIdx++;
     return p;
 }
 
