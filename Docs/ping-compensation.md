@@ -287,7 +287,119 @@ actually saw it**, then applied the outcome to the live game state.
 
 ---
 
-## 6. Call-flow diagram
+## 6. NewNet projectiles ("fake projectiles")
+
+Everything above describes **hitscan** weapons (shock beam, minigun, sniper,
+assault, link beam): the trace is instantaneous, so the server can rewind, trace,
+and resolve the hit in the same frame the fire command arrives.
+
+**Projectile** weapons — shock combo ball, bio globs, flak chunks/shells, link
+plasma, rockets — can't work that way. The projectile takes time to travel, so the
+outcome isn't known at fire time, and you can't just rewind-and-trace. NewNet
+solves this with two cooperating tricks: **client-side fake projectiles** for
+instant visual feedback, and **server-side forward extrapolation** so the real
+projectile is born already advanced by the shooter's latency. The relevant classes
+are `FakeProjectileManager`, the `NewNet_Fake_*` projectiles, and the `NewNet_PRI`
+ping estimator.
+
+### 6.1 Client: spawn a fake immediately
+
+When a remote client fires a projectile weapon, the fire mode's client effect
+(e.g. `NewNet_ShockProjFire.DoClientFireEffect` → `SpawnFakeProjectile`,
+`NewNet_ShockProjFire.uc:78`) spawns a **fake projectile** right away —
+`NewNet_Fake_ShockProjectile`, `NewNet_Fake_BioGlob`, `NewNet_Fake_FlakChunk`,
+etc. Fakes are **cosmetic only**: they don't collide with players
+(`bCollideActors=False`), deal no damage, and exist purely so the shooter sees the
+projectile leave the barrel with zero delay. The real, authoritative projectile is
+still spawned by the server.
+
+### 6.2 The `FakeProjectileManager`
+
+Each client has one hidden `FakeProjectileManager` (spawned by `MutUTComp.Tick`
+on the client, `MutUTComp.uc:812`). It is the bookkeeping actor that lets a real
+projectile find "its" fake later. It holds an array of `{FP, index}` records
+(`FakeProjectileManager.uc`):
+
+- `RegisterFakeProjectile(p, index)` — record a spawned fake.
+- `AllowFakeProjectile(class, index)` — dedup guard: refuse a second fake for the
+  same shot (matched by class **and** index), since a fire effect can fire more
+  than once.
+- `GetFP(class, index)` / `GetClosestFP(class, index, loc)` — look up the fake to
+  reconcile a newly-arrived real projectile against. `GetClosestFP` breaks ties by
+  proximity when several fakes of the same class share an index (e.g. a lingering
+  fake from a previous shot), keeping the reconciliation delta small.
+- `CleanUpProjectiles` / `RemoveProjectile` — prune destroyed or already-reconciled
+  fakes.
+
+The **`index`** comes from a per-weapon counter (`CurIndex`, replicated to the
+owning client — see `NewNet_BioRifle`/`NewNet_LinkGun`). It disambiguates multiple
+in-flight projectiles of the same class so each real projectile matches its own
+fake and not a neighbor's.
+
+### 6.3 Latency source: `NewNet_PRI.PredictedPing`
+
+Fakes and forward-extrapolation use `NewNet_PRI.PredictedPing` — a smoothed
+round-trip ping measured by a dedicated ping/pong `LinkedReplicationInfo`
+(`NewNet_PRI.uc`), tweened over `PingTweenTime` (3 s) and seeded from the first 8
+samples. This is a **separate** latency estimate from the collision-copy clock used
+by hitscan (`PingDT`); projectile prediction needs the client's own round-trip
+estimate because the client must extrapolate before the server ever responds.
+
+### 6.4 Server: forward-extrapolate the real projectile
+
+When the server spawns the real projectile (`SpawnProjectile` in the fire mode,
+e.g. `NewNet_BioFire.uc:19`; for rockets it's in the weapon,
+`NewNet_RocketLauncher.uc:300+`), it does **not** simply spawn it at the muzzle.
+Instead it simulates the projectile's flight forward by `PingDT` in small
+`PROJ_TIMESTEP` (~0.02 s) steps. At each step it rewinds the collision copies to
+the matching moment (`TimeTravel(pingDT - g)`) and traces that segment:
+
+- If the projectile would already have struck something during those first
+  `PingDT` seconds, it spawns the real projectile at that hit point (and the hit is
+  resolved there).
+- Otherwise it spawns the real projectile at the extrapolated position with the
+  extrapolated velocity/direction.
+
+So a high-ping player's projectile is **born already `ping` seconds into its
+flight**, roughly where the shooter's fake already is. This forward rewind is
+clamped by `MAX_PROJECTILE_FUDGE` (per weapon — 0.075 s for most, 0.275 s for
+rockets), a tighter cap than hitscan compensation.
+
+### 6.5 Client: the real projectile replaces the fake
+
+The real projectile replicates to clients. On the owning shooter's client,
+`NewNet_ShockProjectile.PostNetBeginPlay` → `DoPostNet` (`NewNet_ShockProjectile.uc:24`):
+
+1. `CheckOwned()` — only the local shooter reconciles; other clients just render
+   the normally-replicated real projectile.
+2. `CheckForFakeProj()` — ask the `FakeProjectileManager` for the matching fake.
+   If found: snap the real projectile to the fake's **current** location, record
+   the delta between that and where the server says it should be, delete the fake,
+   then over `INTERP_TIME` (0.7 s) smoothly slide the real projectile from the
+   fake's position to the server position (`FakeInterp`) so there is no visible
+   pop.
+3. If **no** fake is found (e.g. it already expired), just nudge the real
+   projectile forward by `PredictedPing * Velocity` so it still starts roughly
+   where the shooter expected.
+
+Fakes and reals are made to ignore each other during flight (e.g.
+`NewNet_Fake_ShockProjectile.ProcessTouch` ignores `NewNet_ShockProjectile`, and
+vice-versa) so they never detonate one another.
+
+### 6.6 Hitscan vs. projectile at a glance
+
+| | Hitscan | Projectile |
+| --- | --- | --- |
+| Client feedback | instant cosmetic trace (`DoInstantFireEffect`) | instant **fake projectile** |
+| Latency used | `PingDT` (collision-copy clock) | `PredictedPing` (`NewNet_PRI`) + `PingDT` server-side |
+| Server technique | rewind world, trace once | forward-extrapolate real projectile through rewound world, step by step |
+| Reconciliation | favor-the-shooter re-trace (`bBelievesHit`) | real projectile snaps to fake, then `FakeInterp` |
+| Compensation cap | `MAX_HISTORY_LENGTH` (0.35 s) | `MAX_PROJECTILE_FUDGE` (0.075 s; 0.275 s rockets) |
+| Bookkeeping | `PawnCollisionCopy` list | `FakeProjectileManager` |
+
+---
+
+## 7. Call-flow diagram
 
 ```
         CLIENT (Role < ROLE_Authority)                    SERVER (ROLE_Authority)
@@ -340,7 +452,7 @@ actually saw it**, then applied the outcome to the live game state.
 
 ---
 
-## 7. Key formulas & constants recap
+## 8. Key formulas & constants recap
 
 - **Rewind amount:**
   `PingDT = ClientTimeStamp − GetStamp(Stamp) − DT + 0.5·AverDT`
@@ -357,7 +469,7 @@ actually saw it**, then applied the outcome to the live game state.
 
 ---
 
-## 8. Where to look in the source
+## 9. Where to look in the source
 
 | Concern | File / function |
 | --- | --- |
@@ -367,7 +479,14 @@ actually saw it**, then applied the outcome to the live game state.
 | Per-pawn history & time travel | `PawnCollisionCopy.uc` — `AddHistory` (`:374`), `TimeTravelPawn` (`:138`), `GoToPawn` (`:110`) |
 | Clock transport pawn/controller | `TimeStamp_Pawn.uc`, `TimeStamp_Controller.uc` |
 | `AverDT` replication | `TimeStamp.uc` |
+| Fake-projectile bookkeeping | `FakeProjectileManager.uc` — `RegisterFakeProjectile`, `AllowFakeProjectile`, `GetFP`/`GetClosestFP` |
+| Client fake spawn | `NewNet_ShockProjFire.uc` — `DoClientFireEffect` (`:22`), `SpawnFakeProjectile` (`:78`); fakes `NewNet_Fake_*.uc` |
+| Server forward-extrapolation | `NewNet_BioFire.uc` — `SpawnProjectile` (`:19`); `NewNet_RocketLauncher.uc` — `SpawnProjectile` (`:300+`) |
+| Real→fake reconciliation | `NewNet_ShockProjectile.uc` — `DoPostNet` (`:24`), `CheckForFakeProj` (`:64`), `FakeInterp` (`:110`) |
+| Projectile ping estimate | `NewNet_PRI.uc` — `PredictedPing` (ping/pong) |
 
-Every other `NewNet_*` weapon (minigun, sniper, flak, link, rocket, bio, assault)
-follows this identical client-predict / server-rewind structure; only the trace
-or projectile spawn in the fire mode differs.
+The hitscan `NewNet_*` weapons (minigun, sniper, assault, link beam, shock/super
+shock beam) share the client-predict / server-rewind structure of §5; only the
+trace in the fire mode differs. The **projectile** weapons (shock combo, bio, flak,
+link plasma, rockets) instead use the fake-projectile / forward-extrapolation
+scheme of §6.
