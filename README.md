@@ -12,6 +12,9 @@ V24
 - fix team overlay not showing when enabled
 - use utcomp style scoreboard for team deathmatch
 - use utcomp style scoreboard for assault
+- fix landing position correction on multidodge 
+- honor keepmomentumonlanding offline
+- fix F8 next stats not working when scoreboard opened before stats
 
 V23
 - fix felloutofworld issue with timestamp pawn

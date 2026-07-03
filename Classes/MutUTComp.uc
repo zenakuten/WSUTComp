@@ -1682,7 +1682,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bEnablePowerupsOverlay", "Enable Powerups Overlay for spectators", security, weight, "Check");
     PlayInfo.AddSetting("UTComp Settings", "ServerMaxPlayers", "Voting Max Players",255, weight, "Text","2;0:32",,False,False);
     PlayInfo.AddSetting("UTComp Settings", "NumGrenadesOnSpawn", "Number of grenades on spawn",255, weight, "Text","2;0:32",,False,False);
-    PlayInfo.AddSetting("UTComp Settings", "MaxMultiDodges", "Number of additional dodges",255, weight, "Text","2;0:99",);
+    PlayInfo.AddSetting("UTComp Settings", "MaxMultiDodges", "Number of additional dodges",255, weight, "Text","4;0:9999",);
     PlayInfo.AddSetting("UTComp Settings", "SuicideInterval", "Minimum time between two suicides", security, weight, "Text", "0;0:1800",, False, False);
 	PlayInfo.AddSetting("UTComp Settings", "bDisableCameraShake", "Disable Camera Shake", security, weight, "Check");
 	PlayInfo.AddSetting("UTComp Settings", "bShowTeamScoresInServerBrowser", "Show team scores in server browser", security, weight, "Check");

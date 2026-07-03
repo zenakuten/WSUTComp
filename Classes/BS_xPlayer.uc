@@ -36,6 +36,12 @@ var UTComp_Warmup uWarmup;
 var UTComp_ServerReplicationInfo RepInfo;
 var UTComp_PRI UTCompPRI;
 
+// Set while airborne when the multi-dodge tick clears an active dodge; read (and reset)
+// in NotifyLanded. Because the tick wipes DoubleClickDir at a client/server-inconsistent
+// time, this stable per-fall record is what keeps the landing velocity - and therefore
+// the predicted position - in agreement across client, server, and standalone.
+var bool bDodgedThisFall;
+
 var ONSPowerCore oldFoundCore;
 var xweaponbase oldFoundWep;
 var Controller LastViewedController;
@@ -516,7 +522,14 @@ event PlayerTick(float deltatime)
         UTComp_xPawn(Pawn) != none && UTComp_xPawn(Pawn).MultiDodgesRemaining > 0
     ) {
         UTComp_xPawn(Pawn).MultiDodgesRemaining -= 1;
-        DoubleClickDir = DCLICK_None;
+        // Remember the dodge before we wipe DoubleClickDir below, so NotifyLanded can
+        // still tell this was a dodge-landing (see bDodgedThisFall).
+        bDodgedThisFall = true;
+		if(DoubleClickDir >= DCLICK_Active)
+		{
+			ClearDoubleClick();
+			DoubleClickDir = DCLICK_None;
+		}
     }
 
     if (Level.NetMode == NM_Client && RepInfo != none) {
@@ -3192,17 +3205,37 @@ state PlayerWalking
 {
     function bool NotifyLanded(vector HitNormal)
     {
-        if(RepInfo == None || (RepInfo != None && !RepInfo.bKeepMomentumOnLanding))
-            return super.NotifyLanded(HitNormal);
+        local bool bKeep, bWasDodging;
+
+        // Was a dodge in progress when we hit the ground? Consider both the live
+        // DoubleClickDir and the stable per-fall flag, since the multi-dodge tick may
+        // have already wiped DoubleClickDir (at a client/server-inconsistent time,
+        // which is what produced the visible landing position correction).
+        bWasDodging = (DoubleClickDir == DCLICK_Active) || bDodgedThisFall;
+        bDodgedThisFall = false;
+
+        // keep-momentum-on-landing setting; fall back to the local mutator config when
+        // there is no replicated RepInfo (standalone) so it also applies offline.
+        if(RepInfo != None)
+            bKeep = RepInfo.bKeepMomentumOnLanding;
+        else
+            bKeep = class'MutUTComp'.default.bKeepMomentumOnLanding;
 
         if (DoubleClickDir == DCLICK_Active)
         {
             DoubleClickDir = DCLICK_Done;
             ClearDoubleClick();
-            Pawn.Velocity *= Vect(0.8,0.8,1.0);
         }
         else
             DoubleClickDir = DCLICK_None;
+
+        if (bWasDodging && Pawn != None)
+        {
+            if (bKeep)
+                Pawn.Velocity *= Vect(0.8,0.8,1.0);   // keep momentum (glide)
+            else
+                Pawn.Velocity *= Vect(0.1,0.1,1.0);   // stock: kill momentum
+        }
 
         if ( Global.NotifyLanded(HitNormal) )
             return true;

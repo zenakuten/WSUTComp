@@ -32,7 +32,9 @@ simulated function UpdatePrecacheMaterials()
 
 exec function NextStats()
 {
-    if (ScoreBoard == none || bShowScoreBoard == false)
+    // Match the engine's draw priority: when local stats (F3) are up they render even
+    // over the scoreboard, so cycle that screen rather than the hidden scoreboard.
+    if (bShowLocalStats || ScoreBoard == none || bShowScoreBoard == false)
         Super.NextStats();
     else
         ScoreBoard.NextStats();
