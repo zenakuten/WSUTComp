@@ -265,6 +265,8 @@ simulated function SpawnBeamEffect(vector HitLocation, vector HitNormal, vector 
     }
 
     if (
+        Instigator != None &&
+        Instigator.PlayerReplicationInfo != None &&
         Instigator.PlayerReplicationInfo.Team != None &&
         Instigator.PlayerReplicationInfo.Team.TeamIndex == 1
     ) {

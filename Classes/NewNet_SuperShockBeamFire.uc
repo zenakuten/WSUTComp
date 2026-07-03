@@ -401,12 +401,17 @@ simulated function SpawnClientBeamEffect(Vector Start, Rotator Dir, Vector HitLo
 function SpawnBeamEffect(Vector Start, Rotator Dir, Vector HitLocation, Vector HitNormal, int ReflectNum)
 {
     local ShockBeamEffect Beam;
+    local bool bBlueTeam;
+
+    bBlueTeam = Instigator != None && Instigator.PlayerReplicationInfo != None
+        && Instigator.PlayerReplicationInfo.Team != None
+        && Instigator.PlayerReplicationInfo.Team.TeamIndex == 1;
 
     if (Weapon != None)
     {
         if(bUseEnhancedNetCode)
         {
-            if ( (Instigator.PlayerReplicationInfo.Team != None) && (Instigator.PlayerReplicationInfo.Team.TeamIndex == 1) ) {
+            if ( bBlueTeam ) {
                 Beam = Weapon.Spawn(class'NewNet_BlueSuperShockBeam', Weapon.Owner,, Start, Dir);
             } else {
                 Beam = Weapon.Spawn(class'NewNet_SuperShockBeamEffect', Weapon.Owner,, Start, Dir);
@@ -414,7 +419,7 @@ function SpawnBeamEffect(Vector Start, Rotator Dir, Vector HitLocation, Vector H
         }
         else
         {
-            if ( (Instigator.PlayerReplicationInfo.Team != None) && (Instigator.PlayerReplicationInfo.Team.TeamIndex == 1) ) {
+            if ( bBlueTeam ) {
                 Beam = Weapon.Spawn(Class'XWeapons.BlueSuperShockBeam',,, Start, Dir);
                 Beam.CoilClass = class'ShockBeamCoilBlue';
             } else {

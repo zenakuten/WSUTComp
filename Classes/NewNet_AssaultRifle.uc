@@ -12,8 +12,6 @@ replication
 {
     reliable if( Role<ROLE_Authority )
         NewNet_ServerStartFire;
-    unreliable if(Role == Role_Authority)
-        DispatchClientEffect;
 }
 
 function DisableNet()
@@ -74,13 +72,6 @@ function NewNet_ServerStartFire(byte Mode, byte ClientTimeStamp, float DT)
     ServerStartFire(Mode);
 }
 
-
-simulated function DispatchClientEffect(Vector V, rotator R)
-{
-    if(Level.NetMode != NM_Client)
-        return;
-    Spawn(class'LinkProjectile',,,V,R);
-}
 
 DefaultProperties
 {
