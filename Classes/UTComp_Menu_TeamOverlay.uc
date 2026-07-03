@@ -131,7 +131,8 @@ function UpdateOverlay()
   if(overl==None)
   {
     FindCurrentOverlay();
-    return;
+    if(overl==None)
+        return;
   }
   utcomp_Overlay(overl).vertPosition=Class'utcomp_Overlay'.default.VertPosition;
   utcomp_Overlay(overl).horizposition=Class'utcomp_Overlay'.default.HorizPosition;

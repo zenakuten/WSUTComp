@@ -2656,6 +2656,8 @@ simulated function SetOverlayEnabled(Bool b)
     Settings.bOverlayEnabled=b;
     SaveSettings();
     staticsaveconfig();
+    if(Overlay!=None)
+        Overlay.OverlayEnabled=b;
 }
 
 simulated function SetPowerupOverlayEnabled(Bool b)
