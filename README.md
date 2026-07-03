@@ -8,6 +8,11 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V24
+- fix team overlay not showing when enabled
+- use utcomp style scoreboard for team deathmatch
+- use utcomp style scoreboard for assault
+
 V23
 - fix felloutofworld issue with timestamp pawn
 - add terrain dodge option (Calypto)
