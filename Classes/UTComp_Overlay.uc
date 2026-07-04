@@ -72,6 +72,51 @@ var int numPowerups;
 var Texture MouseCursorTexture;
 var float MousePosX, MousePosY;
 
+var UTComp_ServerReplicationInfo EmoteSRI;
+
+// Emoticon rendering, shared with the HUD and scoreboard, so player names on the
+// team overlay render emoticons the same way chat and the scoreboard do.
+#include Classes\Include\EmoticonsDraw.uci
+
+// Returns the emoticon replication info to draw names with, or None when
+// emoticons are disabled server-side, disabled client-side, or not replicated.
+function EmoticonsReplicationInfo GetEmoteReplicationIfEnabled()
+{
+    if (EmoteSRI == None)
+        foreach ViewportOwner.Actor.DynamicActors(class'UTComp_ServerReplicationInfo', EmoteSRI)
+            break;
+
+    // Server-side disable (mutator bEnableEmoticons, replicated via SRI).
+    if (EmoteSRI != None && !EmoteSRI.bEnableEmoticons)
+        return None;
+
+    // EmoteInfo is only spawned when emoticons are enabled server-side, so a
+    // None here also means "disabled server-side".
+    if (PC == None || PC.EmoteInfo == None)
+        return None;
+
+    // Client-side disable (UTComp menu / HUD setting).
+    if (PC.HUDSettings != None && !PC.HUDSettings.bEnableEmoticons)
+        return None;
+
+    return PC.EmoteInfo;
+}
+
+// Draws Name at the current canvas position with emoticons rendered. Returns
+// false (and draws nothing) when emoticons are disabled or Name has none, so
+// callers fall back to their normal text draw.
+function bool TryDrawEmoteName(Canvas C, coerce string Name)
+{
+    local EmoticonsReplicationInfo rep;
+
+    rep = GetEmoteReplicationIfEnabled();
+    if (rep == None || FindNextSmile(rep, Name) < 0)
+        return false;
+
+    // 0.5 => half line-height icons; full size looks oversized on the overlay.
+    DrawSmileyText(rep, Name, C,,, 0.5);
+    return true;
+}
 
 event NotifyLevelChange()
 {
@@ -614,7 +659,8 @@ function DrawPlayerNames(Canvas Canvas, UTComp_PRI uPRI, int team)
       Canvas.Font = InfoFont;
 
     Canvas.SetPos(currentX, currentY + (strLenY + strLenLocationY) * i);
-    Canvas.DrawTextClipped(oPRI.PlayerName);
+    if (!TryDrawEmoteName(Canvas, oPRI.PlayerName))
+      Canvas.DrawTextClipped(oPRI.PlayerName);
   }
 
   Canvas.ClipX = oldClipX;
