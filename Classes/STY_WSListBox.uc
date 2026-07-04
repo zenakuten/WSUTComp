@@ -16,7 +16,7 @@ defaultproperties
 	FontColors(1)=(R=0,G=255,B=255)
 	FontColors(2)=(R=0,G=255,B=255)
 	FontColors(3)=(R=0,G=255,B=255)
-	FontColors(4)=(R=60,G=60,B=60)
+	FontColors(4)=(R=140,G=140,B=140)
 	ImgColors(0)=(B=255,G=255,R=255,A=255)
 	ImgColors(1)=(B=255,G=255,R=255,A=255)
 	ImgColors(2)=(B=255,G=255,R=255,A=255)

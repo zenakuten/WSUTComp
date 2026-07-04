@@ -19,6 +19,10 @@ V24
 - live preview skin colors while dragging the rgb sliders
 - add spawn protected team color preview model
 - reset skins now resets spawn protected colors to red/blue
+- lighten disabled gui control text for readability
+- fix disabled slider track and grab handle not rendering
+- fix disabled checkbox box not rendering
+- darken disabled checkbox check mark
 
 V23
 - fix felloutofworld issue with timestamp pawn

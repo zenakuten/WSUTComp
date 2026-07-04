@@ -18,12 +18,12 @@ defaultproperties
 	FontColors(1)=(R=0,G=255,B=255)
 	FontColors(2)=(R=0,G=255,B=255)
 	FontColors(3)=(R=0,G=255,B=255)
-	FontColors(4)=(R=60,G=60,B=60)
+	FontColors(4)=(R=140,G=140,B=140)
 	ImgColors(0)=(B=200,G=200,R=200,A=200)
 	ImgColors(1)=(B=200,G=200,R=200,A=170)
 	ImgColors(2)=(B=200,G=200,R=200,A=170)
 	ImgColors(3)=(B=200,G=200,R=200,A=190)
-	ImgColors(4)=(B=200,G=200,R=200,A=80)
+	ImgColors(4)=(B=200,G=200,R=200,A=150)
 	Images(0)=Texture'WSUTComp.GUI.WSButton'
 	Images(1)=Texture'WSUTComp.GUI.WSWatch'
 	Images(2)=Texture'WSUTComp.GUI.WSWatch'

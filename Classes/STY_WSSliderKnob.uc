@@ -16,15 +16,15 @@ defaultproperties
 	FontColors(1)=(R=0,G=255,B=255)
 	FontColors(2)=(R=0,G=255,B=255)
 	FontColors(3)=(R=0,G=255,B=255)
-	FontColors(4)=(B=60,G=60,R=60)
+	FontColors(4)=(B=140,G=140,R=140)
 	ImgColors(0)=(B=255,G=255,R=255,A=255)
 	ImgColors(1)=(B=255,G=255,R=255,A=255)
 	ImgColors(2)=(B=255,G=255,R=255,A=255)
 	ImgColors(3)=(B=255,G=255,R=255,A=255)
-	ImgColors(4)=(B=255,G=255,R=255,A=80)
+	ImgColors(4)=(B=140,G=140,R=140,A=220)
 	Images(0)=Texture'WSUTComp.GUI.WSSliderKnob'
 	Images(1)=Texture'WSUTComp.GUI.WSSliderKnob'
 	Images(2)=Texture'WSUTComp.GUI.WSSliderKnob'
 	Images(3)=Texture'WSUTComp.GUI.WSSliderKnob'
-	Images(4)=Texture'WSUTComp.GUI.WSNone'
+	Images(4)=Texture'WSUTComp.GUI.WSSliderKnob'
 }
