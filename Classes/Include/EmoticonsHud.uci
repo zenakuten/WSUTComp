@@ -117,7 +117,7 @@ simulated function DrawTypingPrompt(Canvas C, String Text, optional int Pos)
 // Borrowed from AssaultPlus by Marco a.k.a .:..: and modified to work with configurable and replicatable emoticons.
 function DrawSmileyText( EmoticonsReplicationInfo replication, string S, canvas C, optional out float XXL, optional out float XYL )
 {
-	local int i,n;
+	local int i,n,matchLen;
 	local float PX,PY,XL,YL,CurX,CurY,SScale,Sca,AdditionalY,NewAY;
 	local string D;
 	local color OrgC;
@@ -139,11 +139,11 @@ function DrawSmileyText( EmoticonsReplicationInfo replication, string S, canvas 
 	CurY = PY;
 	OrgC = C.DrawColor;
 	// Search for smiles in text
-	i = FindNextSmile( replication, S, n );
+	i = FindNextSmile( replication, S, n, matchLen );
 	While( i!=-1 && replication != None )
 	{
 		D = Left(S,i);
-		S = Mid( S, i+Len( replication.Smileys[n].Event ) );
+		S = Mid( S, i+matchLen );
 		// Draw text behind
 		C.SetPos(CurX,CurY);
 		C.DrawText(D);
@@ -191,7 +191,7 @@ function DrawSmileyText( EmoticonsReplicationInfo replication, string S, canvas 
 		}
 		// Then go for next smile
 		C.DrawColor = OrgC;
-		i = FindNextSmile( replication, S, n );
+		i = FindNextSmile( replication, S, n, matchLen );
 	}
 	// Then draw rest of text remaining
 	C.SetPos(CurX,CurY);
@@ -225,20 +225,58 @@ function string StripColorForTTS( string s )
 }
 
 // Borrowed from AssaultPlus by Marco a.k.a .:..:
-function int FindNextSmile( EmoticonsReplicationInfo replication, string S, optional out int SmileNr )
+// Scans left-to-right, skipping color codes (Chr(27) + 3 bytes) so emoticon
+// events are only matched in visible text. Matching tolerates color codes that
+// are interspersed *within* an event too, which happens with multicolor names
+// (e.g. "=dart" gets a color code inserted between every letter). MatchLen
+// returns the raw length consumed in S (event chars + any interspersed codes)
+// so the caller advances past the whole matched region.
+function int FindNextSmile( EmoticonsReplicationInfo replication, string S, optional out int SmileNr, optional out int MatchLen )
 {
-	local int i,j,p,bp;
+	local int i,j,pos,slen,mlen;
 
-	bp = -1;
 	j = replication.Smileys.Length;
-	for( i = 0; i < j; i ++ )
+	slen = Len(S);
+	for( pos = 0; pos < slen; pos++ )
 	{
-		p = InStr( S, replication.Smileys[i].Event );
-		if( p!=-1 && (p<bp || bp==-1) )
+		// Skip over color codes so a match can't start inside one.
+		if( Mid(S,pos,1)==Chr(27) )
 		{
-			bp = p;
-			SmileNr = i;
+			pos += 3; // +1 more from the loop increment => skip all 4 bytes
+			continue;
+		}
+		for( i = 0; i < j; i++ )
+		{
+			mlen = MatchSmileAt( S, pos, replication.Smileys[i].Event );
+			if( mlen > 0 )
+			{
+				SmileNr = i;
+				MatchLen = mlen;
+				return pos;
+			}
 		}
 	}
-	return bp;
+	return -1;
+}
+
+// Attempts to match Event starting at Pos in S, skipping color codes
+// (Chr(27) + 3 bytes) sitting between event characters. Returns the raw length
+// consumed on success, or 0 if it does not match here.
+function int MatchSmileAt( string S, int Pos, string Event )
+{
+	local int e_i,elen,s_i,slen;
+
+	elen = Len(Event);
+	slen = Len(S);
+	s_i = Pos;
+	for( e_i = 0; e_i < elen; e_i++ )
+	{
+		// Skip color codes interspersed between event characters.
+		while( s_i < slen && Mid(S,s_i,1)==Chr(27) )
+			s_i += 4;
+		if( s_i >= slen || Mid(S,s_i,1)!=Mid(Event,e_i,1) )
+			return 0;
+		s_i++;
+	}
+	return s_i - Pos;
 }
