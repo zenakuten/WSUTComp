@@ -15,6 +15,10 @@ V24
 - fix landing position correction on multidodge 
 - honor keepmomentumonlanding offline
 - fix F8 next stats not working when scoreboard opened before stats
+- redesign brightskins config menu with two-column layout and per-team preview models
+- live preview skin colors while dragging the rgb sliders
+- add spawn protected team color preview model
+- reset skins now resets spawn protected colors to red/blue
 
 V23
 - fix felloutofworld issue with timestamp pawn
