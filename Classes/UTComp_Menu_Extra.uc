@@ -114,6 +114,24 @@ function InternalOnChange( GUIComponent C )
     UpdateServerCamDistance();
 }
 
+// Live preview while dragging a color slider: recolor the label text as the slider
+// moves. The config save is deferred to release (InternalOnChange).
+function OnSlide( GUIComponent C )
+{
+    switch(C)
+    {
+        case GhostRSlide: Settings.DeResColor.R = GhostRSlide.Value; MatchTextToSliders(); break;
+        case GhostGSlide: Settings.DeResColor.G = GhostGSlide.Value; MatchTextToSliders(); break;
+        case GhostBSlide: Settings.DeResColor.B = GhostBSlide.Value; MatchTextToSliders(); break;
+        case GhostASlide: Settings.DeResColor.A = GhostASlide.Value; MatchTextToSliders(); break;
+
+        case GhostFXRSlide: Settings.DeResFXColor.R = GhostFXRSlide.Value; MatchTextToSliders(); break;
+        case GhostFXGSlide: Settings.DeResFXColor.G = GhostFXGSlide.Value; MatchTextToSliders(); break;
+        case GhostFXBSlide: Settings.DeResFXColor.B = GhostFXBSlide.Value; MatchTextToSliders(); break;
+        case GhostFXASlide: Settings.DeResFXColor.A = GhostFXASlide.Value; MatchTextToSliders(); break;
+    }
+}
+
 function MatchSlidersToColors()
 {
     GhostRSlide.Value = Settings.DeResColor.R;
@@ -229,7 +247,7 @@ defaultproperties
     Begin Object Class=wsComboBox Name=ComboDamageIndicatorType
          Caption="Damage Indicators:"
          OnCreateComponent=ComboDamageIndicatorType.InternalOnCreateComponent
-         WinTop=0.380000
+         WinTop=0.33
          WinLeft=0.12
          WinWidth=0.25
          OnChange=UTComp_Menu_Extra.InternalOnChange
@@ -243,7 +261,7 @@ defaultproperties
         WinWidth=0.25
         WinHeight=0.030000
         WinLeft=0.12
-        WinTop=0.43
+        WinTop=0.38
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
     ch_EnableAwards=wsCheckBox'UTComp_Menu_Extra.EnableAwardsCheck'
@@ -255,7 +273,7 @@ defaultproperties
         WinWidth=0.25
         WinHeight=0.030000
         WinLeft=0.12
-        WinTop=0.48
+        WinTop=0.43
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
     ch_FastGhost=wsCheckBox'UTComp_Menu_Extra.FastGhostCheck'
@@ -267,7 +285,7 @@ defaultproperties
         WinWidth=0.25
         WinHeight=0.030000
         WinLeft=0.12
-        WinTop=0.53
+        WinTop=0.48
         OnChange=UTComp_Menu_Extra.InternalOnChange
     End Object
     ch_ColorGhost=wsCheckBox'UTComp_Menu_Extra.ColorGhostCheck'
@@ -284,7 +302,7 @@ defaultproperties
      Begin Object Class=wsGUISlider Name=thirdCamDistanceSlide
          bIntSlider=True
          WinTop=0.33
-         WinLeft=0.7500000
+         WinLeft=0.68
          WinWidth=0.125
          OnClick=thirdCamDistanceSlide.InternalOnClick
          OnMousePressed=thirdCamDistanceSlide.InternalOnMousePressed
@@ -309,7 +327,7 @@ defaultproperties
      Begin Object Class=wsGUISlider Name=thirdCamOffsetX
          bIntSlider=True
          WinTop=0.38
-         WinLeft=0.7500000
+         WinLeft=0.68
          WinWidth=0.125
          OnClick=thirdCamOffsetX.InternalOnClick
          OnMousePressed=thirdCamOffsetX.InternalOnMousePressed
@@ -335,7 +353,7 @@ defaultproperties
      Begin Object Class=wsGUISlider Name=thirdCamOffsetY
          bIntSlider=True
          WinTop=0.43
-         WinLeft=0.750000
+         WinLeft=0.68
          WinWidth=0.125
          OnClick=thirdCamOffsetY.InternalOnClick
          OnMousePressed=thirdCamOffsetY.InternalOnMousePressed
@@ -361,7 +379,7 @@ defaultproperties
      Begin Object Class=wsGUISlider Name=thirdCamOffsetZ
          bIntSlider=True
          WinTop=0.48
-         WinLeft=0.750000
+         WinLeft=0.68
          WinWidth=0.125
          OnClick=thirdCamOffsetZ.InternalOnClick
          OnMousePressed=thirdCamOffsetZ.InternalOnMousePressed
@@ -387,6 +405,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=RedRSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedRSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostRSlide=wsGUISlider'UTComp_Menu_Extra.RedRSlider'
@@ -402,6 +421,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=RedGSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedGSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostGSlide=wsGUISlider'UTComp_Menu_Extra.RedGSlider'
@@ -417,6 +437,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=RedBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedBSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostBSlide=wsGUISlider'UTComp_Menu_Extra.RedBSlider'
@@ -432,6 +453,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=RedBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedASlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostASlide=wsGUISlider'UTComp_Menu_Extra.RedASlider'
@@ -447,6 +469,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=BlueRSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueRSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostFXRSlide=wsGUISlider'UTComp_Menu_Extra.BlueRSlider'
@@ -462,6 +485,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=BlueGSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueGSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostFXGSlide=wsGUISlider'UTComp_Menu_Extra.BlueGSlider'
@@ -477,6 +501,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=BlueBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueBSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostFXBSlide=wsGUISlider'UTComp_Menu_Extra.BlueBSlider'
@@ -492,6 +517,7 @@ defaultproperties
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=BlueASlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueASlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_Extra.OnSlide
          MaxValue=255
      End Object
      ghostFXASlide=wsGUISlider'UTComp_Menu_Extra.BlueASlider'

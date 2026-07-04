@@ -147,6 +147,24 @@ function InternalOnChange( GUIComponent C )
     SaveSettings();
 }
 
+// Live preview while dragging a color slider: recolor the selected letter as the
+// slider moves. The player re-skin + config save is deferred to release (InternalOnChange).
+function OnSlide( GUIComponent C )
+{
+    local int i;
+
+    i = sl_LetterSelect.Value-1;
+    if(i < 0)
+        return;
+
+    switch(C)
+    {
+    case sl_RedColor:   Settings.ColorName[i].R=sl_RedColor.Value;   l_ColorNameLetters[i].TextColor.R=sl_RedColor.Value;   break;
+    case sl_BlueColor:  Settings.ColorName[i].B=sl_BlueColor.Value;  l_ColorNameLetters[i].TextColor.B=sl_BlueColor.Value;  break;
+    case sl_GreenColor: Settings.ColorName[i].G=sl_GreenColor.Value; l_ColorNameLetters[i].TextColor.G=sl_GreenColor.Value; break;
+    }
+}
+
 function bool InternalOnClick( GUIComponent Sender )
 {
     local int i;
@@ -403,6 +421,7 @@ defaultproperties
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
          OnKeyEvent=RedSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorNames.OnSlide
      End Object
      sl_RedColor=wsGUISlider'UTComp_Menu_ColorNames.RedSlider'
 
@@ -418,6 +437,7 @@ defaultproperties
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
          OnKeyEvent=BlueSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorNames.OnSlide
      End Object
      sl_BlueColor=wsGUISlider'UTComp_Menu_ColorNames.BlueSlider'
 
@@ -433,6 +453,7 @@ defaultproperties
          OnChange=UTComp_Menu_ColorNames.InternalOnChange
          OnKeyEvent=GreenSlider.InternalOnKeyEvent
          OnCapturedMouseMove=GreenSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorNames.OnSlide
      End Object
      sl_GreenColor=wsGUISlider'UTComp_Menu_ColorNames.GreenSlider'
 

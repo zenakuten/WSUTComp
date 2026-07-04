@@ -7,6 +7,14 @@ var automated GUISlider radarRSlide, radarGSlide, radarBSlide, radarASlide, rada
 var automated GUILabel radarMapScaleLabel, radarMapAlphaLabel, radarMapXLabel, radarMapYLabel;
 var automated GUISlider radarMapScaleSlide, radarMapAlphaSlide, radarMapXSlide, radarMapYSlide;
 
+// Live preview dudes drawn to the right of the through-wall color sliders. They render
+// as wireframe/colored silhouettes in the radar color, matching the in-game through-wall
+// effect (DrawTeamRadar in _HudCommon.uci), so they track the sliders in real time.
+var automated GUIImage i_PlayerPreview, i_VehiclePreview;
+var UTComp_SpinnyWeap SpinnyPlayer, SpinnyVehicle;
+var vector SpinnyOffset;
+var Engine UEngine;
+
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
     super.InitComponent(MyController, MyOwner);
@@ -38,6 +46,8 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
         radarVehicleGSlide.Hide();
         radarVehicleBSlide.Hide();
         radarVehicleASlide.Hide();
+        i_PlayerPreview.Hide();
+        i_VehiclePreview.Hide();
     }
 
     if(!CanUseTeamRadarMap())
@@ -63,6 +73,7 @@ event Opened(GUIComponent sender)
     ch_EnableTeamRadar.Checked(HUDSettings.bEnableTeamRadar);
     MatchSlidersToColors();
     MatchTextToSliders();
+    InitSpinnies();
 
     super.Opened(sender);
 }
@@ -148,6 +159,24 @@ function InternalOnChange( GUIComponent C )
     SaveHUDSettings();
 }
 
+// Live preview while dragging a color slider: recolor the label text as the slider
+// moves. The config save is deferred to release (InternalOnChange).
+function OnSlide( GUIComponent C )
+{
+    switch(C)
+    {
+        case radarRSlide: HUDSettings.TeamRadarPlayer.R = radarRSlide.Value; MatchTextToSliders(); break;
+        case radarGSlide: HUDSettings.TeamRadarPlayer.G = radarGSlide.Value; MatchTextToSliders(); break;
+        case radarBSlide: HUDSettings.TeamRadarPlayer.B = radarBSlide.Value; MatchTextToSliders(); break;
+        case radarASlide: HUDSettings.TeamRadarPlayer.A = radarASlide.Value; MatchTextToSliders(); break;
+
+        case radarVehicleRSlide: HUDSettings.TeamRadarVehicle.R = radarVehicleRSlide.Value; MatchTextToSliders(); break;
+        case radarVehicleGSlide: HUDSettings.TeamRadarVehicle.G = radarVehicleGSlide.Value; MatchTextToSliders(); break;
+        case radarVehicleBSlide: HUDSettings.TeamRadarVehicle.B = radarVehicleBSlide.Value; MatchTextToSliders(); break;
+        case radarVehicleASlide: HUDSettings.TeamRadarVehicle.A = radarVehicleASlide.Value; MatchTextToSliders(); break;
+    }
+}
+
 function MatchSlidersToColors()
 {
     radarRSlide.Value = HUDSettings.TeamRadarPlayer.R;
@@ -172,8 +201,173 @@ function MatchTextToSliders()
     radarVehicle.TextColor = HUDSettings.TeamRadarVehicle;
 }
 
+// ---- through-wall color preview dudes ----
+
+function InitSpinnies()
+{
+    local xUtil.PlayerRecord Rec;
+
+    if(PlayerOwner().PlayerReplicationInfo != None)
+        Rec = class'xutil'.static.FindPlayerRecord(PlayerOwner().PlayerReplicationInfo.CharacterName);
+    else
+        Rec = class'xutil'.static.FindPlayerRecord("Gorge");
+
+    SpinnyPlayer  = SpawnDude(SpinnyPlayer);
+    SpinnyVehicle = SpawnDude(SpinnyVehicle);
+
+    // Player preview: the player's own character. Vehicle preview: the PRV chassis mesh
+    // (a real vehicle), with no idle anim (vehicles have none - draw in reference pose).
+    // The vehicle mesh is much larger than a character, so it needs a smaller draw scale.
+    LinkDude(SpinnyPlayer,  Rec.MeshName,               0.22, true);
+    LinkDude(SpinnyVehicle, "ONSVehicles-A.PRVchassis", 0.13, false);
+}
+
+function UTComp_SpinnyWeap SpawnDude(UTComp_SpinnyWeap D)
+{
+    local vector X, Y, Z, X2, Y2, V;
+    local rotator R2, R;
+
+    if(D == None)
+        D = PlayerOwner().Spawn(class'UTComp_SpinnyWeap');
+    if(D != None)
+    {
+        D.SetDrawType(DT_Mesh);
+        D.SpinRate = 4000;
+        D.AmbientGlow = 45;
+
+        R = PlayerOwner().Rotation;
+        GetAxes(R, X, Y, Z);
+        R2.Yaw = 32768;
+        V = vector(R2);
+        X2 = V.X*X + V.Y*Y;
+        Y2 = V.X*Y - V.Y*X;
+        R2 = OrthoRotation(X2, Y2, Z);
+        D.SetRotation(R2);
+    }
+    return D;
+}
+
+function LinkDude(UTComp_SpinnyWeap Dude, string MeshName, float Scale, bool bLoopIdle)
+{
+    local Mesh M;
+
+    if(Dude == None)
+        return;
+
+    Dude.SetDrawScale(Scale);
+
+    M = Mesh(DynamicLoadObject(MeshName, class'Mesh'));
+    if(M == None)
+        return;
+
+    Dude.LinkMesh(M);
+    if(bLoopIdle)
+        Dude.LoopAnim('Idle_Rest', 1.0/Dude.Level.TimeDilation);
+}
+
+function bool OnDrawPlayer(Canvas C)
+{
+    return DrawSpinnyTinted(C, SpinnyPlayer, i_PlayerPreview, HUDSettings.TeamRadarPlayer);
+}
+
+function bool OnDrawVehicle(Canvas C)
+{
+    return DrawSpinnyTinted(C, SpinnyVehicle, i_VehiclePreview, HUDSettings.TeamRadarVehicle);
+}
+
+// Draw the dude as a wireframe/colored silhouette in TintColor, exactly like the in-game
+// through-wall render. C_AnimMesh (skeletal mesh) / C_BrushWire (weapon) are global engine
+// colors, so save and restore them around the draw to avoid tinting other rendering.
+function bool DrawSpinnyTinted(Canvas Canvas, UTComp_SpinnyWeap Dude, GUIImage Bounds, color TintColor)
+{
+    local float oOrgX, oOrgY, oClipX, oClipY;
+    local vector CamPos, X, Y, Z;
+    local rotator CamRot;
+    local color oAnimMesh, oBrushWire;
+
+    if(Dude == None || Bounds == None || !Bounds.bVisible)
+        return true;
+
+    if(UEngine == None)
+        foreach AllObjects(class'Engine', UEngine)
+            break;
+    if(UEngine == None)
+        return true;
+
+    oOrgX=Canvas.OrgX;
+    oOrgY=Canvas.OrgY;
+    oClipX=Canvas.ClipX;
+    oClipY=Canvas.ClipY;
+
+    Canvas.OrgX=Bounds.ActualLeft();
+    Canvas.OrgY=Bounds.ActualTop();
+    Canvas.ClipX=Bounds.ActualWidth();
+    Canvas.ClipY=Bounds.ActualHeight();
+
+    Canvas.GetCameraLocation(CamPos, CamRot);
+    GetAxes(CamRot, X, Y, Z);
+    Dude.SetLocation(CamPos + (SpinnyOffset.X * X) + (SpinnyOffset.Y * Y) + (SpinnyOffset.Z * Z));
+
+    oAnimMesh  = UEngine.C_AnimMesh;
+    oBrushWire = UEngine.C_BrushWire;
+    UEngine.C_AnimMesh  = TintColor;
+    UEngine.C_BrushWire = TintColor;
+
+    Canvas.DrawActorClipped(Dude, true, Bounds.ActualLeft(), Bounds.ActualTop(), Bounds.ActualWidth(), Bounds.ActualHeight(), true, 15);
+
+    UEngine.C_AnimMesh  = oAnimMesh;
+    UEngine.C_BrushWire = oBrushWire;
+
+    Canvas.OrgX=oOrgX;
+    Canvas.OrgY=oOrgY;
+    Canvas.ClipX=oClipX;
+    Canvas.ClipY=oClipY;
+    return true;
+}
+
+function Free()
+{
+    Super.Free();
+    if(SpinnyPlayer  != None) { SpinnyPlayer.Destroy();  SpinnyPlayer=None; }
+    if(SpinnyVehicle != None) { SpinnyVehicle.Destroy(); SpinnyVehicle=None; }
+}
+
 defaultproperties
 {
+    SpinnyOffset=(X=280.000000,Y=1.000000,Z=2.000000)
+
+    Begin Object Class=GUIImage Name=PlayerPreviewImage
+        Image=Material'2K4Menus.Controls.buttonSquare_b'
+        ImageColor=(R=255,G=255,B=255,A=128)
+        ImageRenderStyle=MSTY_Alpha
+        ImageStyle=ISTY_Stretched
+        bScaleToParent=true
+        bBoundToParent=true
+        WinWidth=0.190000
+        WinHeight=0.170000
+        WinLeft=0.325000
+        WinTop=0.645000
+        RenderWeight=0.52
+        OnDraw=OnDrawPlayer
+    End Object
+    i_PlayerPreview=GUIImage'UTComp_Menu_HUD.PlayerPreviewImage'
+
+    Begin Object Class=GUIImage Name=VehiclePreviewImage
+        Image=Material'2K4Menus.Controls.buttonSquare_b'
+        ImageColor=(R=255,G=255,B=255,A=128)
+        ImageRenderStyle=MSTY_Alpha
+        ImageStyle=ISTY_Stretched
+        bScaleToParent=true
+        bBoundToParent=true
+        WinWidth=0.190000
+        WinHeight=0.170000
+        WinLeft=0.720000
+        WinTop=0.645000
+        RenderWeight=0.52
+        OnDraw=OnDrawVehicle
+    End Object
+    i_VehiclePreview=GUIImage'UTComp_Menu_HUD.VehiclePreviewImage'
+
     Begin Object Class=wsCheckBox Name=EnableMapTeamRadarCheck
         Caption="Show teammates on the HUD or minimap"
         Hint="Show teammates as a dot on the HUD or minimap"
@@ -300,13 +494,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.120000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=RedRSlider.InternalOnClick
          OnMousePressed=RedRSlider.InternalOnMousePressed
          OnMouseRelease=RedRSlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=RedRSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedRSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarRSlide=wsGUISlider'UTComp_Menu_HUD.RedRSlider'
@@ -315,13 +510,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.120000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=RedGSlider.InternalOnClick
          OnMousePressed=RedGSlider.InternalOnMousePressed
          OnMouseRelease=RedGSlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=RedGSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedGSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarGSlide=wsGUISlider'UTComp_Menu_HUD.RedGSlider'
@@ -330,13 +526,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.120000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=RedBSlider.InternalOnClick
          OnMousePressed=RedBSlider.InternalOnMousePressed
          OnMouseRelease=RedBSlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=RedBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedBSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarBSlide=wsGUISlider'UTComp_Menu_HUD.RedBSlider'
@@ -345,13 +542,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.7750000
          WinLeft=0.120000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=RedASlider.InternalOnClick
          OnMousePressed=RedASlider.InternalOnMousePressed
          OnMouseRelease=RedASlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=RedBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedASlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarASlide=wsGUISlider'UTComp_Menu_HUD.RedASlider'
@@ -360,13 +558,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.5500000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=BlueRSlider.InternalOnClick
          OnMousePressed=BlueRSlider.InternalOnMousePressed
          OnMouseRelease=BlueRSlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=BlueRSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueRSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarVehicleRSlide=wsGUISlider'UTComp_Menu_HUD.BlueRSlider'
@@ -375,13 +574,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.5500000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=BlueGSlider.InternalOnClick
          OnMousePressed=BlueGSlider.InternalOnMousePressed
          OnMouseRelease=BlueGSlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=BlueGSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueGSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarVehicleGSlide=wsGUISlider'UTComp_Menu_HUD.BlueGSlider'
@@ -390,13 +590,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.550000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=BlueBSlider.InternalOnClick
          OnMousePressed=BlueBSlider.InternalOnMousePressed
          OnMouseRelease=BlueBSlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=BlueBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueBSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarVehicleBSlide=wsGUISlider'UTComp_Menu_HUD.BlueBSlider'
@@ -405,13 +606,14 @@ defaultproperties
          bIntSlider=True
          WinTop=0.7750000
          WinLeft=0.550000
-         WinWidth=0.260000
+         WinWidth=0.195000
          OnClick=BlueASlider.InternalOnClick
          OnMousePressed=BlueASlider.InternalOnMousePressed
          OnMouseRelease=BlueASlider.InternalOnMouseRelease
          OnChange=UTComp_Menu_HUD.InternalOnChange
          OnKeyEvent=BlueASlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueASlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_HUD.OnSlide
          MaxValue=255
      End Object
      radarVehicleASlide=wsGUISlider'UTComp_Menu_HUD.BlueASlider'
@@ -419,8 +621,10 @@ defaultproperties
      Begin Object Class=GUILabel Name=radarLabel
          Caption="Through Wall Player Color"
          TextColor=(R=255,G=255,B=255)
+         TextAlign=TXTA_Center
          WinTop=0.6000000
-         WinLeft=0.235000
+         WinLeft=0.120000
+         WinWidth=0.195000
          WinHeight=20.000000
      End Object
      radar=GUILabel'UTComp_Menu_HUD.radarLabel'
@@ -428,8 +632,10 @@ defaultproperties
      Begin Object Class=GUILabel Name=radarVehicleLabel
          Caption="Through Wall Vehicle Color"
          TextColor=(R=255,G=255,B=255)
+         TextAlign=TXTA_Center
          WinTop=0.6000000
-         WinLeft=0.650000
+         WinLeft=0.550000
+         WinWidth=0.195000
          WinHeight=20.000000
      End Object
      radarVehicle=GUILabel'UTComp_Menu_HUD.radarVehicleLabel'

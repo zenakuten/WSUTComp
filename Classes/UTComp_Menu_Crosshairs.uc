@@ -189,6 +189,24 @@ function InternalOnChange( GUIComponent C )
     DisableStuff();
 }
 
+// Live preview while dragging a color slider: recolor the crosshair previews as the
+// slider moves. The config save is deferred to release (InternalOnChange).
+function OnSlide( GUIComponent C )
+{
+    if(lb_CrossHairs.List.Index<0)
+        return;
+
+    switch(C)
+    {
+        case sl_RedHair:     HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossColor.R=sl_RedHair.Value; break;
+        case sl_GreenHair:   HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossColor.G=sl_GreenHair.Value; break;
+        case sl_BlueHair:    HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossColor.B=sl_BlueHair.Value; break;
+        case sl_OpacityHair: HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossColor.A=sl_OpacityHair.Value; break;
+    }
+    UpdateImages();
+    RefreshFullCrossHair();
+}
+
 function DisableStuff()
 {
      if(ch_UseFactory.IsChecked())
@@ -376,6 +394,8 @@ defaultproperties
          bIntSlider=True
          Value=255
          OnChange=InternalOnChange
+         OnCapturedMouseMove=RedCrossSlider.InternalCapturedMouseMove
+         OnSliding=OnSlide
     End Object
     sl_RedHair=wsGUISlider'RedCrossSlider'
 
@@ -444,6 +464,8 @@ defaultproperties
          Value=255
          bIntSlider=True
          OnChange=InternalOnChange
+         OnCapturedMouseMove=GreenCrossSlider.InternalCapturedMouseMove
+         OnSliding=OnSlide
     End Object
     sl_GreenHair=wsGUISlider'GreenCrossSlider'
 
@@ -456,6 +478,8 @@ defaultproperties
          Value=255
          bIntSlider=True
          OnChange=InternalOnChange
+         OnCapturedMouseMove=BlueCrossSlider.InternalCapturedMouseMove
+         OnSliding=OnSlide
     End Object
     sl_BlueHair=wsGUISlider'BlueCrossSlider'
 
@@ -468,6 +492,8 @@ defaultproperties
          Value=255
          bIntSlider=True
          OnChange=InternalOnChange
+         OnCapturedMouseMove=OpacityCrossSlider.InternalCapturedMouseMove
+         OnSliding=OnSlide
     End Object
     sl_OpacityHair=wsGUISlider'OpacityCrossSlider'
 

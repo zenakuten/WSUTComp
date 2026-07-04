@@ -17,6 +17,8 @@ V24
 - fix F8 next stats not working when scoreboard opened before stats
 - redesign brightskins config menu with two-column layout and per-team preview models
 - live preview skin colors while dragging the rgb sliders
+- live preview colored name, crosshair, hud radar, and ghost colors while dragging the sliders
+- add through-wall player/vehicle color preview dudes on the hud menu
 - add spawn protected team color preview model
 - reset skins now resets spawn protected colors to red/blue
 - lighten disabled gui control text for readability
