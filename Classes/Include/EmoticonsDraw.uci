@@ -1,0 +1,197 @@
+// Shared emoticon rendering helpers. Included by both the HUD (EmoticonsHud.uci)
+// and the scoreboards so player names on the scoreboard render emoticons too.
+// These are self-contained: they take the replication info + canvas and do not
+// touch any HUD-only state (that is why the icon is drawn with an explicit white
+// C.MakeColor instead of the HUD's default.WhiteColor).
+
+// Borrowed from AssaultPlus by Marco a.k.a .:..: and modified to work with configurable and replicatable emoticons.
+// IconScale scales the emoticon icons relative to the line height (1.0 = full
+// line height, as used in chat). Pass e.g. 0.5 for smaller icons on the
+// scoreboard. Values <= 0 are treated as 1.0.
+function DrawSmileyText( EmoticonsReplicationInfo replication, string S, canvas C, optional out float XXL, optional out float XYL, optional float IconScale )
+{
+	local int i,n,matchLen;
+	local float PX,PY,XL,YL,CurX,CurY,SScale,Sca,AdditionalY,NewAY;
+	local string D;
+	local color OrgC;
+	local Texture EIcon;
+	local Material MIcon;
+
+    // Fallback to the default behavior if we have not received the replicated state yet.
+    if (replication == none) {
+        C.DrawTextClipped(s, true);
+        return;
+    }
+
+	if (IconScale <= 0)
+		IconScale = 1.0;
+
+	// Initilize
+	C.StrLen("T",XL,YL);
+	SScale = YL * IconScale;
+	PX = C.CurX;
+	PY = C.CurY;
+	CurX = PX;
+	CurY = PY;
+	OrgC = C.DrawColor;
+	// Search for smiles in text
+	i = FindNextSmile( replication, S, n, matchLen );
+	While( i!=-1 && replication != None )
+	{
+		D = Left(S,i);
+		S = Mid( S, i+matchLen );
+		// Draw text behind
+		C.SetPos(CurX,CurY);
+		C.DrawText(D);
+		// Draw smile
+		C.StrLen(StripColorForTTS(D),XL,YL);
+		CurX+=XL;
+		While( CurX>C.ClipX )
+		{
+			CurY+=(YL+AdditionalY);
+			AdditionalY = 0;
+			CurX-=C.ClipX;
+		}
+		C.DrawColor = C.MakeColor(255,255,255,255);
+		C.SetPos(CurX,CurY);
+		if( replication.Smileys[n].Icon != None )
+		{
+			EIcon = replication.Smileys[n].Icon;
+			if( EIcon.USize == 16 )
+				Sca = SScale;
+			else Sca = EIcon.USize/32*SScale;
+			C.DrawTile( EIcon, Sca, Sca, 0, 0, EIcon.USize, EIcon.VSize );
+		}
+		else if( replication.Smileys[n].MatIcon != None )
+		{
+			MIcon = replication.Smileys[n].MatIcon;
+			if( MIcon.MaterialUSize() == 16 )
+				Sca = SScale;
+			else Sca = MIcon.MaterialUSize()/32*SScale;
+			C.DrawTile( MIcon, Sca, Sca, 0, 0, MIcon.MaterialUSize(), MIcon.MaterialVSize() );
+		}
+
+		if( Sca>SScale )
+		{
+			NewAY = (Sca-SScale);
+			if( NewAY>AdditionalY )
+				AdditionalY = NewAY;
+			NewAY = 0;
+		}
+		CurX+=Sca;
+		While( CurX>C.ClipX )
+		{
+			CurY+=(YL+AdditionalY);
+			AdditionalY = 0;
+			CurX-=C.ClipX;
+		}
+		// Then go for next smile
+		C.DrawColor = OrgC;
+		i = FindNextSmile( replication, S, n, matchLen );
+	}
+	// Then draw rest of text remaining
+	C.SetPos(CurX,CurY);
+	C.StrLen(StripColorForTTS(S),XL,YL);
+	C.DrawText(S);
+	CurX+=XL;
+	While( CurX>C.ClipX )
+	{
+		CurY+=(YL+AdditionalY);
+		AdditionalY = 0;
+		CurX-=C.ClipX;
+	}
+	XYL+=AdditionalY;
+	AdditionalY = 0;
+	XXL = CurX;
+	C.SetPos(PX,PY);
+}
+
+// Borrowed from AssaultPlus by Marco a.k.a .:..:
+function string StripColorForTTS( string s )
+{
+	local int p;
+
+	p = InStr(s,chr(27));
+	while ( p>=0 )
+	{
+		s = left(s,p)$mid(S,p+4);
+		p = InStr(s,Chr(27));
+	}
+	return s;
+}
+
+// Borrowed from AssaultPlus by Marco a.k.a .:..:, reworked to be color-code
+// aware without per-character scanning (that tanked performance, since this runs
+// every frame for every chat line and every scoreboard name). We strip color
+// codes to a visible-only copy and match with the native InStr, then map the
+// visible hit back to a raw offset. Stripping first means an event can never
+// false-match inside a color code's RGB bytes, and the raw mapping still spans
+// any color codes interspersed within the event (multicolor names like "=dart"
+// that get a code between every letter). MatchLen is the raw length consumed in
+// S so the caller advances past the whole matched region.
+function int FindNextSmile( EmoticonsReplicationInfo replication, string S, optional out int SmileNr, optional out int MatchLen )
+{
+	local string vis;
+	local int i,j,p,bp,rawStart;
+
+	j = replication.Smileys.Length;
+
+	// Fast path: no color codes present. Match on the raw string with the native
+	// InStr and no string allocations -- identical cost to stock UTComp. This is
+	// the common case (most chat lines and typed text have no color codes), so
+	// the extra per-frame work only kicks in for text that actually has codes.
+	if( InStr(S, Chr(27)) == -1 )
+	{
+		bp = -1;
+		for( i = 0; i < j; i++ )
+		{
+			p = InStr( S, replication.Smileys[i].Event );
+			if( p != -1 && (bp == -1 || p < bp) )
+			{
+				bp = p;
+				SmileNr = i;
+			}
+		}
+		if( bp != -1 )
+			MatchLen = Len(replication.Smileys[SmileNr].Event);
+		return bp;
+	}
+
+	// Slow path: color codes present. Strip to a visible-only copy so events
+	// can't false-match inside a code, match, then map the hit back to a raw
+	// offset (spanning any codes interspersed within the event).
+	vis = StripColorForTTS(S);
+	bp = -1;
+	for( i = 0; i < j; i++ )
+	{
+		p = InStr( vis, replication.Smileys[i].Event );
+		if( p != -1 && (bp == -1 || p < bp) )
+		{
+			bp = p;
+			SmileNr = i;
+		}
+	}
+	if( bp == -1 )
+		return -1;
+
+	rawStart = VisibleToRaw( S, bp );
+	MatchLen = VisibleToRaw( S, bp + Len(replication.Smileys[SmileNr].Event) ) - rawStart;
+	return rawStart;
+}
+
+// Maps an index in the color-code-stripped (visible) string back to the raw
+// index in S, accounting for color codes (Chr(27) + 3 bytes) skipped along the way.
+function int VisibleToRaw( string S, int VisibleIndex )
+{
+	local int raw,p;
+
+	raw = 0;
+	p = InStr( Mid(S,raw), Chr(27) );
+	while( p != -1 && VisibleIndex > p )
+	{
+		VisibleIndex -= p;
+		raw += p + 4;
+		p = InStr( Mid(S,raw), Chr(27) );
+	}
+	return raw + VisibleIndex;
+}

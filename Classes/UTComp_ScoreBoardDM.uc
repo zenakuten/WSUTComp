@@ -6,6 +6,49 @@ var font SmallerFont;
 var UTComp_ServerReplicationInfo RepInfo;
 var string KillsText;
 
+// Emoticon rendering, shared with the HUD, so player names on the scoreboard
+// render emoticons the same way chat does.
+#include Classes\Include\EmoticonsDraw.uci
+
+// Returns the emoticon replication info to draw names with, or None when
+// emoticons are disabled server-side, disabled client-side, or not replicated.
+simulated function EmoticonsReplicationInfo GetEmoteReplicationIfEnabled()
+{
+    local BS_xPlayer P;
+
+    // Server-side disable (mutator bEnableEmoticons, replicated via RepInfo).
+    if (RepInfo != None && !RepInfo.bEnableEmoticons)
+        return None;
+
+    P = BS_xPlayer(Owner);
+    // EmoteInfo is only spawned when emoticons are enabled server-side, so a
+    // None here also means "disabled server-side".
+    if (P == None || P.EmoteInfo == None)
+        return None;
+
+    // Client-side disable (UTComp menu / HUD setting).
+    if (P.HUDSettings != None && !P.HUDSettings.bEnableEmoticons)
+        return None;
+
+    return P.EmoteInfo;
+}
+
+// Draws Name at the current canvas position with emoticons rendered. Returns
+// false (and draws nothing) when emoticons are disabled or Name has none, so
+// callers fall back to their normal text draw.
+simulated function bool TryDrawEmoteName(Canvas C, coerce string Name)
+{
+    local EmoticonsReplicationInfo rep;
+
+    rep = GetEmoteReplicationIfEnabled();
+    if (rep == None || FindNextSmile(rep, Name) < 0)
+        return false;
+
+    // 0.5 => half line-height icons; full size looks oversized on the scoreboard.
+    DrawSmileyText(rep, Name, C,,, 0.5);
+    return true;
+}
+
 function DrawNetInfo(Canvas Canvas,int FontReduction,int HeaderOffsetY,int PlayerBoxSizeY,int BoxSpaceY,int BoxTextOffsetY,int OwnerOffset,int PlayerCount, int NetXPos)
 {
 	local float XL,YL;
@@ -441,7 +484,8 @@ simulated event UpdateScoreBoard(Canvas Canvas)
 		if ( i != OwnerOffset )
 		{
 			Canvas.SetPos(NameXPos, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
-			Canvas.DrawText(playername[i],true);
+			if ( !TryDrawEmoteName(Canvas, playername[i]) )
+				Canvas.DrawText(playername[i],true);
 		}
 	if ( bNameFontReduction )
 		Canvas.Font = GetSmallerFontFor(Canvas,FontReduction);
@@ -485,7 +529,8 @@ simulated event UpdateScoreBoard(Canvas Canvas)
 	Canvas.SetPos(NameXPos, OwnerPos);
 	if ( bNameFontReduction )
 		Canvas.Font = ReducedFont;
-	Canvas.DrawText(playername[OwnerOffset],true);
+	if ( !TryDrawEmoteName(Canvas, playername[OwnerOffset]) )
+		Canvas.DrawText(playername[OwnerOffset],true);
 	if ( bNameFontReduction )
 		Canvas.Font = GetSmallerFontFor(Canvas,FontReduction);
     Canvas.DrawColor = HUDClass.default.GoldColor;

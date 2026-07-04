@@ -515,9 +515,11 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   C.StrLen(PRI.PlayerName, playerNameWidth, playerNameHeight);
   SetPosScaled(C, baseX + 40 + maxScoreWidth, baseY + (boxHeight - playerNameHeight)/2);
   if (uPRI.ColoredName == "") {
-    C.DrawText(PRI.PlayerName);
+    if (!TryDrawEmoteName(C, PRI.PlayerName))
+      C.DrawText(PRI.PlayerName);
   } else {
-    C.DrawText(uPRI.ColoredName);
+    if (!TryDrawEmoteName(C, uPRI.ColoredName))
+      C.DrawText(uPRI.ColoredName);
   }
 
   //Stats

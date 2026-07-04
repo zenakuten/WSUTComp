@@ -141,12 +141,14 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
 
     if(default.benablecolorednamesonscoreboard && uPRI!=None && uPRI.ColoredName !="")
     {
-        C.DrawTextClipped(uPRI.ColoredName$AdminString);
+        if ( !TryDrawEmoteName(C, uPRI.ColoredName$AdminString) )
+            C.DrawTextClipped(uPRI.ColoredName$AdminString);
     }
     else
     {
         C.SetDrawColor(255,255,255,255);
-        C.DrawTextClipped(PRI.PlayerName$AdminString);
+        if ( !TryDrawEmoteName(C, PRI.PlayerName$AdminString) )
+            C.DrawTextClipped(PRI.PlayerName$AdminString);
     }
     C.ClipX=OldClipX;
 
