@@ -1321,7 +1321,8 @@ function ParseURL(string Url)
 {
    local string Skinz0r, Sounds, overlay, powerupsOverlay, warmup, dd, TimedOver
    , TimedOverLength, grenadesonspawn, enableenhancednetcode, suicideIntervalString
-   , fws, allowTeamRadar, allowTeamRadarMap, utcompmovement, starthealth, startarmor;
+   , fws, allowTeamRadar, allowTeamRadarMap, utcompmovement, starthealth, startarmor
+   , maxdodges;
    local array<string> Parts;
    local int i;
 
@@ -1366,6 +1367,8 @@ function ParseURL(string Url)
                starthealth = Right(Parts[i], Len(Parts[i])-Len("startinghealth")-1);
            if (Left(Parts[i], Len("startingarmor")) ~= "startingarmor")
                startarmor = Right(Parts[i], Len(Parts[i])-Len("startingarmor")-1);
+           if (Left(Parts[i], Len("MaxMultiDodges")) ~= "MaxMultiDodges")
+               maxdodges = Right(Parts[i], Len(Parts[i])-Len("MaxMultiDodges")-1);
 
        }
    }
@@ -1457,6 +1460,11 @@ function ParseURL(string Url)
    {
        default.StartingArmor = int(startarmor);
        StartingArmor = default.StartingArmor;
+   }
+   if(maxdodges != "")
+   {
+       default.MaxMultiDodges = int(maxdodges);
+       MaxMultiDodges = default.MaxMultiDodges;
    }
 
 }
