@@ -1456,16 +1456,33 @@ function bool Dodge(eDoubleClickDir DoubleClickMove)
             SetPhysics(PHYS_Falling);
             
             bDidDodge = PerformDodge(DoubleClickMove, Dir, Cross);
-            
+
             // Restore physics state if the dodge failed or didn't lift us
             if (!bDidDodge || Physics == PHYS_Walking)
                 SetPhysics(SavedPhysics);
+
+            if (bDidDodge)
+                ResetAirJumpsForMultiDodge();
 
             return bDidDodge;
         }
     }
 
-    return Super.Dodge(DoubleClickMove);
+    bDidDodge = Super.Dodge(DoubleClickMove);
+    if (bDidDodge)
+        ResetAirJumpsForMultiDodge();
+
+    return bDidDodge;
+}
+
+// Refill air-jumps after a dodge so a multi-dodging player can chain jumps between
+// dodges. Done here (inside ProcessMove) so client and server reset at the same point in
+// the move - resetting from PlayerTick desynced online. Gate on the stable replicated
+// config, not the per-fall MultiDodgesRemaining counter which can differ across sides.
+function ResetAirJumpsForMultiDodge()
+{
+    if (RepInfo != None && RepInfo.MaxMultiDodges > 0)
+        MultiJumpRemaining = MaxMultiJump;
 }
 
 defaultproperties
