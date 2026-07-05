@@ -522,6 +522,10 @@ event PlayerTick(float deltatime)
         UTComp_xPawn(Pawn) != none && UTComp_xPawn(Pawn).MultiDodgesRemaining > 0
     ) {
         UTComp_xPawn(Pawn).MultiDodgesRemaining -= 1;
+        // Reset the available multijumps on a (wall) dodge, matching the standalone
+        // MultiDodging mutator's DodgeHack. Lets e.g. a quad-jump player wall dodge,
+        // jump 3x, wall dodge again, jump 3x more.
+        UTComp_xPawn(Pawn).MultiJumpRemaining = UTComp_xPawn(Pawn).MaxMultiJump;
         // Remember the dodge before we wipe DoubleClickDir below, so NotifyLanded can
         // still tell this was a dodge-landing (see bDodgedThisFall).
         bDodgedThisFall = true;

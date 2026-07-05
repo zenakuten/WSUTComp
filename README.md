@@ -9,6 +9,7 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 Release Notes
 
 V24
+- reset available multijumps on wall dodge
 - render emoticons in player names on the team overlay
 - render emoticons in player names on the scoreboards
 - fix emoticons not rendering when the text contains color codes
