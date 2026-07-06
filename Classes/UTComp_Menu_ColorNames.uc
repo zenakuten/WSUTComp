@@ -412,6 +412,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=RedSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
+          StyleName="WSSliderKnobWhite"
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.600000
@@ -429,6 +430,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=BlueSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
+          StyleName="WSSliderKnobWhite"
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.700000
@@ -446,6 +448,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=GreenSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
+          StyleName="WSSliderKnobWhite"
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.650000
@@ -463,7 +466,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=RedLabel
          Caption="Red"
-         TextColor=(R=255)
+         TextColor=(R=255,G=120,B=120)
          WinTop=0.587500
          WinLeft=0.528125
      End Object
@@ -471,7 +474,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=BlueLabel
          Caption="Blue"
-         TextColor=(B=255)
+         TextColor=(R=120,G=120,B=255)
          WinTop=0.685414
          WinLeft=0.528125
      End Object
@@ -479,7 +482,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=GreenLabel
          Caption="Green"
-         TextColor=(G=255)
+         TextColor=(R=120,G=255,B=120)
          WinTop=0.635417
          WinLeft=0.528125
      End Object

@@ -391,6 +391,7 @@ defaultproperties
 
     Begin Object class=wsGUISlider name=RedCrossSlider
          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
+         StyleName="WSSliderKnobWhite"
          WinTop=0.415
          WinLeft=0.41
          WinWidth=0.25
@@ -408,7 +409,7 @@ defaultproperties
          WinTop=0.40
          WinLeft=0.34
          Caption="Red"
-         TextColor=(R=255)
+         TextColor=(R=255,G=120,B=120)
     End Object
     l_Red=GUILabel'RedCrossLabel'
 
@@ -416,7 +417,7 @@ defaultproperties
          WinTop=0.44
          WinLeft=0.34
          Caption="Green"
-         TextColor=(G=255)
+         TextColor=(R=120,G=255,B=120)
     End Object
     l_Green=GUILabel'GreenCrossLabel'
 
@@ -424,7 +425,7 @@ defaultproperties
          WinTop=0.48
          WinLeft=0.34
          Caption="Blue"
-         TextColor=(B=255)
+         TextColor=(R=120,G=120,B=255)
     End Object
     l_Blue=GUILabel'BlueCrossLabel'
 
@@ -462,6 +463,7 @@ defaultproperties
 
     Begin Object class=wsGUISlider name=GreenCrossSlider
          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
+         StyleName="WSSliderKnobWhite"
          WinTop=0.455
          WinLeft=0.41
          WinWidth=0.25
@@ -477,6 +479,7 @@ defaultproperties
 
     Begin Object class=wsGUISlider name=BlueCrossSlider
          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
+         StyleName="WSSliderKnobWhite"
          WinTop=0.495
          WinLeft=0.41
          WinWidth=0.25

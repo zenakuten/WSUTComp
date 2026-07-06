@@ -567,6 +567,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=RedRSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
+          StyleName="WSSliderKnobWhite"
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.120000
@@ -584,6 +585,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=RedGSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
+          StyleName="WSSliderKnobWhite"
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.120000
@@ -601,6 +603,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=RedBSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
+          StyleName="WSSliderKnobWhite"
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.120000
@@ -618,6 +621,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=BlueRSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
+          StyleName="WSSliderKnobWhite"
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.5500000
@@ -635,6 +639,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=BlueGSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
+          StyleName="WSSliderKnobWhite"
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.5500000
@@ -652,6 +657,7 @@ defaultproperties
 
      Begin Object Class=wsGUISlider Name=BlueBSlider
           FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
+          StyleName="WSSliderKnobWhite"
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.550000
@@ -669,7 +675,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=RedRLabel
          Caption="R"
-         TextColor=(R=255)
+         TextColor=(R=255,G=120,B=120)
          WinTop=0.6250000
          WinLeft=0.100000
          WinHeight=20.000000
@@ -678,7 +684,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=RedGLabel
          Caption="G"
-         TextColor=(G=255)
+         TextColor=(R=120,G=255,B=120)
          WinTop=0.6750000
          WinLeft=0.100000
          WinHeight=20.000000
@@ -687,7 +693,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=RedBLabel
          Caption="B"
-         TextColor=(B=255)
+         TextColor=(R=120,G=120,B=255)
          WinTop=0.725000
          WinLeft=0.100000
          WinHeight=20.000000
@@ -696,7 +702,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=BlueRLabel
          Caption="R"
-         TextColor=(R=255)
+         TextColor=(R=255,G=120,B=120)
          WinTop=0.6250000
          WinLeft=0.53000
          WinHeight=20.000000
@@ -705,7 +711,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=BlueGLabel
          Caption="G"
-         TextColor=(G=255)
+         TextColor=(R=120,G=255,B=120)
          WinTop=0.6750000
          WinLeft=0.53000
          WinHeight=20.000000
@@ -714,7 +720,7 @@ defaultproperties
 
      Begin Object Class=GUILabel Name=BlueBLabel
          Caption="B"
-         TextColor=(B=255)
+         TextColor=(R=120,G=120,B=255)
          WinTop=0.725000
          WinLeft=0.53000
          WinHeight=20.000000

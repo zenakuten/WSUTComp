@@ -82,6 +82,7 @@ function InitComponent(GUIController MyController, GUIComponent MyComponent)
     MyController.RegisterStyle(class'STY_WSSliderBar', true);
     MyController.RegisterStyle(class'STY_WSSliderCaption', true);
     MyController.RegisterStyle(class'STY_WSSliderKnob', true);
+    MyController.RegisterStyle(class'STY_WSSliderKnobWhite', true);
     MyController.RegisterStyle(class'STY_WSEditBox', true);
     MyController.RegisterStyle(class'STY_WSSpinner', true);
     MyController.RegisterStyle(class'STY_WSVertDownButton', true);
