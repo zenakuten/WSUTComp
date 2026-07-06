@@ -68,6 +68,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 
 defaultproperties
 {
+    ActiveMenuButton=7
      Begin Object Class=wsCheckBox Name=AutoDemoCheck
          Caption="Automatically record a demo of each match."
          OnCreateComponent=AutoDemoCheck.InternalOnCreateComponent

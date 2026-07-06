@@ -211,6 +211,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 
 defaultproperties
 {
+    ActiveMenuButton=2
      Begin Object Class=wsCheckBox Name=CheckEnable
          Caption="Enable Overlay"
          OnCreateComponent=CheckEnable.InternalOnCreateComponent

@@ -10,6 +10,11 @@ var automated FloatingImage i_FrameBG2;
 var UTComp_Settings Settings;
 var UTComp_HUDSettings HUDSettings;
 
+// Index into UTCompMenuButtons of the tab button for this menu, so it can stay
+// highlighted while its menu is shown. Each menu sets this in defaultproperties; -1
+// means none (base menu).
+var int ActiveMenuButton;
+
 // Config writes are deferred until the menu closes instead of being written on every
 // change. Each StaticSaveConfig/SaveConfig rewrites an ini synchronously and stalls the
 // game thread (~0.5s per write under Wine), which was hitching every slider release.
@@ -65,7 +70,11 @@ simulated function FlushSettings()
 
 function InitComponent(GUIController MyController, GUIComponent MyComponent)
 {
+    local int i;
+
     MyController.RegisterStyle(class'STY_WSButton', true);
+    MyController.RegisterStyle(class'STY_WSButtonTab', true);
+    MyController.RegisterStyle(class'STY_WSButtonActive', true);
     MyController.RegisterStyle(class'STY_WSComboButton', true);
     MyController.RegisterStyle(class'STY_WSLabel', true);
     MyController.RegisterStyle(class'STY_WSLabelWhite', true);
@@ -82,6 +91,18 @@ function InitComponent(GUIController MyController, GUIComponent MyComponent)
 
     Settings = BS_xPlayer(PlayerOwner()).Settings;
     HUDSettings = BS_xPlayer(PlayerOwner()).HUDSettings;
+
+    // Reset every tab button to the tab style (which doesn't highlight on focus, only
+    // on hover), then give only this menu's button the always-highlighted active style.
+    // The framework auto-focuses a button when a menu opens; without this the focused
+    // button and the active button would both show cyan.
+    for(i=0; i<UTCompMenuButtons.Length; i++)
+        UTCompMenuButtons[i].Style =
+            MyController.GetStyle("WSButtonTab", UTCompMenuButtons[i].FontScale);
+
+    if(ActiveMenuButton >= 0 && ActiveMenuButton < UTCompMenuButtons.Length)
+        UTCompMenuButtons[ActiveMenuButton].Style =
+            MyController.GetStyle("WSButtonActive", UTCompMenuButtons[ActiveMenuButton].FontScale);
 }
 
 function bool InternalOnClick(GUIComponent C)
@@ -365,6 +386,7 @@ defaultproperties
   /*   bResizeWidthAllowed=False
      bResizeHeightAllowed=False
      bMoveAllowed=False      */
+     ActiveMenuButton=-1
      bRequire640x480=True
      bAllowedAsLast=True
      WinWidth=1.000000

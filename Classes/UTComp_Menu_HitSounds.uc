@@ -100,6 +100,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 
 defaultproperties
 {
+    ActiveMenuButton=4
      Begin Object Class=wsGUISlider Name=HitSoundVolume
          MaxValue=4.000000
          WinTop=0.440000

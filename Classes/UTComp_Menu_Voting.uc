@@ -47,6 +47,7 @@ function Blehz()
 
 defaultproperties
 {
+    ActiveMenuButton=6
      Begin Object Class=GUIButton Name=GameTypeButton
          Caption="Gametype"
          StyleName="WSButton"

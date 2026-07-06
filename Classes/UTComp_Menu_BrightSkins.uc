@@ -847,6 +847,7 @@ function AddComboBoxItems(wsGUIComboBox Combo)
 
 defaultproperties
 {
+    ActiveMenuButton=0
      SpinnyOffset=(X=280.000000,Y=1.000000,Z=2.000000)
 
      // ---------- top toggles ----------

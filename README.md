@@ -15,6 +15,7 @@ V25
 - color the r/g/b slider fill bars red/green/blue in the config menus
 - fix red slider fill turning black on hover
 - defer config menu saves to menu close to avoid per-change disk write stalls
+- keep the active menu tab button highlighted while its menu is shown
 
 V24
 - reset available multijumps on wall dodge

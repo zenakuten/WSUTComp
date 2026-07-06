@@ -194,6 +194,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 
 defaultproperties
 {
+    ActiveMenuButton=11
      Begin Object Class=wsGUIVertScrollBar Name=ScrollBarObj
          ItemsPerPage=5
          PositionChanged=UTComp_Menu_Emoticons.PositionChanged

@@ -244,6 +244,7 @@ function bool thirdOffsetZCaptureMouseMove(float dx, float dy)
 
 defaultproperties
 {
+    ActiveMenuButton=10
     Begin Object Class=wsComboBox Name=ComboDamageIndicatorType
          Caption="Damage Indicators:"
          OnCreateComponent=ComboDamageIndicatorType.InternalOnCreateComponent

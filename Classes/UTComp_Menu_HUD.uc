@@ -334,6 +334,7 @@ function Free()
 
 defaultproperties
 {
+    ActiveMenuButton=5
     SpinnyOffset=(X=280.000000,Y=1.000000,Z=2.000000)
 
     Begin Object Class=GUIImage Name=PlayerPreviewImage

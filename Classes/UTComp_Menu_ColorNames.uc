@@ -210,6 +210,7 @@ function bool InternalOnClick( GUIComponent Sender )
 
 defaultproperties
 {
+    ActiveMenuButton=1
      Begin Object Class=GUILabel Name=Label0
      End Object
      l_ColorNameLetters(0)=GUILabel'UTComp_Menu_ColorNames.Label0'

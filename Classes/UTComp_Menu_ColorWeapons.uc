@@ -449,6 +449,7 @@ function UpdateColors()
 
 defaultproperties
 {
+    ActiveMenuButton=9
     Begin Object Class=GUIImage Name=TabWeaponBackground
          Image=Texture'InterfaceContent.Menu.ScoreBoxA'
          ImageColor=(A=100)

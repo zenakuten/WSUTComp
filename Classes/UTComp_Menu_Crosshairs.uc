@@ -354,6 +354,7 @@ function bool InternalOnClick( GUIComponent Sender )
 
 defaultproperties
 {
+    ActiveMenuButton=3
     Begin Object class=wsGUIComboBox name=CrosshairCombo
     	WinWidth=0.248444
 		WinHeight=0.035000

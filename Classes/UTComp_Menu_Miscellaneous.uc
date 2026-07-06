@@ -105,6 +105,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
 
 defaultproperties
 {
+    ActiveMenuButton=8
 
     Begin Object Class=GUILabel Name=ScoreboardLabel
         Caption="----------Scoreboard----------"
