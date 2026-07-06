@@ -8,6 +8,14 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V25
+- live update crosshair size and position previews while dragging the sliders
+- live update the team overlay while dragging its color, position, and size sliders
+- live update the weapon color preview while dragging the color sliders
+- color the r/g/b slider fill bars red/green/blue in the config menus
+- fix red slider fill turning black on hover
+- defer config menu saves to menu close to avoid per-change disk write stalls
+
 V24
 - reset available multijumps on wall dodge
 - render emoticons in player names on the team overlay

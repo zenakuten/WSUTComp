@@ -10,17 +10,57 @@ var automated FloatingImage i_FrameBG2;
 var UTComp_Settings Settings;
 var UTComp_HUDSettings HUDSettings;
 
+// Config writes are deferred until the menu closes instead of being written on every
+// change. Each StaticSaveConfig/SaveConfig rewrites an ini synchronously and stalls the
+// game thread (~0.5s per write under Wine), which was hitching every slider release.
+// We record what changed and flush it once in OnClose (which also fires on tab switch).
+var bool bDirtySettings;
+var bool bDirtyHUDSettings;
+var array< class<Object> > DirtyConfigClasses;
+
 simulated function SaveSettings()
 {
-    Log("Saving settings");
-    //Settings.SaveConfig();
-    Settings.Save();
+    bDirtySettings = true;
 }
 
 simulated function SaveHUDSettings()
 {
-    Log("Saving HUD settings");
-    HUDSettings.SaveConfig();
+    bDirtyHUDSettings = true;
+}
+
+// Queue a config class to be persisted once, on close.
+simulated function MarkConfigDirty(class<Object> ConfigClass)
+{
+    local int i;
+
+    for(i=0; i<DirtyConfigClasses.Length; i++)
+        if(DirtyConfigClasses[i] == ConfigClass)
+            return;
+    DirtyConfigClasses[DirtyConfigClasses.Length] = ConfigClass;
+}
+
+// Persist everything that changed while the menu was open.
+simulated function FlushSettings()
+{
+    local int i;
+    local class<Object> ConfigClass;
+
+    if(bDirtySettings && Settings != None)
+    {
+        Settings.Save();
+        bDirtySettings = false;
+    }
+    if(bDirtyHUDSettings && HUDSettings != None)
+    {
+        HUDSettings.SaveConfig();
+        bDirtyHUDSettings = false;
+    }
+    for(i=0; i<DirtyConfigClasses.Length; i++)
+    {
+        ConfigClass = DirtyConfigClasses[i];
+        ConfigClass.static.StaticSaveConfig();
+    }
+    DirtyConfigClasses.Length = 0;
 }
 
 function InitComponent(GUIController MyController, GUIComponent MyComponent)
@@ -87,6 +127,7 @@ function bool InternalOnClick(GUIComponent C)
 
 function OnClose(optional bool bCancelled)
 {
+   FlushSettings();
    if(PlayerOwner().IsA('BS_xPlayer'))
    {
       BS_xPlayer(PlayerOwner()).ReSkinAll();

@@ -51,7 +51,7 @@ function InternalOnChange( GUIComponent C )
         case ch_AutoDemo:   Settings.bEnableUTCompAutoDemorec=ch_AutoDemo.IsChecked(); break;
         case ch_AutoSS:   Settings.bEnableAutoScreenshot=ch_AutoSS.IsChecked(); break;
     }
-    class'BS_xPlayer'.Static.StaticSaveConfig();
+    MarkConfigDirty(class'BS_xPlayer');
     SaveSettings();
     DisableStuff();
 }
@@ -62,7 +62,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
         return false;
     Settings.ScreenShotMask=co_SSMask.GetText();
     Settings.DemoRecordingMask=co_DemoMask.GetText();
-    class'BS_xPlayer'.Static.StaticSaveConfig();
+    MarkConfigDirty(class'BS_xPlayer');
     SaveSettings();
 }
 

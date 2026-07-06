@@ -189,8 +189,8 @@ function InternalOnChange( GUIComponent C )
     DisableStuff();
 }
 
-// Live preview while dragging a color slider: recolor the crosshair previews as the
-// slider moves. The config save is deferred to release (InternalOnChange).
+// Live preview while dragging a slider: update the crosshair previews (color, size,
+// position) as the slider moves. The config save is deferred to release (InternalOnChange).
 function OnSlide( GUIComponent C )
 {
     if(lb_CrossHairs.List.Index<0)
@@ -202,6 +202,9 @@ function OnSlide( GUIComponent C )
         case sl_GreenHair:   HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossColor.G=sl_GreenHair.Value; break;
         case sl_BlueHair:    HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossColor.B=sl_BlueHair.Value; break;
         case sl_OpacityHair: HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossColor.A=sl_OpacityHair.Value; break;
+        case sl_SizeHair:    HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].CrossScale=sl_SizeHair.Value; break;
+        case sl_HorizHair:   HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].OffsetX=sl_HorizHair.Value; break;
+        case sl_VertHair:    HUDSettings.UTCompCrosshairs[lb_CrossHairs.List.Index].OffsetY=sl_VertHair.Value; break;
     }
     UpdateImages();
     RefreshFullCrossHair();
@@ -386,6 +389,7 @@ defaultproperties
     i_ListBoxBG=GUIImage'ListBoxBackgroundImage'
 
     Begin Object class=wsGUISlider name=RedCrossSlider
+         FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          WinTop=0.415
          WinLeft=0.41
          WinWidth=0.25
@@ -456,6 +460,7 @@ defaultproperties
     l_Vert=GUILabel'VertCrossLabel'
 
     Begin Object class=wsGUISlider name=GreenCrossSlider
+         FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          WinTop=0.455
          WinLeft=0.41
          WinWidth=0.25
@@ -470,6 +475,7 @@ defaultproperties
     sl_GreenHair=wsGUISlider'GreenCrossSlider'
 
     Begin Object class=wsGUISlider name=BlueCrossSlider
+         FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          WinTop=0.495
          WinLeft=0.41
          WinWidth=0.25
@@ -505,6 +511,8 @@ defaultproperties
          MaxValue=4
          Value=1.00
          OnChange=InternalOnChange
+         OnCapturedMouseMove=SizeCrossSlider.InternalCapturedMouseMove
+         OnSliding=OnSlide
     End Object
     sl_SizeHair=wsGUISlider'SizeCrossSlider'
 
@@ -516,6 +524,8 @@ defaultproperties
          MaxValue=0.6
          Value=0.50
          OnChange=InternalOnChange
+         OnCapturedMouseMove=HorizCrossSlider.InternalCapturedMouseMove
+         OnSliding=OnSlide
     End Object
     sl_HorizHair=wsGUISlider'HorizCrossSlider'
 
@@ -527,6 +537,8 @@ defaultproperties
          MaxValue=0.6
          Value=0.50
          OnChange=InternalOnChange
+         OnCapturedMouseMove=VertCrossSlider.InternalCapturedMouseMove
+         OnSliding=OnSlide
     End Object
     sl_VertHair=wsGUISlider'VertCrossSlider'
 

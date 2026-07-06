@@ -76,12 +76,12 @@ function InternalOnChange( GUIComponent C )
         case ch_ViewSmoothing:  Settings.bViewSmoothing=ch_ViewSmoothing.IsChecked(); 
             break;
     }
-    class'UTComp_Overlay'.static.StaticSaveConfig();
-    class'BS_xPlayer'.static.StaticSaveConfig();
+    MarkConfigDirty(class'UTComp_Overlay');
+    MarkConfigDirty(class'BS_xPlayer');
     SaveSettings();
-    class'UTComp_Scoreboard'.static.StaticSaveConfig();
-    class'UTComp_xPawn'.static.StaticSaveConfig();
-    class'UTComp_HudCDeathMatch'.Static.StaticSaveConfig();
+    MarkConfigDirty(class'UTComp_Scoreboard');
+    MarkConfigDirty(class'UTComp_xPawn');
+    MarkConfigDirty(class'UTComp_HudCDeathMatch');
     SaveHUDSettings();
     BS_xPlayer(PlayerOwner()).MatchHudColor();
 

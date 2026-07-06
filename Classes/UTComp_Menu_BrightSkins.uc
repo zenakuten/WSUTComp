@@ -204,7 +204,7 @@ function UpdateBandStates()
 
 function SaveAll()
 {
-    class'UTComp_xPawn'.static.StaticSaveConfig();
+    MarkConfigDirty(class'UTComp_xPawn');
     SaveSettings();
     if(BS_xPlayer(PlayerOwner()) != None)
     {
@@ -950,6 +950,7 @@ defaultproperties
      l_RedB=GUILabel'UTComp_Menu_BrightSkins.RedBLabel'
 
      Begin Object Class=wsGUISlider Name=RedRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.465000
@@ -966,6 +967,7 @@ defaultproperties
      sl_RedR=wsGUISlider'UTComp_Menu_BrightSkins.RedRSlider'
 
      Begin Object Class=wsGUISlider Name=RedGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.500000
@@ -982,6 +984,7 @@ defaultproperties
      sl_RedG=wsGUISlider'UTComp_Menu_BrightSkins.RedGSlider'
 
      Begin Object Class=wsGUISlider Name=RedBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.535000
@@ -1078,6 +1081,7 @@ defaultproperties
      l_BlueB=GUILabel'UTComp_Menu_BrightSkins.BlueBLabel'
 
      Begin Object Class=wsGUISlider Name=BlueRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.465000
@@ -1094,6 +1098,7 @@ defaultproperties
      sl_BlueR=wsGUISlider'UTComp_Menu_BrightSkins.BlueRSlider'
 
      Begin Object Class=wsGUISlider Name=BlueGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.500000
@@ -1110,6 +1115,7 @@ defaultproperties
      sl_BlueG=wsGUISlider'UTComp_Menu_BrightSkins.BlueGSlider'
 
      Begin Object Class=wsGUISlider Name=BlueBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.535000
@@ -1215,6 +1221,7 @@ defaultproperties
      l_SpTeam=GUILabel'UTComp_Menu_BrightSkins.SpTeamLabel'
 
      Begin Object Class=wsGUISlider Name=SpEnRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.610000
@@ -1231,6 +1238,7 @@ defaultproperties
      sl_SpEnR=wsGUISlider'UTComp_Menu_BrightSkins.SpEnRSlider'
 
      Begin Object Class=wsGUISlider Name=SpEnGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.645000
@@ -1247,6 +1255,7 @@ defaultproperties
      sl_SpEnG=wsGUISlider'UTComp_Menu_BrightSkins.SpEnGSlider'
 
      Begin Object Class=wsGUISlider Name=SpEnBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.680000
@@ -1263,6 +1272,7 @@ defaultproperties
      sl_SpEnB=wsGUISlider'UTComp_Menu_BrightSkins.SpEnBSlider'
 
      Begin Object Class=wsGUISlider Name=SpTmRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.610000
@@ -1279,6 +1289,7 @@ defaultproperties
      sl_SpTmR=wsGUISlider'UTComp_Menu_BrightSkins.SpTmRSlider'
 
      Begin Object Class=wsGUISlider Name=SpTmGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.645000
@@ -1295,6 +1306,7 @@ defaultproperties
      sl_SpTmG=wsGUISlider'UTComp_Menu_BrightSkins.SpTmGSlider'
 
      Begin Object Class=wsGUISlider Name=SpTmBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.680000
@@ -1442,6 +1454,7 @@ defaultproperties
      l_ClanB=GUILabel'UTComp_Menu_BrightSkins.ClanBLabel'
 
      Begin Object Class=wsGUISlider Name=ClanRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.620000
@@ -1459,6 +1472,7 @@ defaultproperties
      sl_ClanR=wsGUISlider'UTComp_Menu_BrightSkins.ClanRSlider'
 
      Begin Object Class=wsGUISlider Name=ClanGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.645000
@@ -1476,6 +1490,7 @@ defaultproperties
      sl_ClanG=wsGUISlider'UTComp_Menu_BrightSkins.ClanGSlider'
 
      Begin Object Class=wsGUISlider Name=ClanBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          MaxValue=128.000000
          bIntSlider=True
          WinTop=0.670000

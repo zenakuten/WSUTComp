@@ -141,9 +141,9 @@ function InternalOnChange( GUIComponent C )
                            BS_xPlayer(PlayerOwner()).SetInitialColoredName();
                            InitSliderAndLetters();*/   break;
     }
-    class'BS_xPlayer'.Static.StaticSaveConfig();
-    class'UTComp_ScoreBoard'.Static.StaticSaveConfig();
-    class'UTComp_xDeathMessage'.Static.StaticSaveConfig();
+    MarkConfigDirty(class'BS_xPlayer');
+    MarkConfigDirty(class'UTComp_ScoreBoard');
+    MarkConfigDirty(class'UTComp_xDeathMessage');
     SaveSettings();
 }
 
@@ -201,7 +201,7 @@ function bool InternalOnClick( GUIComponent Sender )
                     SpecialInitSliderAndLetters(co_SavedNames.GetIndex());
                     SetColorSliders(sl_LetterSelect.Value-1);  break;
     }
-    class'BS_xPlayer'.Static.StaticSaveConfig();
+    MarkConfigDirty(class'BS_xPlayer');
     SaveSettings();
 
     Super.InternalOnClick(Sender);
@@ -410,6 +410,7 @@ defaultproperties
      bu_Apply=GUIButton'UTComp_Menu_ColorNames.ButtonApply'
 
      Begin Object Class=wsGUISlider Name=RedSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.600000
@@ -426,6 +427,7 @@ defaultproperties
      sl_RedColor=wsGUISlider'UTComp_Menu_ColorNames.RedSlider'
 
      Begin Object Class=wsGUISlider Name=BlueSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.700000
@@ -442,6 +444,7 @@ defaultproperties
      sl_BlueColor=wsGUISlider'UTComp_Menu_ColorNames.BlueSlider'
 
      Begin Object Class=wsGUISlider Name=GreenSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          MaxValue=255.000000
          bIntSlider=True
          WinTop=0.650000

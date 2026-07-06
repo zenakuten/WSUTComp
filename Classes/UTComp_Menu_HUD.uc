@@ -491,6 +491,7 @@ defaultproperties
     /////////////////////
 
      Begin Object Class=wsGUISlider Name=RedRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.120000
@@ -507,6 +508,7 @@ defaultproperties
      radarRSlide=wsGUISlider'UTComp_Menu_HUD.RedRSlider'
 
      Begin Object Class=wsGUISlider Name=RedGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.120000
@@ -523,6 +525,7 @@ defaultproperties
      radarGSlide=wsGUISlider'UTComp_Menu_HUD.RedGSlider'
 
      Begin Object Class=wsGUISlider Name=RedBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.120000
@@ -555,6 +558,7 @@ defaultproperties
      radarASlide=wsGUISlider'UTComp_Menu_HUD.RedASlider'
 
      Begin Object Class=wsGUISlider Name=BlueRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.5500000
@@ -571,6 +575,7 @@ defaultproperties
      radarVehicleRSlide=wsGUISlider'UTComp_Menu_HUD.BlueRSlider'
 
      Begin Object Class=wsGUISlider Name=BlueGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.5500000
@@ -587,6 +592,7 @@ defaultproperties
      radarVehicleGSlide=wsGUISlider'UTComp_Menu_HUD.BlueGSlider'
 
      Begin Object Class=wsGUISlider Name=BlueBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.550000

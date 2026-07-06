@@ -395,6 +395,7 @@ defaultproperties
     /////////////////////
 
      Begin Object Class=wsGUISlider Name=RedRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.120000
@@ -411,6 +412,7 @@ defaultproperties
      ghostRSlide=wsGUISlider'UTComp_Menu_Extra.RedRSlider'
 
      Begin Object Class=wsGUISlider Name=RedGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.120000
@@ -427,6 +429,7 @@ defaultproperties
      ghostGSlide=wsGUISlider'UTComp_Menu_Extra.RedGSlider'
 
      Begin Object Class=wsGUISlider Name=RedBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.120000
@@ -459,6 +462,7 @@ defaultproperties
      ghostASlide=wsGUISlider'UTComp_Menu_Extra.RedASlider'
 
      Begin Object Class=wsGUISlider Name=BlueRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.5500000
@@ -475,6 +479,7 @@ defaultproperties
      ghostFXRSlide=wsGUISlider'UTComp_Menu_Extra.BlueRSlider'
 
      Begin Object Class=wsGUISlider Name=BlueGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.5500000
@@ -491,6 +496,7 @@ defaultproperties
      ghostFXGSlide=wsGUISlider'UTComp_Menu_Extra.BlueGSlider'
 
      Begin Object Class=wsGUISlider Name=BlueBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.550000

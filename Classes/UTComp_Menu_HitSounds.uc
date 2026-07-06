@@ -79,7 +79,7 @@ function InternalOnChange( GUIComponent C )
         case ch_CPMAStyle:   Settings.bCPMAStyleHitSounds=ch_CPMAStyle.IsChecked(); break;
         case ch_EnableHeadshotSound: Settings.bHeadshotSound=ch_EnableHeadshotSound.IsChecked(); break;
     }
-    class'BS_xPlayer'.Static.StaticSaveConfig();
+    MarkConfigDirty(class'BS_xPlayer');
     SaveSettings();
     DisableStuff();
 }
@@ -93,7 +93,7 @@ function bool InternalOnKeyEvent(out byte Key, out byte State, float delta)
     BS_xPlayer(PlayerOwner()).LoadedFriendlySound = None;
     BS_xPlayer(PlayerOwner()).LoadedEnemySound = none;
     SaveSettings();
-    class'BS_xPlayer'.Static.StaticSaveConfig();
+    MarkConfigDirty(class'BS_xPlayer');
 
     return true;
 }

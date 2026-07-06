@@ -12,10 +12,14 @@ class STY_WSSliderKnob extends STY2SliderKnob;
 defaultproperties
 {
 	KeyName="WSSliderKnob"
+	// FontColors double as the canvas color the native slider Draw uses for the fill
+	// image (UGUIComponent::Draw sets Canvas.Color = FontColors[state]). Keep the
+	// interactive states white so the fill isn't modulated on hover/focus/press -- a
+	// cyan tint here turns the red fill bar black (red * cyan = black).
 	FontColors(0)=(R=255,G=255,B=255)
-	FontColors(1)=(R=0,G=255,B=255)
-	FontColors(2)=(R=0,G=255,B=255)
-	FontColors(3)=(R=0,G=255,B=255)
+	FontColors(1)=(R=255,G=255,B=255)
+	FontColors(2)=(R=255,G=255,B=255)
+	FontColors(3)=(R=255,G=255,B=255)
 	FontColors(4)=(B=140,G=140,R=140)
 	ImgColors(0)=(B=255,G=255,R=255,A=255)
 	ImgColors(1)=(B=255,G=255,R=255,A=255)

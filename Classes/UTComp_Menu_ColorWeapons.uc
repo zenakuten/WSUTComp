@@ -262,11 +262,76 @@ function InternalOnChange( GUIComponent C )
     SaveSettings();
 }
 
-function bool checkcolor(Color c)
+// Live preview while dragging a slider: recolor the preview rockets as the slider
+// moves. The config save is deferred to release (InternalOnChange). The "too dark"
+// message is suppressed during the slide to avoid spamming it every drag step.
+function OnSlide( GUIComponent C )
+{
+    local float lastval;
+    Switch(C)
+    {
+        case RRSlide:
+            lastval=Settings.TeamColorRed.R;
+            Settings.TeamColorRed.R = RRSlide.Value;
+            if(checkcolor(Settings.TeamColorRed, true))
+                UpdateColors();
+            else
+                Settings.TeamColorRed.R = lastval;
+        break;
+
+        case RGSlide:
+            lastval=Settings.TeamColorRed.G;
+            Settings.TeamColorRed.G = RGSlide.Value;
+            if(checkcolor(Settings.TeamColorRed, true))
+                UpdateColors();
+            else
+                Settings.TeamColorRed.G = lastval;
+        break;
+
+        case RBSlide:
+            lastval=Settings.TeamColorRed.B;
+            Settings.TeamColorRed.B = RBSlide.Value;
+            if(checkcolor(Settings.TeamColorRed, true))
+                UpdateColors();
+            else
+                Settings.TeamColorRed.B = lastval;
+        break;
+
+        case BRSlide:
+            lastval=Settings.TeamColorBlue.R;
+            Settings.TeamColorBlue.R = BRSlide.Value;
+            if(checkcolor(Settings.TeamColorBlue, true))
+                UpdateColors();
+            else
+                Settings.TeamColorBlue.R = lastval;
+        break;
+
+        case BGSlide:
+            lastval=Settings.TeamColorBlue.G;
+            Settings.TeamColorBlue.G = BGSlide.Value;
+            if(checkcolor(Settings.TeamColorBlue, true))
+                UpdateColors();
+            else
+                Settings.TeamColorBlue.G = lastval;
+        break;
+
+        case BBSlide:
+            lastval=Settings.TeamColorBlue.B;
+            Settings.TeamColorBlue.B = BBSlide.Value;
+            if(checkcolor(Settings.TeamColorBlue, true))
+                UpdateColors();
+            else
+                Settings.TeamColorBlue.B = lastval;
+        break;
+    }
+}
+
+function bool checkcolor(Color c, optional bool bSilent)
 {
     if(c.R + c.G + c.B < MinHue)
     {
-        PlayerOwner().ClientMessage("too dark");
+        if(!bSilent)
+            PlayerOwner().ClientMessage("too dark");
         return false;
     }
 
@@ -500,6 +565,7 @@ defaultproperties
     // ------------------
 
      Begin Object Class=wsGUISlider Name=RedRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.120000
@@ -510,11 +576,13 @@ defaultproperties
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
          OnKeyEvent=RedRSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedRSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorWeapons.OnSlide
          MaxValue=255
      End Object
      RRSlide=wsGUISlider'UTComp_Menu_ColorWeapons.RedRSlider'
 
      Begin Object Class=wsGUISlider Name=RedGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.120000
@@ -525,11 +593,13 @@ defaultproperties
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
          OnKeyEvent=RedGSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedGSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorWeapons.OnSlide
          MaxValue=255
      End Object
      RGSlide=wsGUISlider'UTComp_Menu_ColorWeapons.RedGSlider'
 
      Begin Object Class=wsGUISlider Name=RedBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.120000
@@ -540,11 +610,13 @@ defaultproperties
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
          OnKeyEvent=RedBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=RedBSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorWeapons.OnSlide
          MaxValue=255
      End Object
      RBSlide=wsGUISlider'UTComp_Menu_ColorWeapons.RedBSlider'
 
      Begin Object Class=wsGUISlider Name=BlueRSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillRed'
          bIntSlider=True
          WinTop=0.6250000
          WinLeft=0.5500000
@@ -555,11 +627,13 @@ defaultproperties
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
          OnKeyEvent=BlueRSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueRSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorWeapons.OnSlide
          MaxValue=255
      End Object
      BRSlide=wsGUISlider'UTComp_Menu_ColorWeapons.BlueRSlider'
 
      Begin Object Class=wsGUISlider Name=BlueGSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillGreen'
          bIntSlider=True
          WinTop=0.6750000
          WinLeft=0.5500000
@@ -570,11 +644,13 @@ defaultproperties
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
          OnKeyEvent=BlueGSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueGSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorWeapons.OnSlide
          MaxValue=255
      End Object
      BGSlide=wsGUISlider'UTComp_Menu_ColorWeapons.BlueGSlider'
 
      Begin Object Class=wsGUISlider Name=BlueBSlider
+          FillImage=Texture'WSUTComp.GUI.WSSliderFillBlue'
          bIntSlider=True
          WinTop=0.7250000
          WinLeft=0.550000
@@ -585,6 +661,7 @@ defaultproperties
          OnChange=UTComp_Menu_ColorWeapons.InternalOnChange
          OnKeyEvent=BlueBSlider.InternalOnKeyEvent
          OnCapturedMouseMove=BlueBSlider.InternalCapturedMouseMove
+         OnSliding=UTComp_Menu_ColorWeapons.OnSlide
          MaxValue=255
      End Object
      BBSlide=wsGUISlider'UTComp_Menu_ColorWeapons.BlueBSlider'
