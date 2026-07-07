@@ -132,21 +132,21 @@ defaultproperties
      l_AutoSSMask=GUILabel'UTComp_Menu_AutoDemoSS.SSMaskLabel'
 
      Begin Object Class=GUILabel Name=SSHeadingLabel
-        Caption="--- Auto Screenshot ---"
+        Caption="Auto Screenshot"
         TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
-		WinLeft=0.342188
+		WinLeft=0.225000
 		WinTop=0.514167
      End Object
      l_SSHeading=GUILabel'UTComp_Menu_AutoDemoSS.SSHeadingLabel'
 
      Begin Object class=GUILabel Name=DemnoHeadingLabel
-        Caption="--- Auto Demo Recording---"
+        Caption="Auto Demo Recording"
         TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
-		WinLeft=0.326563
+		WinLeft=0.225000
 		WinTop=0.347500
      End Object
      l_DemoHeading=GUILabel'DemnoHeadingLabel'

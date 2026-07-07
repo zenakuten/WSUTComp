@@ -85,11 +85,11 @@ defaultproperties
      bu_UTComp_SettingsMenu=GUIButton'UTComp_Menu_Voting.UTComp_SettingsButton'
 
      Begin Object class=GUILabel Name=DemnoHeadingLabel
-        Caption="------- Select your voting type -------"
+        Caption="Select your voting type"
         TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
-		WinLeft=0.281250
+		WinLeft=0.315625
 		WinTop=0.385000
      End Object
      l_VotingLabel=GUILabel'DemnoHeadingLabel'

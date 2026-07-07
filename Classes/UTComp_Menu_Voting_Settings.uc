@@ -259,21 +259,21 @@ defaultproperties
      l_NewNet=GUILabel'UTComp_Menu_Voting_Settings.newNetLabel'
 
       Begin Object class=GUILabel Name=DemnoHeadingLabel
-        Caption="--- These settings require a map reload to take effect ---"
+        Caption="These settings require a map reload to take effect"
         TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
-		WinLeft=0.176562
+		WinLeft=0.160125
 		WinTop=0.562085
      End Object
      l_Restart=GUILabel'DemnoHeadingLabel'
 
     Begin Object class=GUILabel Name=RestartLabel
-        Caption="--- These settings are applied instantly after the vote passes ---"
+        Caption="These settings are applied instantly after the vote passes"
         TextColor=(B=255,G=255,R=0)
 		WinWidth=1.000000
 		WinHeight=0.060000
-		WinLeft=0.118750
+		WinLeft=0.162000
 		WinTop=0.332917
      End Object
      l_NoRestart=GUILabel'RestartLabel'

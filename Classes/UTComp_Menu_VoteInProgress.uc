@@ -147,7 +147,7 @@ defaultproperties
          TextAlign=TXTA_Center
          TextColor=(B=255,G=255,R=0)
          WinTop=0.350000
-         Caption="--- Vote in progress ---"
+         Caption="Vote in progress"
      End Object
      l_Vote(0)=GUILabel'UTComp_Menu_VoteInProgress.VoteLabel0'
 

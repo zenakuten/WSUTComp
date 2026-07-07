@@ -17,7 +17,7 @@ V25
 - defer config menu saves to menu close to avoid per-change disk write stalls
 - keep the active menu tab button highlighted while its menu is shown
 - add a ghost preview dude showing live ghost color and ghost fx particles on the extra menu
-- hide the menu preview dudes from the 3d world behind the skins/hud/extra menus
+- fix menu labels, text, position, etc
 
 V24
 - reset available multijumps on wall dodge
