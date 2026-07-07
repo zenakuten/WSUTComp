@@ -12,6 +12,23 @@ var automated GUISlider ghostRSlide, ghostGSlide, ghostBSlide, ghostASlide, ghos
 var automated GUISlider thirdPersonCamDistanceSlide, thirdPersonCamOffsetXSlide, thirdPersonCamOffsetYSlide, thirdPersonCamOffsetZSlide;
 var automated GUILabel thirdPersonCamDistLabel, thirdPersonCamOffsetXLabel, thirdPersonCamOffsetYLabel, thirdPersonCamOffsetZLabel;
 
+// Live preview dude drawn next to the ghost color sliders. It renders as a solid player
+// mesh tinted with the ghost colors (via ColorModifier over the DeRez materials, exactly
+// like the in-game ghost), and updates as the sliders move.
+var automated GUIImage i_GhostPreview;
+var UTComp_SpinnyWeap SpinnyGhost;
+var ColorModifier GhostMod0, GhostMod1;
+var vector SpinnyOffset;
+
+// The in-game ghost fx is a DeResPart particle system attached to the player's body
+// (see UTComp_xPawn.StartDeRes). We attach the same emitter to the preview dude and tint
+// it from the ghost-fx sliders so the extra menu previews the ghost fx as well.
+var Emitter GhostFXEmitter;
+// Downward (camera-up axis) world-unit nudge applied to the ghost fx emitter so the
+// particle cloud lines up with the dude's body instead of its head. Tuned for the
+// preview dude's 0.28 draw scale.
+var float GhostFXBodyOffset;
+
 function InitComponent(GUIController MyController, GUIComponent MyOwner)
 {
     local UTComp_ServerReplicationInfo RepInfo;
@@ -165,6 +182,201 @@ function MatchTextToSliders()
 {
     ghost.TextColor = Settings.DeResColor;
     ghostFX.TextColor = Settings.DeResFXColor;
+    UpdateGhostColors();
+}
+
+// ---- ghost / ghost-fx preview dudes ----
+
+event Opened(GUIComponent sender)
+{
+    InitSpinnies();
+    super.Opened(sender);
+}
+
+function InitSpinnies()
+{
+    local xUtil.PlayerRecord Rec;
+
+    if(SpinnyGhost != None)
+        return;
+
+    if(PlayerOwner().PlayerReplicationInfo != None)
+        Rec = class'xutil'.static.FindPlayerRecord(PlayerOwner().PlayerReplicationInfo.CharacterName);
+    else
+        Rec = class'xutil'.static.FindPlayerRecord("Gorge");
+
+    SpinnyGhost   = SpawnDude(SpinnyGhost);
+
+    LinkDude(SpinnyGhost,   Rec.MeshName, 0.28);
+
+    GhostMod0 = MakeMod(FinalBlend'WSUTComp.Shaders.DeRezFinalBody', Settings.DeResColor);
+    GhostMod1 = MakeMod(FinalBlend'WSUTComp.Shaders.DeRezFinalHead', Settings.DeResColor);
+    if(SpinnyGhost != None)
+    {
+        SpinnyGhost.Skins[0] = GhostMod0;
+        SpinnyGhost.Skins[1] = GhostMod1;
+    }
+
+    // Attach the ghost fx particle system to the preview dude, mirroring
+    // UTComp_xPawn.StartDeRes: base it to the pawn (here the spinny) and drive its
+    // spawn location from the skeletal mesh.
+    if(SpinnyGhost != None)
+    {
+        GhostFXEmitter = PlayerOwner().Spawn(class'UTComp_DeResPreview', SpinnyGhost, , SpinnyGhost.Location);
+        if(GhostFXEmitter != None)
+        {
+            GhostFXEmitter.Emitters[0].SkeletalMeshActor = SpinnyGhost;
+            GhostFXEmitter.SetBase(SpinnyGhost);
+            // Hide from the normal world-scene pass; we render it into the preview pane
+            // ourselves via DrawActorClipped (which ignores bHidden).
+            GhostFXEmitter.bHidden = true;
+        }
+    }
+
+    UpdateGhostColors();
+}
+
+function ColorModifier MakeMod(Material Base, color Col)
+{
+    local ColorModifier M;
+
+    M = ColorModifier(PlayerOwner().Level.ObjectPool.AllocateObject(class'ColorModifier'));
+    M.Material = Base;
+    M.AlphaBlend = true;
+    M.RenderTwoSided = true;
+    M.Color = Col;
+    return M;
+}
+
+function UTComp_SpinnyWeap SpawnDude(UTComp_SpinnyWeap D)
+{
+    local vector X, Y, Z, X2, Y2, V;
+    local rotator R2, R;
+
+    if(D == None)
+        D = PlayerOwner().Spawn(class'UTComp_SpinnyWeap');
+    if(D != None)
+    {
+        D.SetDrawType(DT_Mesh);
+        D.SpinRate = 4000;
+        D.AmbientGlow = 254;
+        // Hide from the world-scene pass; DrawActorClipped renders it into the preview
+        // pane regardless of bHidden.
+        D.bHidden = true;
+
+        R = PlayerOwner().Rotation;
+        GetAxes(R, X, Y, Z);
+        R2.Yaw = 32768;
+        V = vector(R2);
+        X2 = V.X*X + V.Y*Y;
+        Y2 = V.X*Y - V.Y*X;
+        R2 = OrthoRotation(X2, Y2, Z);
+        D.SetRotation(R2);
+    }
+    return D;
+}
+
+function LinkDude(UTComp_SpinnyWeap Dude, string MeshName, float Scale)
+{
+    local Mesh M;
+
+    if(Dude == None)
+        return;
+
+    Dude.SetDrawScale(Scale);
+
+    M = Mesh(DynamicLoadObject(MeshName, class'Mesh'));
+    if(M == None)
+        return;
+
+    Dude.LinkMesh(M);
+    Dude.LoopAnim('Idle_Rest', 1.0/Dude.Level.TimeDilation);
+}
+
+function UpdateGhostColors()
+{
+    local SpriteEmitter S;
+
+    if(GhostMod0   != None) GhostMod0.Color   = Settings.DeResColor;
+    if(GhostMod1   != None) GhostMod1.Color   = Settings.DeResColor;
+
+    // Tint the ghost fx particles from the ghost-fx sliders, matching StartDeRes.
+    if(GhostFXEmitter != None)
+    {
+        S = SpriteEmitter(GhostFXEmitter.Emitters[0]);
+        if(S != None)
+        {
+            S.ColorScale[0].Color = Settings.DeResFXColor;
+            S.ColorScale[1].Color = Settings.DeResFXColor;
+            S.ColorScale[2].Color = Settings.DeResFXColor;
+        }
+    }
+}
+
+function bool OnDrawGhost(Canvas C)
+{
+    return DrawSpinny(C, SpinnyGhost, i_GhostPreview);
+}
+
+// Draw the dude as a solid tinted mesh (WireFrame=false) clipped into the preview pane.
+function bool DrawSpinny(Canvas Canvas, UTComp_SpinnyWeap Dude, GUIImage Bounds)
+{
+    local float oOrgX, oOrgY, oClipX, oClipY;
+    local vector CamPos, X, Y, Z;
+    local rotator CamRot;
+
+    if(Dude == None || Bounds == None || !Bounds.bVisible)
+        return true;
+
+    oOrgX=Canvas.OrgX;
+    oOrgY=Canvas.OrgY;
+    oClipX=Canvas.ClipX;
+    oClipY=Canvas.ClipY;
+
+    Canvas.OrgX=Bounds.ActualLeft();
+    Canvas.OrgY=Bounds.ActualTop();
+    Canvas.ClipX=Bounds.ActualWidth();
+    Canvas.ClipY=Bounds.ActualHeight();
+
+    Canvas.GetCameraLocation(CamPos, CamRot);
+    GetAxes(CamRot, X, Y, Z);
+    Dude.SetLocation(CamPos + (SpinnyOffset.X * X) + (SpinnyOffset.Y * Y) + (SpinnyOffset.Z * Z));
+
+    Canvas.DrawActorClipped(Dude, false, Bounds.ActualLeft(), Bounds.ActualTop(), Bounds.ActualWidth(), Bounds.ActualHeight(), true, 15);
+
+    // Render the attached ghost fx emitter into the same pane. DrawActorClipped only
+    // draws the actor passed to it (not based actors), so the emitter needs its own
+    // draw. ClearZ=false so it shares depth with the mesh just drawn.
+    if(GhostFXEmitter != None)
+    {
+        // SetBase doesn't carry the emitter to the dude's per-frame teleported location,
+        // so pin it explicitly. With PTCS_Relative the particles render relative to the
+        // emitter's transform, so co-locating the emitter with the dude puts the cloud on
+        // the dude instead of near the camera. The extra downward (camera -Z) nudge
+        // compensates for the mesh's prepivot: the dude is drawn offset below the actor
+        // origin (feet on the ground) while particles spawn from the origin, so without it
+        // the cloud rides up at the head instead of covering the body.
+        GhostFXEmitter.SetLocation(Dude.Location - (GhostFXBodyOffset * Z));
+        Canvas.DrawActorClipped(GhostFXEmitter, false, Bounds.ActualLeft(), Bounds.ActualTop(), Bounds.ActualWidth(), Bounds.ActualHeight(), false, 15);
+    }
+
+    Canvas.OrgX=oOrgX;
+    Canvas.OrgY=oOrgY;
+    Canvas.ClipX=oClipX;
+    Canvas.ClipY=oClipY;
+    return true;
+}
+
+function Free()
+{
+    Super.Free();
+    if(GhostFXEmitter != None)
+    {
+        GhostFXEmitter.Emitters[0].SkeletalMeshActor = None;
+        GhostFXEmitter.Kill();
+        GhostFXEmitter = None;
+    }
+    if(SpinnyGhost   != None) { SpinnyGhost.Destroy();   SpinnyGhost=None; }
 }
 
 function UpdatePawnCamDistance()
@@ -245,6 +457,25 @@ function bool thirdOffsetZCaptureMouseMove(float dx, float dy)
 defaultproperties
 {
     ActiveMenuButton=10
+    SpinnyOffset=(X=280.000000,Y=1.000000,Z=2.000000)
+    GhostFXBodyOffset=10.000000
+
+    Begin Object Class=GUIImage Name=GhostPreviewImage
+        Image=Material'2K4Menus.Controls.buttonSquare_b'
+        ImageColor=(R=255,G=255,B=255,A=128)
+        ImageRenderStyle=MSTY_Alpha
+        ImageStyle=ISTY_Stretched
+        bScaleToParent=true
+        bBoundToParent=true
+        WinWidth=0.150000
+        WinHeight=0.200000
+        WinLeft=0.380000
+        WinTop=0.630000
+        RenderWeight=0.52
+        OnDraw=OnDrawGhost
+    End Object
+    i_GhostPreview=GUIImage'UTComp_Menu_Extra.GhostPreviewImage'
+
     Begin Object Class=wsComboBox Name=ComboDamageIndicatorType
          Caption="Damage Indicators:"
          OnCreateComponent=ComboDamageIndicatorType.InternalOnCreateComponent

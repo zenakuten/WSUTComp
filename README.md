@@ -16,6 +16,8 @@ V25
 - fix red slider fill turning black on hover
 - defer config menu saves to menu close to avoid per-change disk write stalls
 - keep the active menu tab button highlighted while its menu is shown
+- add a ghost preview dude showing live ghost color and ghost fx particles on the extra menu
+- hide the menu preview dudes from the 3d world behind the skins/hud/extra menus
 
 V24
 - reset available multijumps on wall dodge

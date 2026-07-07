@@ -477,6 +477,9 @@ function UTComp_SpinnyWeap SpawnDude(UTComp_SpinnyWeap D)
         D.SetDrawScale(0.18);
         D.SpinRate=4000;
         D.AmbientGlow=45;
+        // Hide from the world-scene pass so the dude doesn't render in the 3D viewport
+        // behind the menu; DrawActorClipped renders it into the preview pane regardless.
+        D.bHidden=true;
 
         R=PlayerOwner().Rotation;
         GetAxes(R, X, Y, Z);
