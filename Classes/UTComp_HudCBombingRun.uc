@@ -102,10 +102,7 @@ simulated function DrawUTCompCrosshair (Canvas C)
 
 simulated function DrawCrosshair (Canvas C)
 {
-    if(HUDSettings.bEnableUTCompCrosshairs && HUDSettings.UTCompCrosshairs.Length>0)
-        DrawUTCompCrosshair(C);
-    else
-        OldDrawCrosshair(C);
+    DrawCrosshairChecked(C);
 }
 
 simulated function OldDrawCrosshair(Canvas C)

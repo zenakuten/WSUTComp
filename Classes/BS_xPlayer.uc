@@ -4801,34 +4801,101 @@ simulated function ClientReceiveAward(Sound awardSound, float delay, float atten
     }
 }
 
-function rotator Adjust3pAim()
+// showdebug: append our own info to the standard controller debug readout.
+// The engine HUD calls ViewTarget.DisplayDebug() which chains down to the
+// controller (Pawn.DisplayDebug -> Controller.DisplayDebug), so overriding
+// here adds to the same block the base "showdebug" already prints.
+simulated function DisplayDebug(Canvas Canvas, out float YL, out float YPos)
 {
-	local vector CamLookAt, HitLocation, HitNormal, OffsetVector;
-	local Actor HitActor;
-    local vector CameraLocation;
+    Super.DisplayDebug(Canvas, YL, YPos);
+
+    Canvas.SetDrawColor(0, 255, 255);
+    if (bBehindView)
+        Canvas.DrawText("     VIEW: Third Person (behind view)", false);
+    else
+        Canvas.DrawText("     VIEW: First Person", false);
+    YPos += YL;
+    Canvas.SetPos(4, YPos);
+}
+
+// Computes the world point under the 3p crosshair (screen center) by tracing the camera
+// ray, and outputs the weapon fire start. Shared by the 3p aim (Adjust3pAim) and the
+// "shot blocked" crosshair check (Is3pShotBlocked).
+simulated function vector Get3pCrosshairTarget(out vector projStart)
+{
     local UTComp_xPawn bsxPawn;
-    local vector FireDir, PawnDir;
-    local vector StartTrace,EndTrace;
+    local vector CamLookAt, HitLocation, HitNormal, FireDir, EndTrace;
+    local vector X, Y, Z;
+    local Actor HitActor;
 
     bsxPawn = UTComp_xPawn(Pawn);
-	CamLookAt = bsxPawn.GetCameraLocationStart() + (bsxPawn.TPCamWorldOffset >> bsxPawn.Rotation);
 
-	OffsetVector = vect(0, 0, 0);
-	OffsetVector.X = -1.0 * bsxPawn.TPCamDistance;
+    // CamLookAt is the 3p orbit pivot (pawn + world offset), at the pawn's head. It lies
+    // on the screen-center (crosshair) ray, which runs along vector(Rotation).
+    CamLookAt = bsxPawn.GetCameraLocationStart() + (bsxPawn.TPCamWorldOffset >> bsxPawn.Rotation);
+    FireDir = vector(Rotation);
+    EndTrace = CamLookAt + 10000 * FireDir;
 
-	CameraLocation = CamLookAt + (OffsetVector >> Rotation);
+    // Trace the crosshair ray forward from CamLookAt -- NOT from the camera behind the
+    // pawn. The real view (SpecialCalcBehindView) clamps the camera forward along this
+    // same line when it backs into a wall, so tracing from the camera's un-clamped spot
+    // started behind that wall and hit it. CamLookAt is always in front of that wall and
+    // on the ray.
+    // Trace actors too, so an enemy under the crosshair becomes the aim point rather than
+    // the wall behind them -- otherwise the shot parallaxes past the enemy into that wall.
+    // Call Trace on the pawn (not the controller) so it ignores our own body.
+    HitActor = bsxPawn.Trace(HitLocation, HitNormal, EndTrace, CamLookAt, true);
+    if (HitActor == None)
+        HitLocation = EndTrace;
 
-    FireDir=vector(Rotation);
-    StartTrace=CameraLocation;
-    StartTrace.Z-= bsxPawn.BaseEyeHeight;
-    EndTrace=CamLookAt + 10000 * FireDir;
+    // Fire start = the actual projectile origin, so callers aim/measure from where shots
+    // really leave the gun.
+    GetAxes(Rotation, X, Y, Z);
+    if (bsxPawn.Weapon != None)
+        projStart = bsxPawn.Weapon.GetFireStart(X, Y, Z);
+    else
+        projStart = bsxPawn.Location + bsxPawn.EyePosition();
 
-    HitActor = Trace(HitLocation, HitNormal, EndTrace, StartTrace, true);
-    if(HitActor == None)
-       HitLocation=EndTrace;
+    return HitLocation;
+}
 
-    PawnDir = Normal(HitLocation - bsxPawn.Location);
-    return rotator(PawnDir);
+// Returns the 3p fire direction: aim from the weapon's fire start toward the world point
+// under the crosshair, so the shot converges on the crosshair. Fallback aim used when no
+// auto-aim target is found (see AdjustAim). projStart is the real projectile origin; when
+// omitted (e.g. the HUD debug line) we derive it from the pawn eye.
+// simulated so the HUD (client) can call this to draw the 3p aim debug line.
+simulated function rotator Adjust3pAim(optional vector projStart)
+{
+    local vector HitLocation, fireStart;
+
+    if (UTComp_xPawn(Pawn) == None)
+        return Rotation;
+
+    HitLocation = Get3pCrosshairTarget(fireStart);
+    if (projStart == vect(0,0,0))
+        projStart = fireStart;
+
+    return rotator(Normal(HitLocation - projStart));
+}
+
+// True when the weapon's shot can't reach the point under the 3p crosshair -- e.g. the
+// pawn is behind cover that the camera sees past (crosshair on a far wall, but the gun's
+// line is blocked by a near pillar). The HUD uses this to grey the crosshair, mirroring
+// the vehicle "bCorrectAim" concept from ONSWeapon.
+simulated function bool Is3pShotBlocked()
+{
+    local vector AimPoint, projStart, HitLocation, HitNormal;
+    local Actor HitActor;
+
+    if (!bBehindView || UTComp_xPawn(Pawn) == None)
+        return false;
+
+    AimPoint = Get3pCrosshairTarget(projStart);
+
+    // Trace the real shot path from the gun to the aim point. If it stops short on world
+    // geometry, cover is blocking the shot.
+    HitActor = Trace(HitLocation, HitNormal, AimPoint, projStart, false);
+    return HitActor != None && VSize(HitLocation - AimPoint) > 4.0;
 }
 
 // override adjust aim to fix 3p view aim
@@ -4871,13 +4938,13 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
         if ( BestTarget == None )
         {
             // snarf
-            // fix for locked rotation in 3p view 
+            // fix for locked rotation in 3p view
             if (bBehindView)
             {
                 if(Vehicle(Pawn) != None)
                     return Pawn.Rotation;
 
-                return Adjust3pAim();
+                return Adjust3pAim(projStart);
             }
             else
 				return Rotation;
@@ -4895,7 +4962,7 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
             if(Vehicle(Pawn) != None)
                 return Pawn.Rotation;
 
-            return Adjust3pAim();
+            return Adjust3pAim(projStart);
         }
         else
             return Rotation;

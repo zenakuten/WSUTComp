@@ -9,6 +9,10 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 Release Notes
 
 V25
+- fix 3p weapon aim so shots track the crosshair (pitch, wall-clamped camera, and enemies under the crosshair)
+- grey out the crosshair in 3p when the shot is blocked by cover the camera sees past
+- showdebug now shows first/third person view and a 3p aim debug line
+- showdebug now draws the weapon crosshair
 - live update crosshair size and position previews while dragging the sliders
 - live update the team overlay while dragging its color, position, and size sliders
 - live update the weapon color preview while dragging the color sliders

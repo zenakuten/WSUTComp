@@ -38,3 +38,10 @@ var() float HUDXCen, HUDXRad, HUDYCen, HUDYRad; // Center radar tweaking
 var texture HUDZAxisTex;
 
 // end radar
+
+// 3p crosshair "shot blocked" greying: when the 3p aim is obstructed (Is3pShotBlocked),
+// we recolor the player's crosshair grey by wrapping its texture in this ColorModifier --
+// their custom crosshair is kept, just tinted, not replaced. bGrey3pCrosshair is set only
+// around the crosshair draw (see DrawCrosshairChecked / the DrawSpriteWidget override).
+var bool bGrey3pCrosshair;
+var ColorModifier Crosshair3pGreyMod;

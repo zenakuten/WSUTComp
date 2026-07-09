@@ -9,6 +9,119 @@ simulated function bool IsVehicleEmpty(ONSVehicle V)
     return V == None || !V.bDriving;
 }
 
+// Crosshair draw wrapper: in 3p, grey the crosshair when the weapon's shot can't reach
+// the point under the crosshair (behind cover the camera sees past). The per-class
+// DrawCrosshair dispatchers call this so the logic lives in one place. bGrey3pCrosshair
+// is read by the DrawSpriteWidget override below, and is scoped to just this draw --
+// DrawEnemyName (called inside the crosshair funcs) early-returns in behind view, so it
+// isn't affected.
+simulated function DrawCrosshairChecked(Canvas C)
+{
+    local BS_xPlayer PC;
+
+    PC = BS_xPlayer(PlayerOwner);
+    bGrey3pCrosshair = PC != None && PC.Is3pShotBlocked();
+
+    if(HUDSettings.bEnableUTCompCrosshairs && HUDSettings.UTCompCrosshairs.Length>0)
+        DrawUTCompCrosshair(C);
+    else
+        OldDrawCrosshair(C);
+
+    bGrey3pCrosshair = false;
+}
+
+// While bGrey3pCrosshair is set (only around the crosshair draw), recolor the sprite grey
+// by wrapping its texture in a ColorModifier -- the player's custom crosshair texture is
+// preserved as the modifier's Material, so we tint rather than replace it. Tint RGB is
+// neutralised to white so the grey shows through whatever crosshair colour they picked;
+// alpha (opacity) is left untouched.
+simulated function DrawSpriteWidget(Canvas C, out SpriteWidget W)
+{
+    if (bGrey3pCrosshair && W.WidgetTexture != None && W.WidgetTexture != Crosshair3pGreyMod)
+    {
+        if (Crosshair3pGreyMod == None)
+        {
+            Crosshair3pGreyMod = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
+            Crosshair3pGreyMod.AlphaBlend = true;
+            Crosshair3pGreyMod.RenderTwoSided = true;
+            Crosshair3pGreyMod.Color.R = 110;
+            Crosshair3pGreyMod.Color.G = 110;
+            Crosshair3pGreyMod.Color.B = 110;
+            Crosshair3pGreyMod.Color.A = 255;
+        }
+        Crosshair3pGreyMod.Material = W.WidgetTexture;
+        W.WidgetTexture = Crosshair3pGreyMod;
+        W.Tints[0].R = 255; W.Tints[0].G = 255; W.Tints[0].B = 255;
+        W.Tints[1].R = 255; W.Tints[1].G = 255; W.Tints[1].B = 255;
+    }
+    Super.DrawSpriteWidget(C, W);
+}
+
+// showdebug extras: while the base engine HUD prints the debug text (and we add
+// our view-mode line via BS_xPlayer.DisplayDebug), draw a world-space line here
+// showing where the weapon is actually aiming while in 3rd person view.
+// This must live in the HUD because Draw3DLine is a native HUD function and is
+// only valid during the world-space render pass (WorldSpaceOverlays).
+simulated event WorldSpaceOverlays()
+{
+    local BS_xPlayer PC;
+    local vector Start, End, HitLocation, HitNormal, FireDir;
+    local vector X, Y, Z;
+    local Actor HitActor;
+
+    Super.WorldSpaceOverlays();
+
+    if (!bShowDebugInfo)
+        return;
+
+    PC = BS_xPlayer(PlayerOwner);
+    if (PC == None || !PC.bBehindView)
+        return;
+    if (PC.Pawn == None || PC.Pawn.Weapon == None)
+        return;
+
+    // line start = weapon fire start, direction = the 3p aim adjustment from that same
+    // start, so the line matches exactly where a shot would go.
+    GetAxes(PC.Rotation, X, Y, Z);
+    Start = PC.Pawn.Weapon.GetFireStart(X, Y, Z);
+    FireDir = vector(PC.Adjust3pAim(Start));
+
+    // extend the aim direction to where the shot actually hits, else a long ray. Trace
+    // actors too so the line stops at an enemy (matching the real beam); call Trace on the
+    // pawn so it ignores our own body at the eye origin.
+    HitActor = PC.Pawn.Trace(HitLocation, HitNormal, Start + 10000 * FireDir, Start, true);
+    if (HitActor == None)
+        End = Start + 10000 * FireDir;
+    else
+        End = HitLocation;
+
+    Draw3DLine(Start, End, class'Canvas'.Static.MakeColor(255, 255, 0));
+}
+
+// In showdebug mode the engine HUD's PostRender takes the debug-only branch and
+// skips the normal HUD pass, so the weapon crosshair (its own render flow via
+// DrawCrosshair) never draws. Re-run just the crosshair here, in the same canvas
+// state DrawHud sets up, so debug mode still shows the aim point.
+simulated event PostRender(Canvas Canvas)
+{
+    local plane OldModulate;
+
+    Super.PostRender(Canvas);
+
+    if (bShowDebugInfo && !bHideHud && PawnOwner != None)
+    {
+        OldModulate = Canvas.ColorModulate;
+        Canvas.ColorModulate.X = 1;
+        Canvas.ColorModulate.Y = 1;
+        Canvas.ColorModulate.Z = 1;
+        Canvas.ColorModulate.W = HudOpacity/255;
+
+        DrawCrosshair(Canvas);
+
+        Canvas.ColorModulate = OldModulate;
+    }
+}
+
 simulated function DrawTeamRadar(Canvas C)
 {
     local Pawn Pawn;
