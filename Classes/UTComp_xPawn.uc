@@ -161,7 +161,17 @@ function int NewShieldAbsorb(int dam)
 event Landed(vector HitNormal)
 {
     super.Landed(HitNormal);
-    MultiDodgesRemaining = RepInfo.MaxMultiDodges;
+
+    // RepInfo replicates as a separate actor and can still be None on a client early in a
+    // map; resolve it lazily like the other call sites, and guard the deref. A late RepInfo
+    // must not poison MultiDodgesRemaining (leaving it stuck at 0), which would make the
+    // client never treat dodge landings as dodges and desync landing position vs the server.
+    if (RepInfo == None)
+        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+
+    if (RepInfo != None)
+        MultiDodgesRemaining = RepInfo.MaxMultiDodges;
 }
 
 simulated function UpdatePrecacheMaterials()

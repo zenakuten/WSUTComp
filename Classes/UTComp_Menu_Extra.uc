@@ -403,10 +403,11 @@ function UpdateServerCamDistance()
         P = UTComp_xPawn(bsxplayer.Pawn);
         if(P != None)
         {
-            bsxplayer.ServerSetBehindView( 
-                P.TPCamDistance, 
-                P.TPCamWorldOffset.X, 
-                P.TPCamWorldOffset.Y, 
+            bsxplayer.ServerSetBehindView(
+                bsxplayer.bBehindView,
+                P.TPCamDistance,
+                P.TPCamWorldOffset.X,
+                P.TPCamWorldOffset.Y,
                 P.TPCamWorldOffset.Z);
         }
     }

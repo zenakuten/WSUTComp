@@ -518,20 +518,25 @@ event PlayerTick(float deltatime)
         }
     }
 
-    if (DoubleClickDir == DCLICK_Active &&
-        UTComp_xPawn(Pawn) != none && UTComp_xPawn(Pawn).MultiDodgesRemaining > 0
-    ) {
-        UTComp_xPawn(Pawn).MultiDodgesRemaining -= 1;
-        // The multijump reset now happens in UTComp_xPawn.Dodge() (the move path);
-        // doing it here in PlayerTick desynced online.
-        // Remember the dodge before we wipe DoubleClickDir below, so NotifyLanded can
-        // still tell this was a dodge-landing (see bDodgedThisFall).
+    if (DoubleClickDir == DCLICK_Active && UTComp_xPawn(Pawn) != none)
+    {
+        // Latch the dodge independently of the per-fall MultiDodgesRemaining counter. That
+        // counter is replicated (server->client) AND decremented locally on the client, so
+        // the two writers race and it can differ between sides; keying the "was this a dodge
+        // landing" latch off it desynced the landing-velocity decision (the visible position
+        // correction). DoubleClickDir == DCLICK_Active is identical on both sides and matches
+        // stock NotifyLanded semantics. NotifyLanded reads (and resets) this - see bDodgedThisFall.
         bDodgedThisFall = true;
-		if(DoubleClickDir >= DCLICK_Active)
-		{
-			ClearDoubleClick();
-			DoubleClickDir = DCLICK_None;
-		}
+
+        // Consume a multi-dodge and free DoubleClickDir for the next one only while the
+        // counter allows it - this still gates *permission* to chain dodges. The multijump
+        // reset now happens in UTComp_xPawn.Dodge() (the move path); doing it here desynced.
+        if (UTComp_xPawn(Pawn).MultiDodgesRemaining > 0)
+        {
+            UTComp_xPawn(Pawn).MultiDodgesRemaining -= 1;
+            ClearDoubleClick();
+            DoubleClickDir = DCLICK_None;
+        }
     }
 
     if (Level.NetMode == NM_Client && RepInfo != none) {
@@ -3203,6 +3208,23 @@ function ResetNet()
         UTCompPRI.RealKills=0;
 }
 
+// bDodgedThisFall is a per-fall latch normally cleared by PlayerWalking.NotifyLanded. If a
+// fall ever ends without that reset (e.g. landing handled in another state), a stale true
+// would make the next landing wrongly count as a dodge. Clear it whenever a fresh pawn is
+// (re)possessed so it can never survive across a respawn - on the server (Possess) and on
+// the owning client (ClientRestart).
+function Possess(Pawn aPawn)
+{
+    bDodgedThisFall = false;
+    super.Possess(aPawn);
+}
+
+function ClientRestart(Pawn NewPawn)
+{
+    bDodgedThisFall = false;
+    super.ClientRestart(NewPawn);
+}
+
 state PlayerWalking
 {
     function bool NotifyLanded(vector HitNormal)
@@ -4953,20 +4975,24 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
     }
 	InstantWarnTarget(BestTarget,FiredAmmunition,FireDir);
 	ShotTarget = Pawn(BestTarget);
-    if ( !bAimingHelp || (Level.NetMode != NM_Standalone) )
-    {
-        // snarf
-        //fix for locked rotation in 3p view
-        if (bBehindView)
-        {
-            if(Vehicle(Pawn) != None)
-                return Pawn.Rotation;
 
-            return Adjust3pAim(projStart);
-        }
-        else
-            return Rotation;
+    // In 3p, always track the crosshair via Adjust3pAim, in every netmode. Previously this
+    // only happened online (or with aim help off): offline standalone with bAimingHelp fell
+    // through to the aim-assist/target-leading code below, which nudges projectile aim toward
+    // the target center/feet. That made offline projectiles land lower than online (online
+    // aims true along the crosshair ray). Aiming here keeps offline and online identical.
+    // Hitscan already matched because a bProjTarget hit sets bNoZAdjust, so the assist path
+    // barely moves it - this mainly affects projectiles.
+    if (bBehindView)
+    {
+        if (Vehicle(Pawn) != None)
+            return Pawn.Rotation;
+
+        return Adjust3pAim(projStart);
     }
+
+    if ( !bAimingHelp || (Level.NetMode != NM_Standalone) )
+        return Rotation;
 
     // aim at target - help with leading also
     if ( !FiredAmmunition.bInstantHit )
@@ -5032,7 +5058,8 @@ function ClientSetBehindView(bool B)
     	UTComp_xPawn(Pawn).bDesiredBehindView = B;
     	Pawn.SaveConfig();
         ServerSetBehindView(
-            UTComp_xPawn(Pawn).TPCamDistance, 
+            B,
+            UTComp_xPawn(Pawn).TPCamDistance,
             UTComp_xPawn(Pawn).TPCamWorldOffset.X,
             UTComp_xPawn(Pawn).TPCamWorldOffset.Y,
             UTComp_xPawn(Pawn).TPCamWorldOffset.Z);
@@ -5040,9 +5067,16 @@ function ClientSetBehindView(bool B)
 }
 
 // aim will be messed up online if server doesn't know players 3p view
-function ServerSetBehindView(float d, float x, float y, float z)
+function ServerSetBehindView(bool bBehind, float d, float x, float y, float z)
 {
     local UTComp_xPawn p;
+
+    // AdjustAim's 3p branch is gated on bBehindView, and the server only learns the
+    // client's view state through this RPC (the toggle execs set bBehindView client-side
+    // only). Without mirroring it here the server takes the eye-aim branch while the client
+    // used Adjust3pAim, so the authoritative shot misses what the crosshair covers online.
+    bBehindView = bBehind;
+
     p = UTComp_xPawn(Pawn);
     if (p != None)
     {
