@@ -355,11 +355,9 @@ A grab bag of scoreboard, gameplay, and netcode options.
 
 ### Adrenaline Combos
 
-![Adrenaline combo settings](images/misc_combos.png)
-
-The **Disable Adrenaline Combos** button opens this sub‑menu, where each combo has its
-own toggle: **Enable Booster Combo**, **Enable Invisibility Combo**, **Enable Speed
-Combo**, and **Enable Berserk Combo**. Uncheck any combo you don't want to trigger.
+The Misc menu also has a toggle for each adrenaline combo: **Enable Booster Combo**,
+**Enable Invisibility Combo**, **Enable Speed Combo**, and **Enable Berserk Combo**.
+Uncheck any combo you don't want to trigger.
 
 ---
 
