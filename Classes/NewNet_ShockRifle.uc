@@ -52,6 +52,7 @@ simulated event NewNet_ClientStartFire(int Mode)
     local bool b;
     local actor A;
     local vector HN,HL;
+    local BS_xPlayer bsp;
 
     if ( Pawn(Owner).Controller.IsInState('GameEnded') || Pawn(Owner).Controller.IsInState('RoundEnded') )
         return;
@@ -86,7 +87,15 @@ simulated event NewNet_ClientStartFire(int Mode)
             NewNet_ShockBeamFire(FireMode[mode]).DoInstantFireEffect();
 
 
-            A = Trace(HN,HL,Start+Vector(Pawn(Owner).Controller.Rotation)*40000.0,Start,true);
+            // Believed-hit trace must follow the ACTUAL shot. In 3p the beam fires along the
+            // crosshair aim (Adjust3pAim), not the raw view rotation - the latter runs offset
+            // by the cam-Y camera offset and misses the enemy the beam hit, so b stays false and
+            // the server's reverse-fix un-hits a legitimate hit online. Trace the 3p aim instead.
+            bsp = BS_xPlayer(Pawn(Owner).Controller);
+            if(bsp != None && bsp.bBehindView)
+                A = Trace(HN,HL,Start+Vector(bsp.Adjust3pAim(Start))*40000.0,Start,true);
+            else
+                A = Trace(HN,HL,Start+Vector(Pawn(Owner).Controller.Rotation)*40000.0,Start,true);
             if(A!=None && (A.IsA('xPawn') || A.IsA('Vehicle')))
             {
                     b=true;

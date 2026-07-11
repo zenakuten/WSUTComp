@@ -5126,6 +5126,16 @@ function ServerSetBehindView(bool bBehind, float d, float x, float y, float z)
     p = UTComp_xPawn(Pawn);
     if (p != None)
     {
+        // Mirror the pawn's 3p flag on the server too. Pawn.PointOfView() returns
+        // bDesiredBehindView, and the enhanced-netcode fire paths (rocket/flak primary, shock
+        // beam, sniper - anything with a bUseReplicatedInfo/SavedRot branch) only recompute the
+        // 3p crosshair aim via AdjustAim when PointOfView() is true; otherwise they fire along
+        // the client's raw view rotation (SavedRot), which ignores the cam-Y crosshair parallax
+        // and sends the shot the wrong way online. bDesiredBehindView is config/client-set, so
+        // without this the server pawn stays false and those weapons miss the crosshair at a
+        // non-zero cam Y (weapons without that branch - shock core, link, rocket secondary -
+        // were unaffected, which matches what's seen in game).
+        p.bDesiredBehindView = bBehind;
         p.TPCamDistance = d;
         P.TPCamWorldOffset.X = X;
         P.TPCamWorldOffset.Y = Y;
