@@ -113,10 +113,20 @@ simulated function SpawnEffects()
         else
         {
             Attachment = xPawn(Instigator).WeaponAttachment;
-            if (Attachment != None && (Level.TimeSeconds - Attachment.LastRenderTime) < 1)
+            // Prefer the pawn's settled muzzle-tip cache. It's the live muzzle during normal
+            // play (updated every frame), but through the ~0.75s a weapon takes to settle after
+            // a switch it holds the PREVIOUS weapon's fully-raised muzzle instead of the fresh
+            // attachment's low, still-settling tip bone. That low transitional tip is exactly
+            // the "first beam of a fire held through a switch" glitch.
+            if (UTComp_xPawn(Instigator) != None && UTComp_xPawn(Instigator).bHasMuzzleTip)
+                SetLocation(UTComp_xPawn(Instigator).LastMuzzleTip);
+            else if (Attachment != None && (Level.TimeSeconds - Attachment.LastRenderTime) < 1)
                 SetLocation(Attachment.GetTipLocation());
+            // No usable muzzle (no cached tip and attachment not posed): start from the eye.
+            // In 3p the settled muzzle sits at ~eye height, so the eye is a good stand-in and
+            // avoids the old crude estimate's low/off-center look.
             else
-                SetLocation(Instigator.Location + Instigator.EyeHeight*Vect(0,0,1) + Normal(mSpawnVecA - Instigator.Location) * 25.0); 
+                SetLocation(Instigator.Location + Instigator.EyePosition());
             Spawn(MuzFlash3Class);
         }
     }

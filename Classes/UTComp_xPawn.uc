@@ -41,6 +41,15 @@ var ColorModifier DeResModifier1;
 
 var config bool bDesiredBehindView;
 
+// Client-side cache of the last validly-posed 3p weapon muzzle ('tip' bone) location.
+// Beam effects fall back to this when the attachment tip isn't posed yet - notably the first
+// shot of a fire held through a weapon switch, where the fresh attachment hasn't rendered so
+// GetTipLocation() would return garbage. The previous weapon's muzzle is a close stand-in.
+var vector LastMuzzleTip;
+var bool bHasMuzzleTip;
+var Actor LastSeenAttachment;
+var float AttachmentChangeTime;
+
 // copy/pasta from vehicle
 var float TPCamDistance;
 var vector   TPCamWorldOffset; // Applied in world space after vehicle transform.
@@ -434,6 +443,28 @@ simulated function Tick(float DeltaTime)
 
     if(LocalPC==None)
         LocalPC=Level.GetLocalPlayerController();
+
+    // Cache the 3p weapon muzzle ('tip' bone) so beam effects start at the right place. The
+    // catch: after a weapon switch the fresh attachment settles/brings-up over ~1s, during
+    // which its tip bone rides low (GetTipLocation() reports a too-low muzzle even though the
+    // attachment has already rendered). A beam fired in that window - the "fire held through a
+    // weapon switch" glitch - would start from the low, wrong spot. So we hold off updating the
+    // cache until the attachment has been stable past that settle window; meanwhile the cache
+    // keeps the PREVIOUS weapon's fully-raised muzzle, a good stand-in for that first beam. The
+    // shock refire is ~0.7s, so the settle window sits between the 1st (~0.3s) and 2nd (~1.0s,
+    // already settled) post-switch beam.
+    if(WeaponAttachment != LastSeenAttachment)
+    {
+        LastSeenAttachment = WeaponAttachment;
+        AttachmentChangeTime = Level.TimeSeconds;
+    }
+    if(WeaponAttachment != None
+       && (Level.TimeSeconds - AttachmentChangeTime) >= 0.75
+       && (Level.TimeSeconds - WeaponAttachment.LastRenderTime) < 0.5)
+    {
+        LastMuzzleTip = WeaponAttachment.GetTipLocation();
+        bHasMuzzleTip = true;
+    }
 
     if(ShouldUpdateSkin())
     {
@@ -1315,7 +1346,12 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 	local Actor HitActor;
     local vector x, y, z;
 
-    if(Settings != None)
+    // Only the locally-controlled client drives its camera offset from its own Settings.
+    // On the server this pawn is a remote proxy: its authoritative 3p offset arrives via
+    // BS_xPlayer.ServerSetBehindView. Reading the server's own Settings object here would
+    // clobber that replicated value with the wrong (server-local) offset, mirroring the
+    // camera to the opposite side and throwing off server-side 3p projectile aim.
+    if(Settings != None && IsLocallyControlled())
     {
         TPCamDistance = Settings.TPCamDistance;
         TPCamWorldOffset = Settings.TPCamWorldOffset;
@@ -1339,7 +1375,10 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
     {
         // use default 3p view
         TPCamDistance = default.TPCamDistance;
-        TPCamWorldOffset = default.TPCamWorldOffset;
+        // Don't reset the server proxy's replicated offset to the default here either;
+        // only the local client's own view should fall back to the default framing.
+        if (IsLocallyControlled())
+            TPCamWorldOffset = default.TPCamWorldOffset;
 
         if (DesiredTPCamDistance < TPCamDistance)
             TPCamDistance = FMax(DesiredTPCamDistance, TPCamDistance - CameraSpeed * (Level.TimeSeconds - LastCameraCalcTime));

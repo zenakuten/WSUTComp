@@ -42,6 +42,13 @@ var UTComp_PRI UTCompPRI;
 // the predicted position - in agreement across client, server, and standalone.
 var bool bDodgedThisFall;
 
+
+// Client-side cache for the last 3p camera offset we sent the server (see
+// MaybeSendCamOffsetToServer), so we only re-send when it actually changes.
+var vector LastSentCamOffset;
+var float LastSentCamDist;
+var float LastCamSendTime;
+
 var ONSPowerCore oldFoundCore;
 var xweaponbase oldFoundWep;
 var Controller LastViewedController;
@@ -538,6 +545,13 @@ event PlayerTick(float deltatime)
             DoubleClickDir = DCLICK_None;
         }
     }
+
+    // Keep the server's copy of the 3p camera offset in sync with ours. The server needs it
+    // for server-authoritative fire (all projectiles, and hitscan when enhanced netcode is
+    // off) so its AdjustAim/Adjust3pAim matches our view. Menu events alone miss config-loaded
+    // settings and respawns, so push here whenever it actually changes (throttled).
+    if (Level.NetMode == NM_Client && bBehindView)
+        MaybeSendCamOffsetToServer();
 
     if (Level.NetMode == NM_Client && RepInfo != none) {
         if (Player.CurrentNetSpeed > RepInfo.MaxNetSpeed)
@@ -3222,6 +3236,12 @@ function Possess(Pawn aPawn)
 function ClientRestart(Pawn NewPawn)
 {
     bDodgedThisFall = false;
+    // Force MaybeSendCamOffsetToServer to re-push our 3p offset: the server's new pawn
+    // starts at the default offset, but the dedup cache below persists on this controller
+    // across deaths, so without clearing it we'd never re-send and server 3p aim would be
+    // wrong until the next slider change.
+    LastSentCamOffset = vect(0,0,0);
+    LastSentCamDist = -1;
     super.ClientRestart(NewPawn);
 }
 
@@ -4843,12 +4863,13 @@ simulated function DisplayDebug(Canvas Canvas, out float YL, out float YPos)
 // Computes the world point under the 3p crosshair (screen center) by tracing the camera
 // ray, and outputs the weapon fire start. Shared by the 3p aim (Adjust3pAim) and the
 // "shot blocked" crosshair check (Is3pShotBlocked).
-simulated function vector Get3pCrosshairTarget(out vector projStart)
+simulated function vector Get3pCrosshairTarget(out vector projStart, optional bool bSkipProjectiles)
 {
     local UTComp_xPawn bsxPawn;
-    local vector CamLookAt, HitLocation, HitNormal, FireDir, EndTrace;
+    local vector CamLookAt, HitLocation, HitNormal, FireDir, EndTrace, TraceStart;
     local vector X, Y, Z;
     local Actor HitActor;
+    local int SafetyCount;
 
     bsxPawn = UTComp_xPawn(Pawn);
 
@@ -4863,10 +4884,29 @@ simulated function vector Get3pCrosshairTarget(out vector projStart)
     // same line when it backs into a wall, so tracing from the camera's un-clamped spot
     // started behind that wall and hit it. CamLookAt is always in front of that wall and
     // on the ray.
-    // Trace actors too, so an enemy under the crosshair becomes the aim point rather than
-    // the wall behind them -- otherwise the shot parallaxes past the enemy into that wall.
-    // Call Trace on the pawn (not the controller) so it ignores our own body.
-    HitActor = bsxPawn.Trace(HitLocation, HitNormal, EndTrace, CamLookAt, true);
+    // Trace actors (true) so a static-mesh wall or an enemy under the crosshair becomes the
+    // aim point. A world-geometry-only trace (false) is NOT usable here: most UT2004 map
+    // geometry is static-mesh actors, which false-traces miss entirely.
+    // bSkipProjectiles (projectile/core fire): step past our own in-flight projectiles/fakes
+    // (all Projectile subclasses). While firing a core stream they ride along this ray and
+    // would hijack the aim; stepping to the stationary wall/enemy behind them keeps the aim
+    // point the SAME every shot so the cores fly parallel instead of fanning out. Use a high
+    // step cap so even a long held-fire stream is fully cleared (do NOT fall back to a
+    // world-only trace - that misses static meshes and yields a wrong, inconsistent aim).
+    //
+    // When NOT skipping (hitscan/beam fire): stop at the first thing under the crosshair,
+    // INCLUDING a core. That lets the beam aim eye->core and hit it directly, which is how you
+    // combo a core in 3p: skipping to the wall behind the core made the beam fire eye->wall,
+    // and the eye-vs-CamLookAt parallax (camera Y offset) then made it miss the core entirely.
+    TraceStart = CamLookAt;
+    HitActor = bsxPawn.Trace(HitLocation, HitNormal, EndTrace, TraceStart, true);
+    while (bSkipProjectiles && HitActor != None && Projectile(HitActor) != None && SafetyCount < 32)
+    {
+        TraceStart = HitLocation + FireDir * 16.0;
+        HitActor = bsxPawn.Trace(HitLocation, HitNormal, EndTrace, TraceStart, true);
+        SafetyCount++;
+    }
+
     if (HitActor == None)
         HitLocation = EndTrace;
 
@@ -4886,14 +4926,14 @@ simulated function vector Get3pCrosshairTarget(out vector projStart)
 // auto-aim target is found (see AdjustAim). projStart is the real projectile origin; when
 // omitted (e.g. the HUD debug line) we derive it from the pawn eye.
 // simulated so the HUD (client) can call this to draw the 3p aim debug line.
-simulated function rotator Adjust3pAim(optional vector projStart)
+simulated function rotator Adjust3pAim(optional vector projStart, optional bool bSkipProjectiles)
 {
     local vector HitLocation, fireStart;
 
     if (UTComp_xPawn(Pawn) == None)
         return Rotation;
 
-    HitLocation = Get3pCrosshairTarget(fireStart);
+    HitLocation = Get3pCrosshairTarget(fireStart, bSkipProjectiles);
     if (projStart == vect(0,0,0))
         projStart = fireStart;
 
@@ -4912,7 +4952,9 @@ simulated function bool Is3pShotBlocked()
     if (!bBehindView || UTComp_xPawn(Pawn) == None)
         return false;
 
-    AimPoint = Get3pCrosshairTarget(projStart);
+    // Skip projectiles: the cover check is about the wall/enemy under the crosshair, not a
+    // transient core in flight.
+    AimPoint = Get3pCrosshairTarget(projStart, true);
 
     // Trace the real shot path from the gun to the aim point. If it stops short on world
     // geometry, cover is blocking the shot.
@@ -4966,7 +5008,9 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
                 if(Vehicle(Pawn) != None)
                     return Pawn.Rotation;
 
-                return Adjust3pAim(projStart);
+                // Core fire skips projectiles for a stable stream; the beam does NOT, so it
+                // can aim at (and combo) a core under the crosshair.
+                return Adjust3pAim(projStart, !FiredAmmunition.bInstantHit);
             }
             else
 				return Rotation;
@@ -4988,7 +5032,9 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
         if (Vehicle(Pawn) != None)
             return Pawn.Rotation;
 
-        return Adjust3pAim(projStart);
+        // Core fire skips projectiles for a stable stream; the beam does NOT, so it
+        // can aim at (and combo) a core under the crosshair.
+        return Adjust3pAim(projStart, !FiredAmmunition.bInstantHit);
     }
 
     if ( !bAimingHelp || (Level.NetMode != NM_Standalone) )
@@ -5085,6 +5131,48 @@ function ServerSetBehindView(bool bBehind, float d, float x, float y, float z)
         P.TPCamWorldOffset.Y = Y;
         P.TPCamWorldOffset.Z = Z;
     }
+}
+
+// Client-only: push our current 3p camera offset to the server whenever it changes, so the
+// server's Adjust3pAim matches our view. SpecialCalcBehindView keeps Pawn.TPCamWorldOffset in
+// sync with the live Settings each frame, so reading it here covers menu edits, config-loaded
+// settings, and respawns alike - none of which reliably route through a menu event. Throttled
+// so a slider drag sends at most a few times a second instead of every frame.
+function MaybeSendCamOffsetToServer()
+{
+    local UTComp_xPawn p;
+    local vector camOffset;
+    local float camDist;
+
+    p = UTComp_xPawn(Pawn);
+    if (p == None)
+        return;
+
+    // Read the stable user setting, NOT Pawn.TPCamWorldOffset: SpecialCalcBehindView's
+    // "camera too far" fallback transiently overwrites the pawn value with the default offset
+    // for a frame, and shipping that default to the server makes its 3p aim jump -> stray
+    // wrong-direction projectiles. Settings holds what the player actually configured.
+    if (p.Settings != None)
+    {
+        camOffset = p.Settings.TPCamWorldOffset;
+        camDist = p.Settings.TPCamDistance;
+    }
+    else
+    {
+        camOffset = p.TPCamWorldOffset;
+        camDist = p.TPCamDistance;
+    }
+
+    if (camOffset == LastSentCamOffset && camDist == LastSentCamDist)
+        return;
+    if (Level.TimeSeconds - LastCamSendTime < 0.2)
+        return;
+
+    LastSentCamOffset = camOffset;
+    LastSentCamDist = camDist;
+    LastCamSendTime = Level.TimeSeconds;
+
+    ServerSetBehindView(bBehindView, camDist, camOffset.X, camOffset.Y, camOffset.Z);
 }
 
 defaultproperties

@@ -413,13 +413,27 @@ function UpdateServerCamDistance()
     }
 }
 
+// Fired once when a 3p-cam slider is released. During a drag, the CaptureMouseMove handlers
+// only update the local pawn/render (live preview); the base slider never fires OnChange on
+// drag or release, so the server would otherwise keep the offset from the initial click and
+// its 3p aim (which uses the replicated TPCamWorldOffset) would diverge from the client view.
+// Push the final value here - one RPC per release, not per drag frame.
+function sliderReleaseSendToServer(GUIComponent Sender)
+{
+    if (GUISlider(Sender) != None)
+        GUISlider(Sender).InternalOnMouseRelease(Sender);   // base: recompute value from cursor
+    MatchSettingsToThirdPerson();
+    UpdatePawnCamDistance();
+    UpdateServerCamDistance();
+}
+
 function bool thirdDistanceCaptureMouseMove(float dx, float dy)
 {
     local bool retval;
     retval = thirdPersonCamDistanceSlide.InternalCapturedMouseMove(dx, dy);
     MatchSettingsToThirdPerson();
     UpdatePawnCamDistance();
-    
+
     return retval;
 }
 
@@ -429,7 +443,7 @@ function bool thirdOffsetXCaptureMouseMove(float dx, float dy)
     retval = thirdPersonCamOffsetXSlide.InternalCapturedMouseMove(dx, dy);
     MatchSettingsToThirdPerson();
     UpdatePawnCamDistance();
-    
+
     return retval;
 }
 
@@ -439,7 +453,7 @@ function bool thirdOffsetYCaptureMouseMove(float dx, float dy)
     retval = thirdPersonCamOffsetYSlide.InternalCapturedMouseMove(dx, dy);
     MatchSettingsToThirdPerson();
     UpdatePawnCamDistance();
-    
+
     return retval;
 }
 
@@ -449,7 +463,7 @@ function bool thirdOffsetZCaptureMouseMove(float dx, float dy)
     retval = thirdPersonCamOffsetZSlide.InternalCapturedMouseMove(dx, dy);
     MatchSettingsToThirdPerson();
     UpdatePawnCamDistance();
-    
+
     return retval;
 }
 
@@ -539,7 +553,7 @@ defaultproperties
          WinWidth=0.125
          OnClick=thirdCamDistanceSlide.InternalOnClick
          OnMousePressed=thirdCamDistanceSlide.InternalOnMousePressed
-         OnMouseRelease=thirdCamDistanceSlide.InternalOnMouseRelease
+         OnMouseRelease=UTComp_Menu_Extra.sliderReleaseSendToServer
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=thirdCamDistanceSlide.InternalOnKeyEvent
          //OnCapturedMouseMove=thirdCamDistanceSlide.InternalCapturedMouseMove
@@ -564,7 +578,7 @@ defaultproperties
          WinWidth=0.125
          OnClick=thirdCamOffsetX.InternalOnClick
          OnMousePressed=thirdCamOffsetX.InternalOnMousePressed
-         OnMouseRelease=thirdCamOffsetX.InternalOnMouseRelease
+         OnMouseRelease=UTComp_Menu_Extra.sliderReleaseSendToServer
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=thirdCamOffsetX.InternalOnKeyEvent
          //OnCapturedMouseMove=thirdCamOffsetX.InternalCapturedMouseMove
@@ -590,7 +604,7 @@ defaultproperties
          WinWidth=0.125
          OnClick=thirdCamOffsetY.InternalOnClick
          OnMousePressed=thirdCamOffsetY.InternalOnMousePressed
-         OnMouseRelease=thirdCamOffsetY.InternalOnMouseRelease
+         OnMouseRelease=UTComp_Menu_Extra.sliderReleaseSendToServer
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=thirdCamOffsetY.InternalOnKeyEvent
          //OnCapturedMouseMove=thirdCamOffsetY.InternalCapturedMouseMove
@@ -616,7 +630,7 @@ defaultproperties
          WinWidth=0.125
          OnClick=thirdCamOffsetZ.InternalOnClick
          OnMousePressed=thirdCamOffsetZ.InternalOnMousePressed
-         OnMouseRelease=thirdCamOffsetZ.InternalOnMouseRelease
+         OnMouseRelease=UTComp_Menu_Extra.sliderReleaseSendToServer
          OnChange=UTComp_Menu_Extra.InternalOnChange
          OnKeyEvent=thirdCamOffsetZ.InternalOnKeyEvent
          //OnCapturedMouseMove=thirdCamOffsetZ.InternalCapturedMouseMove
