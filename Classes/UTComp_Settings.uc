@@ -185,8 +185,8 @@ defaultproperties
     DeResColor=(R=00,G=70,B=255,A=255)
     DeResFXColor=(R=00,G=70,B=255,A=255)
     bShowKillsOnScoreboard=True
-    TPCamDistance=280.0
-    TPCamWorldOffset=(X=-35,Y=-28.0,Z=38.000000)
+    TPCamDistance=225.0
+    TPCamWorldOffset=(X=-35,Y=0.0,Z=38.000000)
 	bDebug=false
 
     instance=none

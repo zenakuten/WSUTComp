@@ -17,6 +17,22 @@ function bool InternalCapturedMouseMove(float deltaX, float deltaY)
     return bResult;
 }
 
+// The base slider only refreshes its value tooltip while dragging, so after a
+// programmatic value change (a reset button, config load, etc.) a hover shows the
+// stale value. Refresh the tip from the current value each time it is about to show.
+// (Mirrors the default GUIComponent.OnBeginTooltip body, plus the refresh.)
+function GUIToolTip RefreshValueTooltip()
+{
+    if ( bShowValueTooltip && ToolTip != None )
+        ToolTip.SetTip( GetValueString() );
+
+    if ( ToolTip != None )
+        return ToolTip.EnterArea();
+    if ( MenuOwner != None )
+        return MenuOwner.OnBeginTooltip();
+    return None;
+}
+
 
 defaultproperties
 {
@@ -24,4 +40,5 @@ defaultproperties
     CaptionStyleName="WSSliderCaption"
     BarStyleName="WSSliderBar"
     StyleName="WSSliderKnob"
+    OnBeginTooltip=wsGUISlider.RefreshValueTooltip
 }

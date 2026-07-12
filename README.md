@@ -20,6 +20,11 @@ V25
 - defer config menu saves to menu close to avoid per-change disk write stalls
 - keep the active menu tab button highlighted while its menu is shown
 - add a ghost preview dude showing live ghost color and ghost fx particles on the extra menu
+- add a "default 3p" button to reset the 3p camera sliders on the extra menu
+- fix the 3p camera default distance and offset (match the engine 3p distance, center cam y)
+- cap the 3p cam distance slider so the camera no longer warps at high distances
+- fix config sliders showing a stale tooltip value after a reset or config load
+- fix menu controls and tab buttons drifting when clicked on the skins, hud, and extra menus
 - fix menu labels, text, position, etc
 
 V24

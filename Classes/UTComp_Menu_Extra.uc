@@ -11,6 +11,7 @@ var automated GUISlider ghostRSlide, ghostGSlide, ghostBSlide, ghostASlide, ghos
 
 var automated GUISlider thirdPersonCamDistanceSlide, thirdPersonCamOffsetXSlide, thirdPersonCamOffsetYSlide, thirdPersonCamOffsetZSlide;
 var automated GUILabel thirdPersonCamDistLabel, thirdPersonCamOffsetXLabel, thirdPersonCamOffsetYLabel, thirdPersonCamOffsetZLabel;
+var automated GUIButton bu_Default3P;
 
 // Live preview dude drawn next to the ghost color sliders. It renders as a solid player
 // mesh tinted with the ghost colors (via ColorModifier over the DeRez materials, exactly
@@ -129,6 +130,27 @@ function InternalOnChange( GUIComponent C )
     SaveSettings();
     SaveHUDSettings();
     UpdateServerCamDistance();
+}
+
+function bool InternalOnClick(GUIComponent Sender)
+{
+    if(Sender == bu_Default3P)
+        ResetThirdPersonToDefaults();
+
+    return Super.InternalOnClick(Sender);
+}
+
+// Restore the four 3p camera sliders (distance + X/Y/Z world offset) to the
+// authoritative default view values, which live on the pawn class UTComp_xPawn.
+function ResetThirdPersonToDefaults()
+{
+    Settings.TPCamDistance = class'UTComp_xPawn'.default.TPCamDistance;
+    Settings.TPCamWorldOffset = class'UTComp_xPawn'.default.TPCamWorldOffset;
+
+    MatchSlidersToThirdPerson();
+    UpdatePawnCamDistance();
+    UpdateServerCamDistance();
+    SaveSettings();
 }
 
 // Live preview while dragging a color slider: recolor the label text as the slider
@@ -321,49 +343,30 @@ function bool OnDrawGhost(Canvas C)
 // Draw the dude as a solid tinted mesh (WireFrame=false) clipped into the preview pane.
 function bool DrawSpinny(Canvas Canvas, UTComp_SpinnyWeap Dude, GUIImage Bounds)
 {
-    local float oOrgX, oOrgY, oClipX, oClipY;
-    local vector CamPos, X, Y, Z;
+    local vector CamPos, X, Y, Z, DudeLoc;
     local rotator CamRot;
+    local float fov;
 
     if(Dude == None || Bounds == None || !Bounds.bVisible)
         return true;
 
-    oOrgX=Canvas.OrgX;
-    oOrgY=Canvas.OrgY;
-    oClipX=Canvas.ClipX;
-    oClipY=Canvas.ClipY;
-
-    Canvas.OrgX=Bounds.ActualLeft();
-    Canvas.OrgY=Bounds.ActualTop();
-    Canvas.ClipX=Bounds.ActualWidth();
-    Canvas.ClipY=Bounds.ActualHeight();
-
     Canvas.GetCameraLocation(CamPos, CamRot);
     GetAxes(CamRot, X, Y, Z);
-    Dude.SetLocation(CamPos + (SpinnyOffset.X * X) + (SpinnyOffset.Y * Y) + (SpinnyOffset.Z * Z));
 
-    Canvas.DrawActorClipped(Dude, false, Bounds.ActualLeft(), Bounds.ActualTop(), Bounds.ActualWidth(), Bounds.ActualHeight(), true, 15);
+    // Distance / 1.5 renders the ghost preview (and, via DudeLoc, its fx cloud) 50% larger.
+    // Apparent size is 1/distance, and SpinnyPaneLoc keeps it centered in the pane regardless.
+    DudeLoc = SpinnyPaneLoc(Canvas, Bounds, CamPos, X, Y, Z, SpinnyOffset.X / 1.5, 15.0, fov);
+    Dude.SetLocation(DudeLoc);
+    Canvas.DrawActor(Dude, false, true, fov);
 
-    // Render the attached ghost fx emitter into the same pane. DrawActorClipped only
-    // draws the actor passed to it (not based actors), so the emitter needs its own
-    // draw. ClearZ=false so it shares depth with the mesh just drawn.
+    // Ghost fx emitter shares the dude's spot (ClearZ=false so it shares depth). The
+    // downward nudge lines the particle cloud up with the body instead of the head.
     if(GhostFXEmitter != None)
     {
-        // SetBase doesn't carry the emitter to the dude's per-frame teleported location,
-        // so pin it explicitly. With PTCS_Relative the particles render relative to the
-        // emitter's transform, so co-locating the emitter with the dude puts the cloud on
-        // the dude instead of near the camera. The extra downward (camera -Z) nudge
-        // compensates for the mesh's prepivot: the dude is drawn offset below the actor
-        // origin (feet on the ground) while particles spawn from the origin, so without it
-        // the cloud rides up at the head instead of covering the body.
-        GhostFXEmitter.SetLocation(Dude.Location - (GhostFXBodyOffset * Z));
-        Canvas.DrawActorClipped(GhostFXEmitter, false, Bounds.ActualLeft(), Bounds.ActualTop(), Bounds.ActualWidth(), Bounds.ActualHeight(), false, 15);
+        GhostFXEmitter.SetLocation(DudeLoc - (GhostFXBodyOffset * Z));
+        Canvas.DrawActor(GhostFXEmitter, false, false, fov);
     }
 
-    Canvas.OrgX=oOrgX;
-    Canvas.OrgY=oOrgY;
-    Canvas.ClipX=oClipX;
-    Canvas.ClipY=oClipY;
     return true;
 }
 
@@ -558,7 +561,10 @@ defaultproperties
          OnKeyEvent=thirdCamDistanceSlide.InternalOnKeyEvent
          //OnCapturedMouseMove=thirdCamDistanceSlide.InternalCapturedMouseMove
          OnCapturedMouseMove=UTComp_Menu_Extra.thirdDistanceCaptureMouseMove
-         MaxValue=200
+         // The view breaks past 255 (total camera distance exceeds the 300 fallback in
+         // SpecialCalcBehindView), so that is the cap. The 225 default sits at ~88%.
+         MinValue=0
+         MaxValue=255
      End Object
      thirdPersonCamDistanceSlide=wsGUISlider'UTComp_Menu_Extra.thirdCamDistanceSlide'
 
@@ -638,6 +644,19 @@ defaultproperties
          MaxValue=64
      End Object
      thirdPersonCamOffsetZSlide=wsGUISlider'UTComp_Menu_Extra.thirdCamOffsetZ'
+
+     // Sits under the 3p sliders, right edge aligned with the slider column (0.68 + 0.125 = 0.805).
+     Begin Object Class=GUIButton Name=Default3PButton
+         Caption="Default 3P"
+         StyleName="WSButton"
+         WinWidth=0.125000
+         WinHeight=0.040000
+         WinLeft=0.680000
+         WinTop=0.530000
+         OnClick=UTComp_Menu_Extra.InternalOnClick
+         OnKeyEvent=Default3PButton.InternalOnKeyEvent
+     End Object
+     bu_Default3P=GUIButton'UTComp_Menu_Extra.Default3PButton'
 
     /////////////////////
 

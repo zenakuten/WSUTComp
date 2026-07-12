@@ -283,10 +283,10 @@ function bool OnDrawVehicle(Canvas C)
 // colors, so save and restore them around the draw to avoid tinting other rendering.
 function bool DrawSpinnyTinted(Canvas Canvas, UTComp_SpinnyWeap Dude, GUIImage Bounds, color TintColor)
 {
-    local float oOrgX, oOrgY, oClipX, oClipY;
     local vector CamPos, X, Y, Z;
     local rotator CamRot;
     local color oAnimMesh, oBrushWire;
+    local float fov;
 
     if(Dude == None || Bounds == None || !Bounds.bVisible)
         return true;
@@ -297,34 +297,23 @@ function bool DrawSpinnyTinted(Canvas Canvas, UTComp_SpinnyWeap Dude, GUIImage B
     if(UEngine == None)
         return true;
 
-    oOrgX=Canvas.OrgX;
-    oOrgY=Canvas.OrgY;
-    oClipX=Canvas.ClipX;
-    oClipY=Canvas.ClipY;
-
-    Canvas.OrgX=Bounds.ActualLeft();
-    Canvas.OrgY=Bounds.ActualTop();
-    Canvas.ClipX=Bounds.ActualWidth();
-    Canvas.ClipY=Bounds.ActualHeight();
-
     Canvas.GetCameraLocation(CamPos, CamRot);
     GetAxes(CamRot, X, Y, Z);
-    Dude.SetLocation(CamPos + (SpinnyOffset.X * X) + (SpinnyOffset.Y * Y) + (SpinnyOffset.Z * Z));
+    Dude.SetLocation(SpinnyPaneLoc(Canvas, Bounds, CamPos, X, Y, Z, SpinnyOffset.X, 15.0, fov));
 
     oAnimMesh  = UEngine.C_AnimMesh;
     oBrushWire = UEngine.C_BrushWire;
     UEngine.C_AnimMesh  = TintColor;
     UEngine.C_BrushWire = TintColor;
 
-    Canvas.DrawActorClipped(Dude, true, Bounds.ActualLeft(), Bounds.ActualTop(), Bounds.ActualWidth(), Bounds.ActualHeight(), true, 15);
+    // DrawActor (not DrawActorClipped) via the shared projection helper - avoids the
+    // RI SetViewport side effect that drifted the focused control / tab buttons. Wireframe
+    // stays on (the HUD previews render as wireframe player/vehicle).
+    Canvas.DrawActor(Dude, true, true, fov);
 
     UEngine.C_AnimMesh  = oAnimMesh;
     UEngine.C_BrushWire = oBrushWire;
 
-    Canvas.OrgX=oOrgX;
-    Canvas.OrgY=oOrgY;
-    Canvas.ClipX=oClipX;
-    Canvas.ClipY=oClipY;
     return true;
 }
 

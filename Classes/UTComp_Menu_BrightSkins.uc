@@ -588,32 +588,21 @@ function UpdateSpinny(UTComp_SpinnyWeap Dude, byte Band, optional bool bColorOnl
 
 function bool DrawSpinnyClipped(Canvas Canvas, UTComp_SpinnyWeap Dude, GUIImage Bounds)
 {
-    local float oOrgX, oOrgY, oClipX, oClipY;
     local vector CamPos, X, Y, Z;
     local rotator CamRot;
+    local float fov;
 
     if(Dude==None || Bounds==None || !Bounds.bVisible)
         return true;
 
-    oOrgX=Canvas.OrgX;
-    oOrgY=Canvas.OrgY;
-    oClipX=Canvas.ClipX;
-    oClipY=Canvas.ClipY;
-
-    Canvas.OrgX=Bounds.ActualLeft();
-    Canvas.OrgY=Bounds.ActualTop();
-    Canvas.ClipX=Bounds.ActualWidth();
-    Canvas.ClipY=Bounds.ActualHeight();
-
     Canvas.GetCameraLocation(CamPos, CamRot);
     GetAxes(CamRot, X, Y, Z);
-    Dude.SetLocation(CamPos + (SpinnyOffset.X * X) + (SpinnyOffset.Y * Y) + (SpinnyOffset.Z * Z));
-    Canvas.DrawActorClipped(Dude, false, Bounds.ActualLeft(), Bounds.ActualTop(), Bounds.ActualWidth(), Bounds.ActualHeight(), true, 15);
 
-    Canvas.OrgX=oOrgX;
-    Canvas.OrgY=oOrgY;
-    Canvas.ClipX=oClipX;
-    Canvas.ClipY=oClipY;
+    // DrawActor (not DrawActorClipped) via the shared projection helper - avoids the
+    // RI SetViewport side effect that drifted the focused control / tab buttons.
+    Dude.SetLocation(SpinnyPaneLoc(Canvas, Bounds, CamPos, X, Y, Z, SpinnyOffset.X, 15.0, fov));
+    Canvas.DrawActor(Dude, false, true, fov);
+
     return true;
 }
 

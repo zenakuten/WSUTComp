@@ -68,6 +68,32 @@ simulated function FlushSettings()
     DirtyConfigClasses.Length = 0;
 }
 
+// Position a preview actor so DrawActor projects it into the given pane, and set FovDeg to
+// the FOV that reproduces the on-screen size the old clipped sub-viewport gave it (the
+// clipped FOV scaled by screen-width / pane-width). The preview menus use DrawActor instead
+// of DrawActorClipped because the clipped variant calls RI SetViewport and restores it to
+// full screen, corrupting the menu window viewport for the GUI on-top re-render of the
+// focused control and the tab buttons - the source of the vertical drift.
+function vector SpinnyPaneLoc(Canvas C, GUIImage Bounds, vector CamPos, vector Fwd, vector Rgt, vector Up, float Dist, float ClippedFOV, out float FovDeg)
+{
+    local float ndcX, ndcY, tanHalf, aspect, r, u, paneCX, paneCY;
+
+    paneCX = Bounds.ActualLeft() + Bounds.ActualWidth() * 0.5;
+    paneCY = Bounds.ActualTop() + Bounds.ActualHeight() * 0.5;
+
+    FovDeg  = ClippedFOV * float(C.SizeX) / Bounds.ActualWidth();
+    tanHalf = Tan(FovDeg * 0.5 * Pi / 180.0);
+    aspect  = float(C.SizeX) / float(C.SizeY);
+
+    ndcX = 2.0 * paneCX / float(C.SizeX) - 1.0;
+    ndcY = 1.0 - 2.0 * paneCY / float(C.SizeY);
+
+    r = ndcX * tanHalf * Dist;
+    u = ndcY * (tanHalf / aspect) * Dist;
+
+    return CamPos + Dist * Fwd + r * Rgt + u * Up;
+}
+
 function InitComponent(GUIController MyController, GUIComponent MyComponent)
 {
     local int i;

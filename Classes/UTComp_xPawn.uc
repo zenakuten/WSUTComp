@@ -1370,8 +1370,10 @@ simulated function SpecialCalcBehindView(PlayerController PC, out actor ViewActo
 
 	CameraLocation = CamLookAt + (OffsetVector >> PC.Rotation);
 
-    // check for cam distance too big 
-    if(VSize(CameraLocation - Location) > 300.0)
+    // check for cam distance too big
+    // 350 (not 300): max slider distance 255 plus a large world offset (e.g. X=-64)
+    // can push the total past 300 legitimately, which was snapping the view to default.
+    if(VSize(CameraLocation - Location) > 350.0)
     {
         // use default 3p view
         TPCamDistance = default.TPCamDistance;
@@ -1560,8 +1562,10 @@ defaultproperties
 
     // fixes for 3p view aiming
     CameraSpeed=5.0
-    TPCamDistance=280.000000
+    // Matches the stock engine behind-view distance: PlayerController.CameraDist (9.0)
+    // * xPawn.CollisionRadius (25.0) = 225. Stays under the 350 "too big" fallback below.
+    TPCamDistance=225.000000
     //TPCamWorldOffset=(X=50.0,Z=50.000000)
-    TPCamWorldOffset=(X=-35,Y=-28.0,Z=38.000000)
+    TPCamWorldOffset=(X=-35,Y=0.0,Z=38.000000)
     bSpecialCalcView=true
 }
