@@ -8,6 +8,12 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V26
+- make combo awards harder
+- fix menu controls jumping on click
+- add default 3p view button
+- make ghost/ghostfx preview bigger
+
 V25
 - fix 3p weapon aim so shots track the crosshair (pitch, wall-clamped camera, and enemies under the crosshair)
 - grey out the crosshair in 3p when the shot is blocked by cover the camera sees past

@@ -8,6 +8,9 @@ var Sound MostImpressiveSound;
 
 var class<WeaponDamageType> ComboRadiusDamageType;
 
+// total damage this combo dealt to enemy pawns (set in HurtRadiusEx)
+var float ComboDamageDealt;
+
 // copy from projectile -> hurt radius, return true if anybody killed
 simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, class<DamageType> DamageType, float Momentum, vector HitLocation )
 {
@@ -22,6 +25,7 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 
 	bHurtEntry = true;
     bKilledPlayer = false;
+    ComboDamageDealt = 0.0;
 	foreach VisibleCollidingActors( class 'Actor', Victims, DamageRadius, HitLocation )
 	{
 		// don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
@@ -48,6 +52,9 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 			);
 			if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 				Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
+
+            if(UTComp_xPawn(Victims) != None && Victims != Instigator)
+                ComboDamageDealt += damageScale * DamageAmount;
 
             if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0 && Victims != Instigator)
                 bKilledPlayer = true;
@@ -78,6 +85,9 @@ simulated function bool HurtRadiusEx( float DamageAmount, float DamageRadius, cl
 		);
 		if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
 			Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
+
+        if(UTComp_xPawn(Victims) != None && Victims != Instigator)
+            ComboDamageDealt += damageScale * DamageAmount;
 
         if(Pawn(Victims) != None && Pawn(Victims).Health <= 0 && prevHealth > 0.0 && Victims != Instigator)
             bKilledPlayer = true;
@@ -125,17 +135,16 @@ function SuperExplosion()
         InstDir=Vector(Instigator.Controller.Rotation);
         dot = InstDir Dot Dir;
 
-        //impressive if at angle
-        if(dot > 0.0 && dot < 0.94)
-            bIsImpressive = true;
-
-        //impressive if air and dodge speed 
-        if(Instigator.Physics == PHYS_Falling && VSize(Instigator.Velocity) > Instigator.GroundSpeed * 1.2)
+        //impressive requires the combo made at an angle AND in air at dodge speed
+        if(dot > 0.0 && dot < 0.94
+            && Instigator.Physics == PHYS_Falling
+            && VSize(Instigator.Velocity) > Instigator.GroundSpeed * 1.2)
         {
-            if(bIsImpressive)
-                bMostImpressive=true;
-
             bIsImpressive = true;
+
+            //most impressive additionally requires at least 120 combo damage
+            if(ComboDamageDealt >= 120.0)
+                bMostImpressive = true;
         }
     
         if(BS_xPlayer(Instigator.Controller) != None)
