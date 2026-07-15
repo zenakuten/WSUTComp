@@ -117,11 +117,16 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     local float StartY;
     local float pointScale;
     local UTComp_ONSPlayerReplicationInfo ONSPRI;
+    local float scoreW, scoreH;
     
     ONSPRI = UTComp_ONSPlayerReplicationInfo(PRI);
-    
+
     StartY = 0.110;
-    
+
+    // Shrink the whole row to RowScale (see UTComp_ScoreBoard); no-op at 1.0.
+    C.FontScaleX = RowScale;
+    C.FontScaleY = RowScale;
+
     if(Owner!=None)
        OwnerPRI = PlayerController(Owner).PlayerReplicationInfo;
 
@@ -174,10 +179,12 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     }
     else
     {
-        C.DrawTextJustified(int(PRI.Score), 0,C.ClipX*0.022+XOffset,C.ClipY*(StartY-0.05)+YOffset, C.ClipX*0.068+XOffset, C.ClipY*(StartY+0.090)+Yoffset);
-//        C.DrawTextJustified(int(PRI.Score), 0,C.ClipX*0.0190+XOffset,C.ClipY*0.159+YOffset, C.ClipX*0.068+XOffset, C.ClipY*0.204+Yoffset);
-
-
+        // DrawTextJustified ignores Canvas.FontScale (would keep the score full-size
+        // while the row shrinks), so center it manually with StrLen+DrawText, which
+        // honor it. At RowScale 1.0 this matches the old justified draw.
+        C.StrLen(int(PRI.Score), scoreW, scoreH);
+        C.SetPos(C.ClipX*0.022+XOffset, C.ClipY*(StartY+0.020*RowScale)-scoreH*0.5+YOffset);
+        C.DrawText(int(PRI.Score));
     }
     if(PRI.Team!=None && PRI.Team.TeamIndex==0)
       OtherTeam=1;
@@ -207,7 +214,7 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.Font = SmallerFont;
     else
         C.Font=ReducedFont;
-    C.SetPos(C.ClipX*0.070+XOffset, (C.ClipY*(StartY+0.020))+YOffset);
+    C.SetPos(C.ClipX*0.070+XOffset, (C.ClipY*(StartY+0.020*RowScale))+YOffset);
     C.SetDrawColor(0,200,255,255);
     if(uPRI != None)
     {
@@ -227,10 +234,10 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.SetDrawColor(255,255,255,255);
     if ( Level.NetMode != NM_Standalone )
     { // Net Info
-        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY-0.005))+YOffset);
+        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY-0.005*RowScale))+YOffset);
         C.DrawText("Ping:"$Min(999,4*PRI.Ping));
 
-        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.013))+YOffset);
+        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.013*RowScale))+YOffset);
         C.DrawText("P/L :"$PRI.PacketLoss);
     }
 
@@ -244,25 +251,25 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     {
         C.Font = GetSmallerFontFor(C, 6);
 
-        C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY-0.003))+YOffset);
+        C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY-0.003*RowScale))+YOffset);
         C.DrawText("Node Dmg Pts:"@int(ONSPRI.NodeDamagePoints));
 
-        C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY+0.009))+YOffset);
+        C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY+0.009*RowScale))+YOffset);
         C.DrawText("Node Heal Pts:"@int(ONSPRI.NodeHealPoints));
 
-        C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.021))+YOffset);
+        C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.021*RowScale))+YOffset);
         C.DrawText("ND:"@ONSPRI.NodesDestroyed@" NDC:"@ONSPRI.NodesDestroyedConstructing);
 
-        C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.031))+YOffset);
+        C.SetPos(C.ClipX*(0.40)+XOffset, (C.ClipY*(StartY+0.031*RowScale))+YOffset);
         C.DrawText("NC:"@ONSPRI.NodesConstructed@"  CD:"@ONSPRI.CoresDestroyed);
 
         C.Font = SmallerFont;
     }
     // put PPH on the bottom line next to Time in Game
-    C.SetPos(C.ClipX*0.148+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
+    C.SetPos(C.ClipX*0.148+XOffset, (C.ClipY*(StartY+0.030*RowScale))+YOffset);
     C.DrawText(FPH@Clamp(3600*PRI.Score/FMax(1,FPHTime - PRI.StartTime),-999,9999),true);
 
-    C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
+    C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.030*RowScale))+YOffset);
 
     if(uWarmup==None)
        foreach DynamicActors(class'UTComp_Warmup', uWarmup)
@@ -289,9 +296,13 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     if (OwnerPRI.bOnlySpectator || (PRI.Team!=None && OwnerPRI.Team!=None && PRI.Team.TeamIndex==OwnerPRI.Team.TeamIndex))
     {
         C.SetDrawColor(255,150,0,255);
-        C.SetPos(C.ClipX*0.21+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
+        C.SetPos(C.ClipX*0.21+XOffset, (C.ClipY*(StartY+0.030*RowScale))+YOffset);
         C.DrawText(Left(PRI.GetLocationName(), 30));
     }
+
+    // Restore so the rest of the scoreboard draws full size.
+    C.FontScaleX = 1.0;
+    C.FontScaleY = 1.0;
 }
 
 

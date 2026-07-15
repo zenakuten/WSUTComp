@@ -7,6 +7,11 @@ class UTComp_ScoreBoard extends UTComp_ScoreBoardDM;
 
 var font MainFont, NotReducedFont, sortareducedfont, ReducedFont, SoTiny;
 
+// Vertical scale applied to each player row (pitch, intra-row offsets and text).
+// 1.0 normally; 0.5 when a team column has more than 16 players so twice as many
+// rows fit on screen (up to 32 per team / 64 total). Set in UpdateScoreBoard.
+var float RowScale;
+
 var localized string  fraglimitteam ;
 var int TmpFontSize ;
 var float tmp1,tmp2,tmp3;
@@ -131,11 +136,12 @@ simulated function DrawTCMBar(Canvas C , float Scale)
 }
 simulated function DrawTeamInfoBox(Canvas C,float StartX, float StartY,int TeamNum, float scale, int mPlayerCount)
 {
-    local int i,NewPosY;
+    local int i;
+    local float NewPosY;
     local float NewBoxYscale;
     local bool bDraw;
     bDraw=false;
-    NewBoxYscale = (( C.ClipY*0.055)*mPlayerCount)+C.ClipY*0.035;
+    NewBoxYscale = (( C.ClipY*0.055*RowScale)*mPlayerCount)+C.ClipY*0.035;
     C.Style=5;
     if(TeamNum==0)
         C.SetDrawColor(0,0,255,35);
@@ -162,12 +168,12 @@ simulated function DrawTeamInfoBox(Canvas C,float StartX, float StartY,int TeamN
             bDraw=false;
             C.SetDrawColor(255,255,255,30);
             C.SetPos(C.ClipX *StartX,NewPosY);
-            C.DrawTileStretched(material'Engine.WhiteTexture',C.ClipX*0.472,C.ClipY*0.055);
+            C.DrawTileStretched(material'Engine.WhiteTexture',C.ClipX*0.472,C.ClipY*0.055*RowScale);
         }
         else
             bDraw=true;
 
-        NewPosY += (C.ClipY*0.055);
+        NewPosY += (C.ClipY*0.055*RowScale);
     }
 
     // Trim for box
@@ -196,7 +202,7 @@ simulated event UpdateScoreBoard(Canvas C)
 {
     local PlayerReplicationInfo PRI, OwnerPRI;
     local PlayerReplicationInfo RedPRI[MAXPLAYERS], BluePRI[MaxPlayers], SpecPRI[MaxPlayers];
-    local int i, BluePlayerCount, RedPlayerCount, RedOwnerOffset, BlueOwnerOffset, minTiles, numspecs, j;
+    local int i, BluePlayerCount, RedPlayerCount, RedOwnerOffset, BlueOwnerOffset, minTiles, numspecs, j, mRows;
     local float MyScale;
     local bool bOwnerDrawn;
         // Fonts
@@ -273,6 +279,16 @@ simulated event UpdateScoreBoard(Canvas C)
         }
     }
 
+    // Dynamically shrink rows (and their text, via RowScale in DrawPlayerInformation)
+    // to fit however many players are in the tallest column, never enlarging past full
+    // size. ~1.0 at 16/team, ~0.5 at 32/team, and everything in between.
+    // 0.105 = box top (0.07) + title bar (0.035); 0.98 leaves a small bottom margin.
+    mRows = Min(Max(RedPlayerCount, BluePlayerCount), minTiles);
+    if(mRows > 0)
+        RowScale = FMin(1.0, (0.98 - 0.105) / (0.055 * mRows));
+    else
+        RowScale = 1.0;
+
     MyScale = C.ClipX/1600;
     DrawTCMBar(C,MyScale);
     DrawTitle2(C);
@@ -324,9 +340,9 @@ simulated event UpdateScoreBoard(Canvas C)
             if(!redPRI[i].bOnlySpectator)
             {
                 if(i==(minTiles-1) && !bOwnerDrawn && OwnerPRI.Team != none && OwnerPRI.Team.TeamIndex==0 && !OwnerPRI.bOnlySpectator)
-                    DrawPlayerInformation(C,OwnerPRI,C.ClipX*(0.003),(C.ClipY*0.055)*i,MyScale);
+                    DrawPlayerInformation(C,OwnerPRI,C.ClipX*(0.003),(C.ClipY*0.055*RowScale)*i,MyScale);
                 else
-                    DrawPlayerInformation(C,RedPRI[i],C.ClipX*(0.003),(C.ClipY*0.055)*i,MyScale);
+                    DrawPlayerInformation(C,RedPRI[i],C.ClipX*(0.003),(C.ClipY*0.055*RowScale)*i,MyScale);
                 if (RedPRI[i]==OwnerPRI)
                     bOwnerDrawn=True;
              }
@@ -339,9 +355,9 @@ simulated event UpdateScoreBoard(Canvas C)
             if(!redPRI[i].bOnlySpectator)
             {
                 if(i==(MinTiles-1) && !bOwnerDrawn && !OwnerPRI.bOnlySpectator)
-                    DrawPlayerInformation(C,OwnerPRI,C.Clipx*0.236,(C.ClipY*0.055)*i,MyScale);
+                    DrawPlayerInformation(C,OwnerPRI,C.Clipx*0.236,(C.ClipY*0.055*RowScale)*i,MyScale);
                 else
-                    DrawPlayerInformation(C,RedPRI[i],C.Clipx*0.236,(C.ClipY*0.055)*i,MyScale);
+                    DrawPlayerInformation(C,RedPRI[i],C.Clipx*0.236,(C.ClipY*0.055*RowScale)*i,MyScale);
                 if (RedPRI[i]==OwnerPRI)
                     bOwnerDrawn=True;
             }
@@ -352,9 +368,9 @@ simulated event UpdateScoreBoard(Canvas C)
         if(!BluePRI[i].bOnlySpectator)
         {
             if(i==(MinTiles-1) && !bOwnerDrawn && OwnerPRI.Team != none && OwnerPRI.Team.TeamIndex==1 && !OwnerPRI.bOnlySpectator)
-                DrawPlayerInformation(C,OwnerPRI,C.ClipX*0.496,(C.ClipY*0.055)*i,MyScale);
+                DrawPlayerInformation(C,OwnerPRI,C.ClipX*0.496,(C.ClipY*0.055*RowScale)*i,MyScale);
             else
-                DrawPlayerInformation(C,BluePRI[i],C.ClipX*0.496,(C.ClipY*0.055)*i,MyScale);
+                DrawPlayerInformation(C,BluePRI[i],C.ClipX*0.496,(C.ClipY*0.055*RowScale)*i,MyScale);
             if (BluePRI[i]==OwnerPRI)
                 bOwnerDrawn=True;
         }
@@ -403,9 +419,15 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     local string AdminString;
     local float oldClipX;
     local float StartY;
-    
+    local float scoreW, scoreH;
+
     StartY = 0.110;
-    
+
+    // Shrink the whole row (text + intra-row offsets, scaled below) to RowScale so
+    // twice as many rows fit when compressed. A no-op at RowScale 1.0.
+    C.FontScaleX = RowScale;
+    C.FontScaleY = RowScale;
+
     if(Owner!=None)
        OwnerPRI = PlayerController(Owner).PlayerReplicationInfo;
 
@@ -457,10 +479,13 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     }
     else
     {
-        C.DrawTextJustified(int(PRI.Score), 0,C.ClipX*0.022+XOffset,C.ClipY*(StartY-0.05)+YOffset, C.ClipX*0.068+XOffset, C.ClipY*(StartY+0.090)+Yoffset);
-//        C.DrawTextJustified(int(PRI.Score), 0,C.ClipX*0.0190+XOffset,C.ClipY*0.159+YOffset, C.ClipX*0.068+XOffset, C.ClipY*0.204+Yoffset);
-
-
+        // DrawTextJustified ignores Canvas.FontScale, so it would keep the score
+        // full-size while the rest of the row shrinks. Center it manually with
+        // StrLen+DrawText (both honor FontScale). At RowScale 1.0 this matches the
+        // old justified draw (center = StartY+0.020).
+        C.StrLen(int(PRI.Score), scoreW, scoreH);
+        C.SetPos(C.ClipX*0.022+XOffset, C.ClipY*(StartY+0.020*RowScale)-scoreH*0.5+YOffset);
+        C.DrawText(int(PRI.Score));
     }
     if(PRI.Team!=None && PRI.Team.TeamIndex==0)
       OtherTeam=1;
@@ -471,7 +496,7 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     {
         C.SetDrawColor(255,255,255,255);
         C.SetPos(C.ClipX*0.41+XOffset, (C.ClipY*StartY)+YOffset);
-        C.DrawTile(material'xInterface.S_FlagIcon',90*scale,64*Scale,0,0,90,64);
+        C.DrawTile(material'xInterface.S_FlagIcon',90*scale*RowScale,64*Scale*RowScale,0,0,90,64);
     }
     // Player Deaths
     if(PRI.Deaths>99)
@@ -487,7 +512,7 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.Font = SmallerFont;
     else
         C.Font=ReducedFont;
-    C.SetPos(C.ClipX*0.070+XOffset, (C.ClipY*(StartY+0.020))+YOffset);
+    C.SetPos(C.ClipX*0.070+XOffset, (C.ClipY*(StartY+0.020*RowScale))+YOffset);
     C.SetDrawColor(0,200,255,255);
 
     if(uPRI != None)
@@ -507,14 +532,14 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.SetDrawColor(255,255,255,255);
     if ( Level.NetMode != NM_Standalone )
     { // Net Info
-        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY-0.005))+YOffset);
+        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY-0.005*RowScale))+YOffset);
         C.DrawText("Ping:"$Min(999,4*PRI.Ping));
 
-        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.013))+YOffset);
+        C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.013*RowScale))+YOffset);
         C.DrawText("P/L :"$PRI.PacketLoss);
     }
 
-    C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
+    C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.030*RowScale))+YOffset);
 
     if(uWarmup==None)
        foreach DynamicActors(class'UTComp_Warmup', uWarmup)
@@ -541,15 +566,20 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     if (OwnerPRI.bOnlySpectator || (PRI.Team!=None && OwnerPRI.Team!=None && PRI.Team.TeamIndex==OwnerPRI.Team.TeamIndex))
     {
         C.SetDrawColor(255,150,0,255);
-        C.SetPos(C.ClipX*0.21+XOffset, (C.ClipY*(StartY+0.030))+YOffset);
+        C.SetPos(C.ClipX*0.21+XOffset, (C.ClipY*(StartY+0.030*RowScale))+YOffset);
         C.DrawText(Left(PRI.GetLocationName(), 30));
     }
+
+    // Restore so the rest of the scoreboard (title, boxes, stats) draws full size.
+    C.FontScaleX = 1.0;
+    C.FontScaleY = 1.0;
 }
 
 defaultproperties
 {
      fraglimitteam="SCORE LIMIT:"
      TmpFontSize=1
+     RowScale=1.0
      //tmp1=0.156000
      //tmp2=0.172000
      //tmp3=0.189000

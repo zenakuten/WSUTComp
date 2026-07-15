@@ -52,12 +52,15 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         return;
 
     StartY = 0.110;
-    IconH  = C.ClipY*0.032;                       // fit inside the compact player row
-    IconY  = C.ClipY*(StartY-0.005) + YOffset;
+    IconH  = C.ClipY*0.032*RowScale;               // fit inside the (possibly compressed) player row
+    IconY  = C.ClipY*(StartY-0.005*RowScale) + YOffset;
     IconX  = C.ClipX*0.40 + XOffset;
 
     C.Style = ERenderStyle.STY_Normal;
     C.Font  = SmallerFont;
+    // Match the compressed row scale for the trophy count text.
+    C.FontScaleX = RowScale;
+    C.FontScaleY = RowScale;
 
     // Vehicles destroyed - HUD sheet icon (53x42, keep aspect ratio)
     IconX = DrawTrophy(C, Texture'HudContent.Generic.HUD', ASPRI.DestroyedVehicles,
@@ -70,6 +73,10 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     // Final objective disabled (round won)
     IconX = DrawTrophy(C, Texture'AS_FX_TX.Icons.ScoreBoard_Objective_Single', ASPRI.DisabledFinalObjective,
                        IconX, IconY, IconH, IconH, 0, 0, 128, 128);
+
+    // Restore so the rest of the scoreboard draws full size.
+    C.FontScaleX = 1.0;
+    C.FontScaleY = 1.0;
 }
 
 defaultproperties
