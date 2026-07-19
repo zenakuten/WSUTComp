@@ -353,6 +353,11 @@ A grab bag of scoreboard, gameplay, and netcode options.
   the server has it disabled, the heading notes this and the check box is hidden.
   See `ping-compensation.md` for the technical details.
 
+- **DPI for cm/360** - enter your mouse DPI here (this is the one value the game does not
+  already know). The **cm/360** line below shows how far you have to physically move
+  the mouse to turn a full 360 degrees, computed from your DPI, sensitivity, FOV, and
+  mouse axis speed. It is display-only and changes nothing about how the game plays.
+
 ### Adrenaline Combos
 
 The Misc menu also has a toggle for each adrenaline combo: **Enable Booster Combo**,

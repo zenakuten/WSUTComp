@@ -4998,7 +4998,12 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
         }
         else if ( FiredAmmunition.bInstantHit )
                 bestAim = 1.0;
-        BestTarget = PickTarget(bestAim, bestDist, FireDir, projStart, FiredAmmunition.MaxRange);
+        // PickTarget is native and needs Level.Game, which is None on a pure client.
+        // The shield gun fire Timer runs AdjustAim locally, so calling PickTarget there
+        // spams "PickTarget called with no Level/Game" warnings. Guard it: on the client
+        // BestTarget stays None and we fall through to the normal 3p / return path.
+        if ( Level.Game != None )
+            BestTarget = PickTarget(bestAim, bestDist, FireDir, projStart, FiredAmmunition.MaxRange);
         if ( BestTarget == None )
         {
             // snarf

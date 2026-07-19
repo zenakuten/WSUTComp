@@ -9,6 +9,8 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 Release Notes
 
 V26
+- stop AdjustAim/PickTarget warning spam in client log (shield gun fire)
+- show cm/360 on misc menu
 - dynamically scale scoreboard rows to fit the player count, up to 64 on screen
 - make combo awards harder
 - fix menu controls jumping on click

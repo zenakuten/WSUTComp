@@ -17,6 +17,9 @@ var automated wsCheckBox ch_UseEyeHeightAlgo;
 var automated wsCheckBox ch_UseNewNet;
 var automated wsCheckBox ch_ViewSmoothing;
 
+var automated wsEditBox eb_DPI;
+var automated GUILabel l_Cm360;
+
 var automated GUILabel l_Adren;
 var automated wsCheckBox ch_Booster;
 var automated wsCheckBox ch_Invis;
@@ -42,6 +45,10 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     ch_UseEyeHeightAlgo.Checked(Settings.bUseNewEyeHeightAlgorithm);
     ch_UseNewNet.Checked(Settings.bEnableEnhancedNetCode);
     ch_ViewSmoothing.Checked(Settings.bViewSmoothing);
+
+    eb_DPI.IntOnly(true);
+    eb_DPI.SetComponentValue(string(Settings.MouseDPI), true);
+    UpdateCm360();
 
     ch_Booster.Checked(!Settings.bDisableBooster);
     ch_Speed.Checked(!Settings.bDisableSpeed);
@@ -84,6 +91,9 @@ function InternalOnChange( GUIComponent C )
                             BS_xPlayer(PlayerOwner()).TurnOffNetCode(); break;
         case ch_ViewSmoothing:  Settings.bViewSmoothing=ch_ViewSmoothing.IsChecked();
             break;
+        case eb_DPI:  Settings.MouseDPI=int(eb_DPI.GetText());
+            UpdateCm360();
+            break;
         case ch_Booster: Settings.bDisableBooster=!ch_Booster.IsChecked(); break;
         case ch_Invis:  Settings.bDisableInvis=!ch_Invis.IsChecked(); break;
         case ch_Speed:  Settings.bDisableSpeed=!ch_Speed.IsChecked(); break;
@@ -98,6 +108,76 @@ function InternalOnChange( GUIComponent C )
     SaveHUDSettings();
     BS_xPlayer(PlayerOwner()).MatchHudColor();
 
+}
+
+// Computes cm/360 (physical mouse distance to turn 360 degrees) from the player's
+// current settings and the entered DPI, and updates the display label.
+//
+// Engine mouse->yaw chain (see Engine.PlayerInput / Engine.PlayerController and the
+// native input scaling in UnIn.cpp), for a raw mouse movement of N device counts:
+//   native:  aMouseX += 0.01 * N * Speed        (Speed = the MouseX "Axis" binding speed)
+//   native:  aMouseX *= 20 / DeltaTime
+//   script:  aMouseX *= MouseSensitivity * (FOV/90)    (smoothing off)
+//   script:  aTurn   += aMouseX
+//   script:  ViewRotation.Yaw += 32.0 * DeltaTime * aTurn    (DeltaTime cancels out)
+//
+//   Net: Yaw_per_count = 6.4 * Speed * Sensitivity * (FOV/90) URU   (65536 URU = 360 degrees)
+//
+// counts per 360 = 65536 / Yaw_per_count, and cm/360 = counts * 2.54 / DPI, so:
+//   cm/360 = (65536 * 90 * 2.54) / (6.4 * DPI * Speed * Sensitivity * FOV)
+//          = 2340864 / (DPI * Speed * Sensitivity * FOV)
+//
+// mouse-sensitivity.com assumes Speed = 2.0 (the default MouseX/MouseY binding speed);
+// here we read the player's actual binding value instead.
+function UpdateCm360()
+{
+    local string BindStr;
+    local float Speed, Sens, FOV, DPI, Cm360;
+    local int idx, whole, frac;
+    local string FracStr;
+
+    // Read the "Speed=" value from the player's MouseX axis binding.
+    Speed = 2.0;
+    BindStr = PlayerOwner().ConsoleCommand("KEYBINDING MouseX");
+    idx = InStr(BindStr, "Speed=");
+    if(idx != -1)
+    {
+        BindStr = Mid(BindStr, idx + 6);
+        idx = InStr(BindStr, " ");
+        if(idx != -1)
+            BindStr = Left(BindStr, idx);
+        idx = InStr(BindStr, "|");
+        if(idx != -1)
+            BindStr = Left(BindStr, idx);
+        Speed = float(BindStr);
+    }
+    Speed = Abs(Speed);
+
+    Sens = class'PlayerInput'.default.MouseSensitivity;
+    // The engine scales mouse input by DesiredFOV (PlayerInput.PlayerInput:
+    // FOVScale = DesiredFOV * 0.01111), which is the FOV the player is actually
+    // using - not DefaultFOV, which can be a stale config value.
+    FOV = PlayerOwner().DesiredFOV;
+    DPI = Settings.MouseDPI;
+
+    if(DPI > 0 && Speed > 0 && Sens > 0 && FOV > 0)
+        Cm360 = 2340864.0 / (DPI * Speed * Sens * FOV);
+    else
+        Cm360 = 0.0;
+
+    // Format Cm360 with two decimals (no printf in UnrealScript).
+    whole = int(Cm360);
+    frac = int((Cm360 - whole) * 100.0 + 0.5);
+    if(frac >= 100)
+    {
+        whole += 1;
+        frac -= 100;
+    }
+    FracStr = string(frac);
+    if(frac < 10)
+        FracStr = "0" $ FracStr;
+
+    l_Cm360.Caption = "cm/360:" @ (whole $ "." $ FracStr);
 }
 
 function bool InternalOnClick(GUIComponent C)
@@ -302,4 +382,27 @@ defaultproperties
         OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
     End Object
     ch_UseNewNet=wsCheckBox'UTComp_Menu_Miscellaneous.NewNetCheck'
+
+    Begin Object Class=wsEditBox Name=DPIEditBox
+        Caption="DPI for cm/360"
+        Hint="Your mouse DPI - used only to display cm/360 below"
+        CaptionWidth=0.550000
+        bAutoSizeCaption=true
+        WinWidth=0.250000
+        WinHeight=0.030000
+        WinLeft=0.500000
+        WinTop=0.610000
+        OnChange=UTComp_Menu_Miscellaneous.InternalOnChange
+    End Object
+    eb_DPI=wsEditBox'UTComp_Menu_Miscellaneous.DPIEditBox'
+
+    Begin Object Class=GUILabel Name=Cm360Label
+        Caption="cm/360:"
+        TextColor=(B=255,G=255,R=0)
+        WinWidth=0.480000
+        WinHeight=0.030000
+        WinLeft=0.500000
+        WinTop=0.650000
+    End Object
+    l_Cm360=GUILabel'UTComp_Menu_Miscellaneous.Cm360Label'
 }

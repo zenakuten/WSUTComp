@@ -100,6 +100,8 @@ var config float TPCamDistance;
 var config vector TPCamWorldOffset;
 var config bool bDebug;
 
+var config int MouseDPI; // mouse DPI, used only for the Misc menu cm/360 display
+
 var UTComp_Settings instance;
 
 function Save()
@@ -188,6 +190,7 @@ defaultproperties
     TPCamDistance=225.0
     TPCamWorldOffset=(X=-35,Y=0.0,Z=38.000000)
 	bDebug=false
+    MouseDPI=800
 
     instance=none
 }
