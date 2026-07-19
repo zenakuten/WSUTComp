@@ -268,15 +268,39 @@ Other = PawnCollisionCopy(Other).CopiedPawn;
 ```
 
 **c) Favor-the-shooter reconciliation** (`bBelievesHit`,
-`NewNet_ShockBeamFire.uc:86`). On the first trace of the shot (`bFirstGo`), if the
-server's result disagrees with what the client *believed*:
-- Client believed it hit `A`, but the server missed it → the server re-traces at
-  slightly different rewind offsets `PingDT ± f` over a small window
-  (`0.04 + 2.0*AverDT` seconds). If any offset reproduces the client's hit, that
-  result is accepted. This recovers legitimate hits lost to interpolation jitter.
-- The mirror case (client believed it *missed* but the server would hit) is also
-  reconciled, so a shot the shooter clearly missed isn't turned into a phantom
-  hit.
+`NewNet_ShockBeamFire.uc:86`). The server's rewound trace at `PingDT` is the
+**baseline** result. `bBelievesHit` does **not** override it — it is only a *hint*
+that, when it disagrees with the baseline, triggers a bounded re-search at slightly
+different rewind offsets `PingDT ± f` over a small window
+(`abs(f) < 0.04 + 2.0*AverDT` seconds, ~40 ms plus a couple of ticks). This runs
+only on the first segment of the shot (`bFirstGo && ReflectNum == 0`), so beam
+reflections use the plain baseline trace with no belief reconciliation.
+
+Neither flag alone decides the outcome. The four combinations:
+
+| Client `bBelievesHit` | Baseline rewound trace | Outcome |
+| --- | --- | --- |
+| **true** (actor `A`) | already hit `A` | agreement → **HIT**, no re-search |
+| **false** | missed all pawns | agreement → **MISS**, no re-search |
+| **true** (actor `A`) | did *not* hit `A` (`:86`) | re-search window for `A`; any offset that hits `A` → **switch to HIT on `A`**; never reproduced in window → keep baseline (**no hit on `A`**) |
+| **false** | *did* hit a pawn (`:126`) | re-search window for a None/non-pawn result; any offset that misses → **discard the hit (MISS)**; every offset still hits a pawn → **hit stands** |
+
+So the two disagreement cases are symmetric, and both are gated by the same window:
+
+- **Believed-hit but server missed** (`:86`) — the server searches to *recover* the
+  hit. It accepts `A` only if some offset within the window actually lands on `A`;
+  otherwise the baseline miss stands. Bias: grant the shooter's claimed hit, but
+  only if it's reachable within the tolerance.
+- **Believed-miss but server hit** (`:126`) — the server searches to *cancel* the
+  phantom hit. The moment any offset in the window misses all players it discards
+  the hit; the hit only survives if the target was hit at *every* sampled offset.
+  Bias: honor the shooter's "I missed" as long as a miss is reachable.
+
+Beyond the `±(0.04 + 2·AverDT)` window the client's belief is treated as
+untrustworthy and the server's own rewound trace wins. That bound is also what keeps
+the belief flag from being an exploit: a client can't claim a hit on someone who was
+never near the beam at any plausible offset, and can't shrug off a hit that was solid
+across the whole window.
 
 **d) Restore the world** (`UnTimeTravel`, `NewNet_ShockBeamFire.uc:328`): every
 proxy's collision is turned back off. Damage is applied to the real `Other` via
