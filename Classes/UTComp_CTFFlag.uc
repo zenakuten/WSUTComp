@@ -279,6 +279,8 @@ function RewardFlagCarriers()
 
         if (class'MutUTComp'.Default.bShowAssistConsoleMsg)
           FlagCarriers[i].C.Pawn.ClientMessage("You get " $ Int(Bonus) $ " bonus pts for the Capture!" @ CarriedString(FlagCarriers[i].Time, totalTime));
+        
+        Level.Game.ScoreEvent(FlagCarriers[i].C.PlayerReplicationInfo, bonus, "flag_cap_final");
       }
       else
       {
@@ -289,6 +291,8 @@ function RewardFlagCarriers()
 
         uPRI = class'UTComp_Util'.static.GetUTCompPRI(FlagCarriers[i].C.PlayerReplicationInfo);
         uPRI.Assists++;
+        
+        Level.Game.ScoreEvent(FlagCarriers[i].C.PlayerReplicationInfo, bonus, "flag_assist");
       }
 
       FlagCarriers[i].C.PlayerReplicationInfo.Score += bonus;
