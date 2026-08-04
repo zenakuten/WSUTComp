@@ -752,7 +752,7 @@ function SetupStats()
     class'OnsLaught.ONSAvril'.default.FireModeClass[0] =Class'UTComp_ONSAvrilFire';
 
     class'XWeapons.SuperShockRifle'.default.FireModeClass[0]=class'UTComp_SuperShockBeamFire';
-    class'XWeapons.SuperShockRifle'.default.FireModeClass[1]=class'UTComp_SuperShockBeamFire';
+    class'XWeapons.SuperShockRifle'.default.FireModeClass[1]=class'UTComp_Zoom';
 
  }
 
@@ -2000,10 +2000,10 @@ function InitStatsOverride()
 
 defaultproperties
 {
-     FriendlyName="Wicked Sick UTComp"
+     FriendlyName="Wicked Sick UTComp LGI v2"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V26"
+     FriendlyVersionNumber="LGI v2"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
