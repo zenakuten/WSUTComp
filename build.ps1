@@ -45,7 +45,7 @@ Write-Host "      Created: $ZipName" -ForegroundColor Green
 # 5. Push to GitHub Releases
 Write-Host "`n[5/5] Publishing release to GitHub..."
 Set-Location -Path $RepoDir
-gh release create "v$Version" $ZipPath --title "Wicked Sick UTComp LGI v$Version" --generate-notes
+gh release create "v$Version" $ZipPath --title "Wicked Sick UTComp LGI v$Version" --generate-notes --repo ruben-chapa/WSUTComp
 
 Write-Host "`n=========================================" -ForegroundColor Green
 Write-Host " Success! Release v$Version is live on GitHub." -ForegroundColor Green
