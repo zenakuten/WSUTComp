@@ -293,5 +293,5 @@ simulated function SpawnBeamEffect(vector HitLocation, vector HitNormal, vector 
 DefaultProperties
 {
     FireModeClass(0)=class'NewNet_SuperShockBeamFire'
-    FireModeClass(1)=class'NewNet_SuperShockBeamFire'
+    FireModeClass(1)=class'UTComp_Zoom'
 }
