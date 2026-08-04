@@ -2,7 +2,7 @@
 
 **Wicked Sick UTComp**
 
-> **Note:** This specific fork is maintained and tailored for the **UT2004 Low Gravity InstaGib (LGI)** community. It includes custom weapon adjustments, specialized statistics tracking, and LGI-specific visual enhancements.
+> **Note:** This specific fork is maintained and tailored for the **UT2004 Low Gravity InstaGib (LGI)** community. It includes custom weapon adjustments, restored standard statistics compatibility, and LGI-specific visual enhancements.
 
 Based on [UTCompOmni 1.71](https://github.com/zenakuten/UTCompOmni) 
 which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
