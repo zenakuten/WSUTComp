@@ -653,18 +653,18 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   }
 
   if (totalStats == 12) {
-      statX = baseX + 260;
+      statX = baseX + 210;
       for (count = 0; count < 12; count++) {
         col = count / 4;
         row = count % 4;
         C.Font = GetFontWithSize(FONT_PLAYER_STAT);
-        SetPosScaled(C, statX + 135*col, baseY + (boxHeight - statsArray[count].nameH*4)/2 + statsArray[count].nameH*row);
+        SetPosScaled(C, statX + 155*col, baseY + (boxHeight - statsArray[count].nameH*4)/2 + statsArray[count].nameH*row);
         C.SetDrawColor(255, 255, 255, 255);
         C.DrawText(statsArray[count].name);
         C.SetDrawColor(255, 255, 255, 255);
 
         C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
-        SetPosScaled(C, statX + 135*col + longestName[col] + 5, baseY + (boxHeight - statsArray[count].nameH*4)/2 + statsArray[count].nameH*row);
+        SetPosScaled(C, statX + 155*col + longestName[col] + 5, baseY + (boxHeight - statsArray[count].nameH*4)/2 + statsArray[count].nameH*row);
         C.DrawText(statsArray[count].value);
       }
   } else {
