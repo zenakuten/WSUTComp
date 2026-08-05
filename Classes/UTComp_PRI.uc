@@ -10,6 +10,10 @@ var int PickedUpHealth;
 var int PickedUpKeg;
 var int PickedUpAdren;
 
+var int MaxSpree;
+var int MaxMultiKill;
+var int MidAirs;
+
 var int NormalWepStatsAlt[15];
 var int NormalWepStatsPrim[15];
 
@@ -115,7 +119,8 @@ replication
          bIsReady, CoachTeam, CurrentVoteID,
          ColoredName, RealKills,
          FlagGrabs, FlagCaps, FlagPickups, FlagKills, FlagSaves, FlagDenials,
-         Assists, Covers, CoverSpree, Seals, SealSpree, DefKills;
+         Assists, Covers, CoverSpree, Seals, SealSpree, DefKills,
+         MaxSpree, MaxMultiKill, MidAirs;
 
     unreliable if(Role==Role_Authority && bNetOwner)
         PickedUpFifty, PickedUpHundred, PickedUpAmp,

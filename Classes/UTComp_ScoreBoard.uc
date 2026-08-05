@@ -10,6 +10,8 @@ var font MainFont, NotReducedFont, sortareducedfont, ReducedFont, SoTiny;
 var localized string  fraglimitteam ;
 var int TmpFontSize ;
 var float tmp1,tmp2,tmp3;
+var float RowScale;
+var int mRows;
 var UTComp_Warmup uWarmup;
 var config bool bEnableColoredNamesOnScoreboard;
 var config bool bDrawStats;
@@ -549,6 +551,8 @@ defaultproperties
 {
      fraglimitteam="SCORE LIMIT:"
      TmpFontSize=1
+     RowScale=1.0
+     mRows=1
      //tmp1=0.156000
      //tmp2=0.172000
      //tmp3=0.189000

@@ -239,10 +239,7 @@ simulated event UpdateScoreBoard(Canvas C)
     }
   }
 
-  if (!class'UTComp_ScoreBoard'.default.bDrawLGIStats)
-  {
-      DrawStats(C);
-  }
+  DrawStats(C);
   DrawPowerups(C);
 
   if(numSpecs>0)
@@ -291,9 +288,6 @@ simulated function DrawTeamHeader(Canvas C, byte team)
   local float x_ping, x_pl;
   local int baseHeight, baseWidth, baseY, baseX;
   local int x;
-  local int teamKills, teamDeaths, teamMidAirs;
-  local PlayerReplicationInfo PRI;
-  local UTComp_PRI uPRI;
 
   switch (team)
   {
@@ -343,90 +337,68 @@ simulated function DrawTeamHeader(Canvas C, byte team)
   SetPosScaled(C, scoreX, scoreY);
   C.DrawText(int(GRI.Teams[team].Score));
 
-  //Average ping/PL REMOVED
+  //Average ping/PL
+  C.Font = GetFontWithSize(FONT_TEAM_PING);
+  //STRLEN IS FUCKING STUPID
+  C.StrLen("Ping", pingWidth, pingHeight);
+  C.StrLen("PL", plWidth, plHeight);
+  C.StrLen("Ping 999ms", pingMaxWidth, pingMaxHeight);
 
-  //Powerups/flag timing OR LGI Stats
-  if (class'UTComp_ScoreBoard'.default.bDrawLGIStats)
+  switch (team)
   {
-      for(x = 0; x < GRI.PRIArray.Length; x++)
-      {
-          PRI = GRI.PRIArray[x];
-          if(!PRI.bOnlySpectator && PRI.Team != None && PRI.Team.TeamIndex == team)
-          {
-              teamKills += PRI.Kills;
-              teamDeaths += PRI.Deaths;
-              uPRI = class'UTComp_Util'.static.GetUTCompPRI(PRI);
-              if (uPRI != None)
-                  teamMidAirs += uPRI.MidAirs;
-          }
-      }
-
-      C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
-      C.StrLen("Team Kills", powerupPercentWidth, powerupPercentHeight);
-      C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
-      C.StrLen("99", powerupNumWidth, powerupNumHeight);
-
-      for (x = 0; x < 3; x++) {
-          C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
-          if (x == 0) C.StrLen("Team Kills", powerupPercentWidth, powerupPercentHeight);
-          else if (x == 1) C.StrLen("Team Deaths", powerupPercentWidth, powerupPercentHeight);
-          else if (x == 2) C.StrLen("Team Mid-Airs", powerupPercentWidth, powerupPercentHeight);
-          
-          SetPosScaled(C, baseX + 140 + 280*x - powerupPercentWidth/2, baseY + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
-          if (x == 0) C.DrawText("Team Kills");
-          else if (x == 1) C.DrawText("Team Deaths");
-          else if (x == 2) C.DrawText("Team Mid-Airs");
-
-          C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
-          if (x == 0) C.StrLen(string(teamKills), powerupNumWidth, powerupNumHeight);
-          else if (x == 1) C.StrLen(string(teamDeaths), powerupNumWidth, powerupNumHeight);
-          else if (x == 2) C.StrLen(string(teamMidAirs), powerupNumWidth, powerupNumHeight);
-          
-          SetPosScaled(C, baseX + 140 + 280*x - powerupNumWidth/2, baseY + powerupPercentHeight + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
-          if (x == 0) C.DrawText(string(teamKills));
-          else if (x == 1) C.DrawText(string(teamDeaths));
-          else if (x == 2) C.DrawText(string(teamMidAirs));
-      }
+    case 0:
+      x_ping = baseX + 20;
+      x_pl = x_ping + pingWidth - plWidth;
+      break;
+    case 1:
+      x_ping = baseX + baseWidth - pingMaxWidth;
+      x_pl = x_ping + plWidth;
+      break;
+    default:
   }
-  else
-  {
-      C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
-      C.StrLen("100%", powerupPercentWidth, powerupPercentHeight);
-      C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
-      C.StrLen("99", powerupNumWidth, powerupNumHeight);
 
-      for (x = 0; x < 3; x++) {
+  SetPosScaled(C, x_ping, baseY + (baseHeight - pingHeight - plHeight)/2);
+  C.DrawText("Ping"@GetAverageTeamPing(team)$"ms");
+  SetPosScaled(C, x_pl, baseY + pingHeight + (baseHeight - pingHeight - plHeight)/2);
+  C.DrawText("PL"@GetAverageTeamPL(team)$"%");
 
-        //TODO: scale icons by resolution
-        //TODO: fix flag/clock so it doesnt look dumb + flag has some extra shit at top right
-        switch (x)
-        {
-          case 0:
-            SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + (baseHeight - 64)/2);
-            C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 0, 164, 73, 82); //amp
-            break;
-          case 1:
-            SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + (baseHeight - 64)/2);
-            C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 1, 248, 64, 64); //100a
-            break;
-          case 2:
-            SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + 35); //clock is short, so move it down
-            C.DrawTile(material'HudContent.Generic.Hud', 40, 40, 148, 354, 40, 40); //clock
-            SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + (baseHeight - 64)/2);
-            C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 338, 128, 56, 81); //flag
-            break;
-          default:
+  //Powerups/flag timing
+  C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
+  C.StrLen("100%", powerupPercentWidth, powerupPercentHeight);
+  C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
+  C.StrLen("99", powerupNumWidth, powerupNumHeight);
 
-        }
+  for (x = 0; x < 3; x++) {
 
-        SetPosScaled(C, baseX + 50 + 200*x, baseY + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
-        C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
-        C.DrawText("0%");
+    //TODO: scale icons by resolution
+    //TODO: fix flag/clock so it doesnt look dumb + flag has some extra shit at top right
+    switch (x)
+    {
+      case 0:
+        SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + (baseHeight - 64)/2);
+        C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 0, 164, 73, 82); //amp
+        break;
+      case 1:
+        SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + (baseHeight - 64)/2);
+        C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 1, 248, 64, 64); //100a
+        break;
+      case 2:
+        SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + 35); //clock is short, so move it down
+        C.DrawTile(material'HudContent.Generic.Hud', 40, 40, 148, 354, 40, 40); //clock
+        SetPosScaled(C, baseX + pingMaxWidth - 64 + 100 + 200*x, baseY + (baseHeight - 64)/2);
+        C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 338, 128, 56, 81); //flag
+        break;
+      default:
 
-        SetPosScaled(C, baseX + 50 + 200*x, baseY + powerupPercentHeight + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
-        C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
-        C.DrawText("0");
-      }
+    }
+
+    SetPosScaled(C, baseX + pingMaxWidth + 100 + 200*x, baseY + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
+    C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
+    C.DrawText("0%");
+
+    SetPosScaled(C, baseX + pingMaxWidth + 100 + 200*x, baseY + powerupPercentHeight + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
+    C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
+    C.DrawText("0");
   }
 }
 
@@ -487,34 +459,38 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   local float playerNameWidth, playerNameHeight;
   local int boxWidth, boxHeight;
   local string pingplString;
-  local int count, col, row;
+  local int count;
   local array<Stats> statsArray;
+  local float longestOStatName, longestDStatName;
   local float statX;
-  local Stats stat1, stat2, stat3, stat4, stat5, stat6, stat7, stat8, stat9, stat10, stat11, stat12;
-  local int totalStats;
-  local float kd, Accuracy;
-  local int Shots, Hits;
-  local float longestName[3];
+  local Stats stat1, stat2, stat3, stat4, stat5, stat6;
 
   if (uWarmup == none)
     foreach dynamicActors(class'UTComp_Warmup', uWarmup)
       break;
 
+  //TODO: Global this or something
   boxWidth  = 840;
   boxHeight = 85;
 
   uPRI = class'UTComp_Util'.static.GetUTCompPRI(PRI);
   tPRI = TeamPlayerReplicationInfo(PRI);
 
+  //Ready/Not Ready
   if (uWarmup.bInWarmup) {
-    if (!uPRI.bIsReady) C.SetDrawColor(255, 0, 0, 255);
-    else C.SetDrawColor(0, 255, 0, 255);
+    if (!uPRI.bIsReady) {
+      C.SetDrawColor(255, 0, 0, 255);
+    } else {
+      C.SetDrawColor(0, 255, 0, 255);
+    }
+
 
     SetPosScaled(C, baseX + 20, baseY + (boxHeight - 64)/2);
-    C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 338, 128, 56, 81);
+    C.DrawTile(material'HudContent.Generic.Hud', 64, 64, 338, 128, 56, 81); //flag, tinted red (?)
     C.SetDrawColor(255, 255, 255, 255);
   }
 
+  //Score and Ping/PL
   pingplString = string(PRI.Ping*4)$"ms\ "@string(PRI.PacketLoss)$"%";
 
   C.Font = GetFontWithSize(FONT_PLAYER_SCORE);
@@ -534,152 +510,82 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   SetPosScaled(C, baseX + 15 + 3, baseY + scoreHeight + (boxHeight - scoreHeight - pingplHeight)/2);
   C.DrawText(pingplString);
 
+  //Player Name
   C.Font = GetFontForPlayerName(PRI.PlayerName);
   C.StrLen(PRI.PlayerName, playerNameWidth, playerNameHeight);
   SetPosScaled(C, baseX + 40 + maxScoreWidth, baseY + (boxHeight - playerNameHeight)/2);
-  if (uPRI.ColoredName == "") C.DrawText(PRI.PlayerName);
-  else C.DrawText(uPRI.ColoredName);
-
-  if (class'UTComp_ScoreBoard'.default.bDrawLGIStats)
-  {
-    totalStats = 12;
-    if (PRI.Deaths > 0) kd = float(PRI.Kills) / PRI.Deaths;
-    else kd = float(PRI.Kills);
-
-    Shots = uPRI.NormalWepStatsPrim[1] + uPRI.NormalWepStatsPrim[9] + uPRI.NormalWepStatsPrim[10];
-    Hits = uPRI.NormalWepStatsPrimHit[1] + uPRI.NormalWepStatsPrimHit[9] + uPRI.NormalWepStatsPrimHit[10];
-    if (Shots > 0) Accuracy = float(Hits) / float(Shots) * 100.0;
-    else Accuracy = 0.0;
-
-    statsArray[statsArray.Length] = stat1;
-    statsArray[0].name = "Caps";
-    statsArray[0].value = string(uPRI.FlagCaps);
-
-    statsArray[statsArray.Length] = stat2;
-    statsArray[1].name = "Assists";
-    statsArray[1].value = string(uPRI.Assists);
-
-    statsArray[statsArray.Length] = stat3;
-    statsArray[2].name = "Grabs";
-    statsArray[2].value = string(uPRI.FlagGrabs);
-
-    statsArray[statsArray.Length] = stat4;
-    statsArray[3].name = "Returns";
-    statsArray[3].value = string(tPRI.FlagReturns);
-
-    statsArray[statsArray.Length] = stat5;
-    statsArray[4].name = "Flag Kills";
-    statsArray[4].value = string(uPRI.FlagKills);
-
-    statsArray[statsArray.Length] = stat6;
-    statsArray[5].name = "Covers";
-    statsArray[5].value = string(uPRI.Covers);
-
-    statsArray[statsArray.Length] = stat7;
-    statsArray[6].name = "Seals";
-    statsArray[6].value = string(uPRI.Seals);
-
-    statsArray[statsArray.Length] = stat8;
-    statsArray[7].name = "Accuracy";
-    statsArray[7].value = Left(string(Accuracy), 5) $ "%";
-
-    statsArray[statsArray.Length] = stat9;
-    statsArray[8].name = "K/D";
-    statsArray[8].value = string(PRI.Kills) @ "/" @ string(int(PRI.Deaths)) @ "(" $ Left(string(kd), 4) $ ")";
-
-    statsArray[statsArray.Length] = stat10;
-    statsArray[9].name = "Mid-Airs";
-    statsArray[9].value = string(uPRI.MidAirs);
-
-    statsArray[statsArray.Length] = stat11;
-    statsArray[10].name = "Best Spree";
-    if (uPRI.MaxSpree >= 30) statsArray[10].value = "Godlike";
-    else if (uPRI.MaxSpree >= 25) statsArray[10].value = "Unstoppable";
-    else if (uPRI.MaxSpree >= 20) statsArray[10].value = "Holy Shit";
-    else if (uPRI.MaxSpree >= 15) statsArray[10].value = "Dominating";
-    else if (uPRI.MaxSpree >= 10) statsArray[10].value = "Rampage";
-    else if (uPRI.MaxSpree >= 5) statsArray[10].value = "Killing Spree";
-    else statsArray[10].value = string(uPRI.MaxSpree);
-
-    statsArray[statsArray.Length] = stat12;
-    statsArray[11].name = "Best Multi";
-    if (uPRI.MaxMultiKill >= 7) statsArray[11].value = "Holy Shit";
-    else if (uPRI.MaxMultiKill == 6) statsArray[11].value = "Monster Kill";
-    else if (uPRI.MaxMultiKill == 5) statsArray[11].value = "Unstoppable";
-    else if (uPRI.MaxMultiKill == 4) statsArray[11].value = "Mega Kill";
-    else if (uPRI.MaxMultiKill == 3) statsArray[11].value = "Ultra Kill";
-    else if (uPRI.MaxMultiKill == 2) statsArray[11].value = "Multi Kill";
-    else if (uPRI.MaxMultiKill == 1) statsArray[11].value = "Double Kill";
-    else statsArray[11].value = string(uPRI.MaxMultiKill);
-  }
-  else
-  {
-    totalStats = 6;
-    statsArray[statsArray.Length] = stat1;
-    statsArray[0].name = "Grabs";
-    statsArray[0].value = uPRI.FlagGrabs@"("$uPRI.FlagPickups$")";
-    statsArray[statsArray.Length] = stat2;
-    statsArray[1].name = "Caps";
-    statsArray[1].value = uPRI.FlagCaps@"("$uPRI.Assists$")";
-    statsArray[statsArray.Length] = stat3;
-    statsArray[2].name = "Covers";
-    statsArray[2].value = string(uPRI.Covers);
-    statsArray[statsArray.Length] = stat4;
-    statsArray[3].name = "Flag Kills";
-    statsArray[3].value = string(uPRI.FlagKills);
-    statsArray[statsArray.Length] = stat5;
-    statsArray[4].name = "Returns";
-    statsArray[4].value = string(tPRI.FlagReturns);
-    statsArray[statsArray.Length] = stat6;
-    statsArray[5].name = "Seals";
-    statsArray[5].value = string(uPRI.Seals);
+  if (uPRI.ColoredName == "") {
+    C.DrawText(PRI.PlayerName);
+  } else {
+    C.DrawText(uPRI.ColoredName);
   }
 
-  for (count = 0; count < totalStats; count++) {
+  //Stats
+
+  //TODO: LESS SHITTY PLZ
+  statsArray[statsArray.Length] = stat1;
+  statsArray[0].name = "Grabs";
+  statsArray[0].value = uPRI.FlagGrabs@"("$uPRI.FlagPickups$")";
+
+  statsArray[statsArray.Length] = stat2;
+  statsArray[1].name = "Caps";
+  statsArray[1].value = uPRI.FlagCaps@"("$uPRI.Assists$")";
+
+  statsArray[statsArray.Length] = stat3;
+  statsArray[2].name = "Covers";
+  statsArray[2].value = string(uPRI.Covers);
+
+  statsArray[statsArray.Length] = stat4;
+  statsArray[3].name = "Flag Kills";
+  statsArray[3].value = string(uPRI.FlagKills);
+
+  statsArray[statsArray.Length] = stat5;
+  statsArray[4].name = "Returns";
+  statsArray[4].value = string(tPRI.FlagReturns);
+
+  statsArray[statsArray.Length] = stat6;
+  statsArray[5].name = "Seals";
+  statsArray[5].value = string(uPRI.Seals);
+
+  //Get StrLen shit for spacing
+  for (count = 0; count < 6; count++) {
     C.Font = GetFontWithSize(FONT_PLAYER_STAT);
     C.StrLen(statsArray[count].name, statsArray[count].nameW, statsArray[count].nameH);
+
+    //Find the longest name for both left and right.
+    if (count<3 && statsArray[count].nameW > longestOStatName) {
+      longestOStatName = statsArray[count].nameW;
+    } else if (count>3 && statsArray[count].nameW > longestDStatName) {
+      longestDStatName = statsArray[count].nameW;
+    }
+
     C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
     C.StrLen(statsArray[count].value, statsArray[count].valueW, statsArray[count].valueH);
-
-    col = count / (totalStats / (totalStats / 4));
-    if (totalStats == 12) {
-       col = count / 4;
-    } else {
-       col = count / 3;
-    }
-    if (statsArray[count].nameW > longestName[col]) {
-      longestName[col] = statsArray[count].nameW;
-    }
   }
 
-  if (totalStats == 12) {
-      statX = baseX + 260;
-      for (count = 0; count < 12; count++) {
-        col = count / 4;
-        row = count % 4;
-        C.Font = GetFontWithSize(FONT_PLAYER_STAT);
-        SetPosScaled(C, statX + 160*col, baseY + (boxHeight - statsArray[count].nameH*4)/2 + statsArray[count].nameH*row);
-        C.SetDrawColor(255, 255, 255, 255);
-        C.DrawText(statsArray[count].name);
-        C.SetDrawColor(255, 255, 255, 255);
 
-        C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
-        SetPosScaled(C, statX + 160*col + longestName[col] + 5, baseY + (boxHeight - statsArray[count].nameH*4)/2 + statsArray[count].nameH*row);
-        C.DrawText(statsArray[count].value);
-      }
-  } else {
-      statX = baseX + boxWidth - 300;
-      for (count = 0; count < 6; count++) {
-        col = count / 3;
-        row = count % 3;
-        C.Font = GetFontWithSize(FONT_PLAYER_STAT);
-        SetPosScaled(C, statX + 100*col + longestName[0] + longestName[1]*col - statsArray[count].nameW, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*row);
-        C.DrawText(statsArray[count].name);
+  statX = baseX + boxWidth - 300;
 
-        C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
-        SetPosScaled(C, statX + 100*col + longestName[0] + longestName[1]*col + 5, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*row);
-        C.DrawText(statsArray[count].value);
-      }
+  //Left column
+  for (count = 0; count < 3; count++) {
+    C.Font = GetFontWithSize(FONT_PLAYER_STAT);
+    SetPosScaled(C, statX + longestOStatName - statsArray[count].nameW, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*count);
+    C.DrawText(statsArray[count].name);
+
+    C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
+    SetPosScaled(C, statX + longestOStatName + 5, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*count);
+    C.DrawText(statsArray[count].value);
+  }
+
+  //Right column
+  for (count = 3; count < 6; count++) {
+    C.Font = GetFontWithSize(FONT_PLAYER_STAT);
+    SetPosScaled(C, statX + 100 + longestOStatName + longestDStatName - statsArray[count].nameW, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*(count - 3));
+    C.DrawText(statsArray[count].name);
+
+    C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
+    SetPosScaled(C, statX + 100 + longestOStatName + longestDStatName + 5, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*(count - 3));
+    C.DrawText(statsArray[count].value);
   }
 }
 
