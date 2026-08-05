@@ -1,6 +1,9 @@
 param (
     [Parameter(Mandatory=$true, HelpMessage="Enter the version number (e.g., 2.0.0)")]
-    [string]$Version
+    [string]$Version,
+    
+    [Parameter(Mandatory=$false, HelpMessage="Optional target branch for the release (e.g., feature/branch)")]
+    [string]$TargetBranch
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,7 +48,12 @@ Write-Host "      Created: $ZipName" -ForegroundColor Green
 # 5. Push to GitHub Releases
 Write-Host "`n[5/5] Publishing release to GitHub..."
 Set-Location -Path $RepoDir
-gh release create "v$Version" $ZipPath --title "Wicked Sick UTComp LGI v$Version" --generate-notes --repo ruben-chapa/WSUTComp
+$ReleaseCmd = "gh release create `"v$Version`" `"$ZipPath`" --title `"Wicked Sick UTComp LGI v$Version`" --generate-notes --repo ruben-chapa/WSUTComp"
+if ($TargetBranch) {
+    $ReleaseCmd += " --target `"$TargetBranch`""
+    $ReleaseCmd += " --prerelease"
+}
+Invoke-Expression $ReleaseCmd
 
 Write-Host "`n=========================================" -ForegroundColor Green
 Write-Host " Success! Release v$Version is live on GitHub." -ForegroundColor Green
