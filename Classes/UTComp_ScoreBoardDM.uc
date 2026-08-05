@@ -6,49 +6,6 @@ var font SmallerFont;
 var UTComp_ServerReplicationInfo RepInfo;
 var string KillsText;
 
-// Emoticon rendering, shared with the HUD, so player names on the scoreboard
-// render emoticons the same way chat does.
-#include Classes\Include\EmoticonsDraw.uci
-
-// Returns the emoticon replication info to draw names with, or None when
-// emoticons are disabled server-side, disabled client-side, or not replicated.
-simulated function EmoticonsReplicationInfo GetEmoteReplicationIfEnabled()
-{
-    local BS_xPlayer P;
-
-    // Server-side disable (mutator bEnableEmoticons, replicated via RepInfo).
-    if (RepInfo != None && !RepInfo.bEnableEmoticons)
-        return None;
-
-    P = BS_xPlayer(Owner);
-    // EmoteInfo is only spawned when emoticons are enabled server-side, so a
-    // None here also means "disabled server-side".
-    if (P == None || P.EmoteInfo == None)
-        return None;
-
-    // Client-side disable (UTComp menu / HUD setting).
-    if (P.HUDSettings != None && !P.HUDSettings.bEnableEmoticons)
-        return None;
-
-    return P.EmoteInfo;
-}
-
-// Draws Name at the current canvas position with emoticons rendered. Returns
-// false (and draws nothing) when emoticons are disabled or Name has none, so
-// callers fall back to their normal text draw.
-simulated function bool TryDrawEmoteName(Canvas C, coerce string Name)
-{
-    local EmoticonsReplicationInfo rep;
-
-    rep = GetEmoteReplicationIfEnabled();
-    if (rep == None || FindNextSmile(rep, Name) < 0)
-        return false;
-
-    // 0.5 => half line-height icons; full size looks oversized on the scoreboard.
-    DrawSmileyText(rep, Name, C,,, 0.5);
-    return true;
-}
-
 function DrawNetInfo(Canvas Canvas,int FontReduction,int HeaderOffsetY,int PlayerBoxSizeY,int BoxSpaceY,int BoxTextOffsetY,int OwnerOffset,int PlayerCount, int NetXPos)
 {
 	local float XL,YL;
@@ -484,8 +441,7 @@ simulated event UpdateScoreBoard(Canvas Canvas)
 		if ( i != OwnerOffset )
 		{
 			Canvas.SetPos(NameXPos, (PlayerBoxSizeY + BoxSpaceY)*i + BoxTextOffsetY);
-			if ( !TryDrawEmoteName(Canvas, playername[i]) )
-				Canvas.DrawText(playername[i],true);
+			Canvas.DrawText(playername[i],true);
 		}
 	if ( bNameFontReduction )
 		Canvas.Font = GetSmallerFontFor(Canvas,FontReduction);
@@ -529,8 +485,7 @@ simulated event UpdateScoreBoard(Canvas Canvas)
 	Canvas.SetPos(NameXPos, OwnerPos);
 	if ( bNameFontReduction )
 		Canvas.Font = ReducedFont;
-	if ( !TryDrawEmoteName(Canvas, playername[OwnerOffset]) )
-		Canvas.DrawText(playername[OwnerOffset],true);
+	Canvas.DrawText(playername[OwnerOffset],true);
 	if ( bNameFontReduction )
 		Canvas.Font = GetSmallerFontFor(Canvas,FontReduction);
     Canvas.DrawColor = HUDClass.default.GoldColor;
@@ -643,6 +598,7 @@ function DrawOtherPowerups(Canvas C)
     local float charoffset, charoffset2;
 
 
+    if(class'UTComp_ScoreBoard'.default.bDrawLGIStats) { return; }
     if(!class'UTComp_ScoreBoard'.default.bDrawPickups || BS_xPlayer(Owner)==None || BS_xPlayer(Owner).UTCompPRI==None || C.SizeX<=630)
         return;
     UxP=BS_xPlayer(Owner);
@@ -759,6 +715,7 @@ function DrawPowerups(Canvas C)
     local float charoffset, charoffset2;
 
 
+    if(class'UTComp_ScoreBoard'.default.bDrawLGIStats) { return; }
     if(!class'UTComp_ScoreBoard'.default.bDrawPickups || BS_xPlayer(Owner)==None || BS_xPlayer(Owner).UTCompPRI==None || C.SizeX<=630)
         return;
     UxP=BS_xPlayer(Owner);
@@ -892,6 +849,7 @@ function DrawOtherStats(Canvas C)
     local UTComp_Settings S;
 
 
+    if(class'UTComp_ScoreBoard'.default.bDrawLGIStats) { DrawLGIStats(C); return; }
     bDisplayMessages=!class'UTComp_ScoreBoard'.default.bDrawStats;
     if(!class'UTComp_ScoreBoard'.default.bDrawStats || !Owner.IsA('BS_xPlayer') || BS_xPlayer(Owner).UTCompPRI==None)
         return;
@@ -1075,6 +1033,7 @@ function DrawStats(Canvas C)
     local UTComp_Settings S;
 
 
+    if(class'UTComp_ScoreBoard'.default.bDrawLGIStats) { DrawLGIStats(C); return; }
     bDisplayMessages=!class'UTComp_ScoreBoard'.default.bDrawStats;
     if(!class'UTComp_ScoreBoard'.default.bDrawStats || !Owner.IsA('BS_xPlayer') || BS_xPlayer(Owner).UTCompPRI==None)
         return;
@@ -1299,7 +1258,114 @@ simulated function NextStats()
         BS_xPlayer(Owner).StatNext();
 }
 
+function DrawLGIStats(Canvas C)
+{
+    local float BoxSizeX, BoxSizeY, BorderSize;
+    local float StartPosX, StartPosY;
+    local BS_xPlayer UxP;
+    local UTComp_PRI uPRI;
+    local string DrawString;
+    local float StrLenX, StrLenY;
+    local float tmpEff;
+    local int Shots, Hits, Spree, Multi, MAs;
+    local float Accuracy;
+    
+    if(!Owner.IsA('BS_xPlayer') || BS_xPlayer(Owner).UTCompPRI==None)
+        return;
+
+    UxP=BS_xPlayer(Owner);
+    uPRI=UxP.UTCompPRI;
+    if(UxP.currentStatDraw != None)
+        uPRI=UxP.currentStatDraw;
+        
+    uPRI.UpdatePercentages();
+
+    C.Font=SmallerFont;
+    C.StrLen(" 100% / 100%", BoxSizeX, BoxSizeY);
+    C.Style=5;
+    BorderSize=1.0;
+    
+    StartPosX = C.ClipX * 0.70;
+    StartPosY = C.ClipY * 0.9150 - (BoxSizeY * 6);
+    
+    C.SetDrawColor(10,10,10,155);
+    C.SetPos(StartPosX, StartPosY);
+    C.DrawTileStretched(material'Engine.WhiteTexture', C.ClipX * 0.28, BoxSizeY * 6 + BorderSize * 2);
+    
+    C.SetDrawColor(255,255,255,255);
+    C.SetPos(StartPosX, StartPosY);
+    C.DrawTileStretched(material'Engine.WhiteTexture', C.ClipX * 0.28, BorderSize);
+    C.SetPos(StartPosX, StartPosY + BoxSizeY * 6 + BorderSize);
+    C.DrawTileStretched(material'Engine.WhiteTexture', C.ClipX * 0.28, BorderSize);
+    C.SetPos(StartPosX, StartPosY);
+    C.DrawTileStretched(material'Engine.WhiteTexture', BorderSize, BoxSizeY * 6 + BorderSize * 2);
+    C.SetPos(StartPosX + C.ClipX * 0.28, StartPosY);
+    C.DrawTileStretched(material'Engine.WhiteTexture', BorderSize, BoxSizeY * 6 + BorderSize * 2);
+    
+    Shots = uPRI.NormalWepStatsPrim[1] + uPRI.NormalWepStatsPrim[9] + uPRI.NormalWepStatsPrim[10];
+    Hits = uPRI.NormalWepStatsPrimHit[1] + uPRI.NormalWepStatsPrimHit[9] + uPRI.NormalWepStatsPrimHit[10];
+    if (Shots > 0) Accuracy = float(Hits) / float(Shots) * 100.0;
+    
+    tmpEff = 0.0;
+        
+    Spree = uPRI.MaxSpree;
+    Multi = uPRI.MaxMultiKill;
+    MAs = uPRI.MidAirs;
+
+    if(class'UTComp_ScoreBoard'.default.bEnableColoredNamesOnScoreboard==True && uPRI.ColoredName != "")
+        DrawString = "LGI Stats For "@uPRI.ColoredName$"."@GetNextKeyString();
+    else
+        DrawString = "LGI Stats For "@GetNonColoredName(uPRI)$"."@GetNextKeyString();
+        
+    C.StrLen("LGI Stats For "@GetNonColoredName(uPRI)$"."@GetNextKeyString(), StrLenX, StrLenY);
+    C.SetPos(StartPosX + (C.ClipX * 0.14) - (0.5 * StrLenX), StartPosY + BoxSizeY * 0.2);
+    C.DrawText(DrawString);
+    
+    C.SetDrawColor(255,255,255,255);
+    C.SetPos(StartPosX + BoxSizeX * 0.5, StartPosY + BoxSizeY * 1.5);
+    C.DrawText("Accuracy:");
+    C.SetPos(StartPosX + BoxSizeX * 2.5, StartPosY + BoxSizeY * 1.5);
+    if (Accuracy >= 40.0) C.SetDrawColor(0,255,0,255);
+    else if (Accuracy >= 30.0) C.SetDrawColor(255,255,0,255);
+    else C.SetDrawColor(255,0,0,255);
+    C.DrawText(Left(string(Accuracy), 5)$"% ("$Hits$"/"$Shots$")");
+    
+    C.SetDrawColor(255,255,255,255);
+    C.SetPos(StartPosX + BoxSizeX * 0.5, StartPosY + BoxSizeY * 2.5);
+    C.DrawText("Mid-Airs:");
+    C.SetPos(StartPosX + BoxSizeX * 2.5, StartPosY + BoxSizeY * 2.5);
+    C.SetDrawColor(0,200,255,255);
+    C.DrawText(MAs);
+    
+    C.SetDrawColor(255,255,255,255);
+    C.SetPos(StartPosX + BoxSizeX * 0.5, StartPosY + BoxSizeY * 3.5);
+    C.DrawText("Best Spree:");
+    C.SetPos(StartPosX + BoxSizeX * 2.5, StartPosY + BoxSizeY * 3.5);
+    if (Spree >= 25) { C.SetDrawColor(255,0,0,255); DrawString = "Godlike ("$Spree$")"; }
+    else if (Spree >= 20) { C.SetDrawColor(255,128,0,255); DrawString = "Unstoppable ("$Spree$")"; }
+    else if (Spree >= 15) { C.SetDrawColor(255,255,0,255); DrawString = "Dominating ("$Spree$")"; }
+    else if (Spree >= 10) { C.SetDrawColor(0,255,0,255); DrawString = "Rampage ("$Spree$")"; }
+    else if (Spree >= 5) { C.SetDrawColor(0,255,255,255); DrawString = "Killing Spree ("$Spree$")"; }
+    else { C.SetDrawColor(200,200,200,255); DrawString = string(Spree); }
+    C.DrawText(DrawString);
+    
+    C.SetDrawColor(255,255,255,255);
+    C.SetPos(StartPosX + BoxSizeX * 0.5, StartPosY + BoxSizeY * 4.5);
+    C.DrawText("Best Multi:");
+    C.SetPos(StartPosX + BoxSizeX * 2.5, StartPosY + BoxSizeY * 4.5);
+    if (Multi >= 6) { C.SetDrawColor(255,0,0,255); DrawString = "Monster Kill ("$Multi$")"; }
+    else if (Multi == 5) { C.SetDrawColor(255,128,0,255); DrawString = "Ultra Kill"; }
+    else if (Multi == 4) { C.SetDrawColor(255,255,0,255); DrawString = "Mega Kill"; }
+    else if (Multi == 3) { C.SetDrawColor(0,255,0,255); DrawString = "Multi Kill"; }
+    else if (Multi == 2) { C.SetDrawColor(0,255,255,255); DrawString = "Double Kill"; }
+    else { C.SetDrawColor(200,200,200,255); DrawString = string(Multi); }
+    C.DrawText(DrawString);
+}
+
 defaultproperties
 {
     KillsText="KILLS"
 }
+
+
+
