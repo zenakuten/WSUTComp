@@ -3220,6 +3220,7 @@ function ResetNet()
 {
     if(UTCompPRI!=None)
         UTCompPRI.RealKills=0;
+        UTCompPRI.RealDeaths=0;
 }
 
 // bDodgedThisFall is a per-fall latch normally cleared by PlayerWalking.NotifyLanded. If a

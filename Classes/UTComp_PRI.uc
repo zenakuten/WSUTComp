@@ -12,7 +12,11 @@ var int PickedUpAdren;
 
 var int MaxSpree;
 var int MaxMultiKill;
+var int CurrentSpree;
+var int CurrentMultiKill;
+var float LastKillTime;
 var int MidAirs;
+var byte SSR_Accuracy;
 
 var int NormalWepStatsAlt[15];
 var int NormalWepStatsPrim[15];
@@ -28,6 +32,7 @@ var int NormalWepStatsPrimDamage[15];
 
 var string ColoredName;
 var int RealKills;
+var int RealDeaths;
 var bool bIsReady;
 var byte CoachTeam;
 var byte Vote;
@@ -115,12 +120,12 @@ var string HitPrim, HitAlt, FiredPrim, FiredAlt, DamagePrim, DamageAlt;
 
 replication
 {
-    reliable if(Role==Role_Authority)
+    reliable if(bNetDirty && Role==Role_Authority)
          bIsReady, CoachTeam, CurrentVoteID,
-         ColoredName, RealKills,
+         ColoredName, RealKills, RealDeaths,
          FlagGrabs, FlagCaps, FlagPickups, FlagKills, FlagSaves, FlagDenials,
          Assists, Covers, CoverSpree, Seals, SealSpree, DefKills,
-         MaxSpree, MaxMultiKill, MidAirs;
+         MaxSpree, MaxMultiKill, MidAirs, SSR_Accuracy;
 
     unreliable if(Role==Role_Authority && bNetOwner)
         PickedUpFifty, PickedUpHundred, PickedUpAmp,
@@ -193,9 +198,27 @@ function PassVote(byte b, byte switch, string Options, optional string Caller, o
     }
 }
 
+simulated function PostBeginPlay()
+{
+    Super.PostBeginPlay();
+    if (Role == Role_Authority)
+        SetTimer(1.0, true);
+}
+
+function Timer()
+{
+    local float accuracy;
+    Super.Timer();
+    if (NormalWepStatsPrim[1] > 0)
+    {
+        accuracy = float(NormalWepStatsPrimHit[1]) / float(NormalWepStatsPrim[1]) * 100.0;
+        SSR_Accuracy = byte(accuracy);
+    }
+}
+
 function NotReady()
 {
-    bIsReady=False;
+    bIsReady = false;
 }
 
 function Ready()
@@ -235,6 +258,7 @@ function ClearStats()
     PickedUpKeg=0;
     PickedUpAdren=0;
     RealKills=0;
+    RealDeaths=0;
     TotalDamageG=0;
 }
 

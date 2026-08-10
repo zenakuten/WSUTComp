@@ -159,24 +159,55 @@ function ScoreKill(Controller Killer, Controller Killed)
       if(Killer != none && Killed !=None)
       {
           if ( Killer == Killed)
-          {}
+          {
+              uPRI=class'UTComp_Util'.static.GetUTCompPRI(Killed.PlayerReplicationInfo);
+              if (uPRI != None) {
+                  uPRI.CurrentSpree = 0;
+                  uPRI.CurrentMultiKill = 0;
+              }
+          }
           else if(Killer.PlayerReplicationInfo==None || Killed.PlayerReplicationInfo==None)
           {}
           else if(Killer.PlayerReplicationInfo.Team==None || (Killer.PlayerReplicationInfo.Team != Killed.PlayerReplicationInfo.Team))
           {
               uPRI=class'UTComp_Util'.static.GetUTCompPRI(Killer.PlayerReplicationInfo);
               if(uPRI!=None)
+              {
                   uPRI.RealKills++;
+                  uPRI.CurrentSpree++;
+                  if (uPRI.CurrentSpree > uPRI.MaxSpree) uPRI.MaxSpree = uPRI.CurrentSpree;
+                  
+                  if (Level.TimeSeconds - uPRI.LastKillTime <= 4.0)
+                      uPRI.CurrentMultiKill++;
+                  else
+                      uPRI.CurrentMultiKill = 1;
+                      
+                  if (uPRI.CurrentMultiKill > uPRI.MaxMultiKill) uPRI.MaxMultiKill = uPRI.CurrentMultiKill;
+                  uPRI.LastKillTime = Level.TimeSeconds;
+              }
+              uPRI=class'UTComp_Util'.static.GetUTCompPRI(Killed.PlayerReplicationInfo);
+              if (uPRI != None) {
+                  uPRI.CurrentSpree = 0;
+                  uPRI.CurrentMultiKill = 0;
+              }
           }
           else
           {
               uPRI=class'UTComp_Util'.static.GetUTCompPRI(Killer.PlayerReplicationInfo);
               if(uPRI!=None)
+              {
                   uPRI.RealKills--;
+                  uPRI.CurrentSpree = 0;
+                  uPRI.CurrentMultiKill = 0;
+              }
               uPRI=None;
               uPRI=class'UTComp_Util'.static.GetUTCompPRI(Killed.PlayerReplicationInfo);
               if(uPRI!=None)
+              {
                   uPRI.RealKills++;
+                  uPRI.CurrentSpree = 0;
+                  uPRI.CurrentMultiKill = 0;
+              }
           }
 
 
@@ -212,6 +243,12 @@ function ScoreKill(Controller Killer, Controller Killed)
                 uPC.ClientSetViewTarget(uPC);
             }
         }
+    }
+
+    if (Killed != None && Killed.PlayerReplicationInfo != None)
+    {
+        uPRI = class'UTComp_Util'.static.GetUTCompPRI(Killed.PlayerReplicationInfo);
+        if (uPRI != None) uPRI.RealDeaths++;
     }
 
     if ( NextGameRules != None )

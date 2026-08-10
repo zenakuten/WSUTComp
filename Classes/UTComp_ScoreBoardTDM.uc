@@ -1443,9 +1443,7 @@ function DrawLGIStats(Canvas C)
     C.SetPos(StartPosX + C.ClipX * 0.28, StartPosY);
     C.DrawTileStretched(material'Engine.WhiteTexture', BorderSize, BoxSizeY * 6 + BorderSize * 2);
     
-    Shots = uPRI.NormalWepStatsPrim[1] + uPRI.NormalWepStatsPrim[9] + uPRI.NormalWepStatsPrim[10];
-    Hits = uPRI.NormalWepStatsPrimHit[1] + uPRI.NormalWepStatsPrimHit[9] + uPRI.NormalWepStatsPrimHit[10];
-    if (Shots > 0) Accuracy = float(Hits) / float(Shots) * 100.0;
+    Accuracy = uPRI.SSR_Accuracy;
     
     tmpEff = 0.0;
         
@@ -1469,7 +1467,7 @@ function DrawLGIStats(Canvas C)
     if (Accuracy >= 40.0) C.SetDrawColor(0,255,0,255);
     else if (Accuracy >= 30.0) C.SetDrawColor(255,255,0,255);
     else C.SetDrawColor(255,0,0,255);
-    C.DrawText(Left(string(Accuracy), 5)$"% ("$Hits$"/"$Shots$")");
+    C.DrawText(Left(string(Accuracy), 5)$"%");
     
     C.SetDrawColor(255,255,255,255);
     C.SetPos(StartPosX + BoxSizeX * 0.5, StartPosY + BoxSizeY * 2.5);

@@ -231,6 +231,7 @@ function ResetKills()
             uPRI=class'UTComp_Util'.static.GetUTCompPRI(C.PlayerReplicationInfo);
             if(uPRI!=None)
                 uPRI.RealKills=0;
+                uPRI.RealDeaths=0;
         }
     }
 }
