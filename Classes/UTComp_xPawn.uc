@@ -39,7 +39,11 @@ var Material DeResMatColored0, DeResMatColored1;
 var ColorModifier DeResModifier0;
 var ColorModifier DeResModifier1;
 
-var config bool bDesiredBehindView;
+// Is this pawn being viewed in 3p right now? Set by BS_xPlayer.ClientSetBehindView on the
+// owning client and mirrored onto the server pawn by ServerSetBehindView. Not config and not
+// carried across pawns: a freshly spawned pawn is in 1p, which is what PointOfView() below
+// reports to the engine when the controller possesses it.
+var bool bBehindViewActive;
 
 // Client-side cache of the last validly-posed 3p weapon muzzle ('tip' bone) location.
 // Beam effects fall back to this when the attachment tip isn't posed yet - notably the first
@@ -1309,9 +1313,11 @@ simulated function Destroyed()
     super.Destroyed();
 }
 
+// Read by the enhanced-netcode fire paths to decide whether to recompute the shot for the 3p
+// crosshair, and by the engine on possession to pick the starting view.
 simulated function bool PointOfView()
 {
-	return bDesiredBehindView;
+	return bBehindViewActive;
 }
 
 simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation )

@@ -648,13 +648,6 @@ function SetMaxResponseTime()
         Default.MaxResponseTime = RepInfo.MaxResponseTime;
 }
 
-function SetInitialDesiredBehindView()
-{
-	class'UTComp_xPawn'.default.bDesiredBehindView=false;
-    if(UTComp_xPawn(Pawn) != None)
-		UTComp_xPawn(Pawn).bDesiredBehindView=false;
-}
-
 simulated function InitializeClient()
 {
     InitializeScoreboard();
@@ -665,7 +658,6 @@ simulated function InitializeClient()
     SetMaxSavedMoves();
     SetTauntCount();
     SetMaxResponseTime();
-	SetInitialDesiredBehindView();
     if(Settings.bFirstRun)
     {
         Settings.bFirstRun=False;
@@ -889,10 +881,6 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 
         bFrozen = true;
 		bBehindView = true;
-
-		// reset config value to 1p view (but leave bBehindView above alone)
-		class'UTComp_xPawn'.default.bDesiredBehindView=false;
-		class'UTComp_xPawn'.static.StaticSaveConfig();
 
         if ( !bFixedCamera )
             FindGoodView();
@@ -5106,8 +5094,7 @@ function ClientSetBehindView(bool B)
 
     if (UTComp_xPawn(Pawn) != None)
     {
-    	UTComp_xPawn(Pawn).bDesiredBehindView = B;
-    	Pawn.SaveConfig();
+    	UTComp_xPawn(Pawn).bBehindViewActive = B;
         ServerSetBehindView(
             B,
             UTComp_xPawn(Pawn).TPCamDistance,
@@ -5132,15 +5119,15 @@ function ServerSetBehindView(bool bBehind, float d, float x, float y, float z)
     if (p != None)
     {
         // Mirror the pawn's 3p flag on the server too. Pawn.PointOfView() returns
-        // bDesiredBehindView, and the enhanced-netcode fire paths (rocket/flak primary, shock
+        // bBehindViewActive, and the enhanced-netcode fire paths (rocket/flak primary, shock
         // beam, sniper - anything with a bUseReplicatedInfo/SavedRot branch) only recompute the
         // 3p crosshair aim via AdjustAim when PointOfView() is true; otherwise they fire along
         // the client's raw view rotation (SavedRot), which ignores the cam-Y crosshair parallax
-        // and sends the shot the wrong way online. bDesiredBehindView is config/client-set, so
-        // without this the server pawn stays false and those weapons miss the crosshair at a
-        // non-zero cam Y (weapons without that branch - shock core, link, rocket secondary -
-        // were unaffected, which matches what's seen in game).
-        p.bDesiredBehindView = bBehind;
+        // and sends the shot the wrong way online. The flag is only ever set by the client's
+        // ClientSetBehindView, so without this the server pawn stays false and those weapons
+        // miss the crosshair at a non-zero cam Y (weapons without that branch - shock core,
+        // link, rocket secondary - were unaffected, which matches what's seen in game).
+        p.bBehindViewActive = bBehind;
         p.TPCamDistance = d;
         P.TPCamWorldOffset.X = X;
         P.TPCamWorldOffset.Y = Y;
