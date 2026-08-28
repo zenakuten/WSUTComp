@@ -3,7 +3,6 @@ class UTComp_SuperShockRifle extends SuperShockRifle
 	CacheExempt;
 
 var bool bCantFire;
-var config bool bConfigInitialized;
 
 replication
 {
@@ -15,11 +14,12 @@ simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    //for each new version of ws utcomp, the weapon is considered a new
-    //weapon due to different package name.  As a result a lot of custom config might be lost
-    //like these custom weapon settings.  So on a new release, for first run of the weapon 
-    //copy these config values from the stock weapon
-    if(!bConfigInitialized && Level.NetMode != NM_DedicatedServer)
+    //these weapon settings are per class config, stored under [Package.Class], so nothing the
+    //player sets on the stock weapon ever reaches this subclass.  we are also CacheExempt, so
+    //we are left out of the .ucl records the stock weapon/crosshair menu lists, meaning they
+    //never get set on us directly either.  take them from the stock weapon on every spawn -
+    //keeping our own saved copy meant each new package name orphaned the player's settings
+    if(Level.NetMode != NM_DedicatedServer)
     {
         ExchangeFireModes=class'SuperShockRifle'.default.ExchangeFireModes;
         Priority=class'SuperShockRifle'.default.Priority;
@@ -27,8 +27,6 @@ simulated function PostBeginPlay()
         CustomCrosshairColor=class'SuperShockRifle'.default.CustomCrosshairColor;
         CustomCrosshairScale=class'SuperShockRifle'.default.CustomCrosshairScale;
         CustomCrosshairTextureName=class'SuperShockRifle'.default.CustomCrosshairTextureName;
-        bConfigInitialized=true;
-        StaticSaveConfig();
     }
 }
 

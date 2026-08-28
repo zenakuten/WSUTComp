@@ -10,6 +10,7 @@ Release Notes
 
 V27
 - remove the remembered 3p view setting, always spawn in first person
+- always take weapon crosshair/priority/firemode settings from the stock weapon
 
 V26
 - stop AdjustAim/PickTarget warning spam in client log (shield gun fire)
