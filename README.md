@@ -8,6 +8,10 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V28
+- fix dodge landing stutter online, the multidodge bookkeeping only ran on the client
+- replicate warmup ended so the hud countdown stays quiet during warmup online
+
 V27
 - remove the remembered 3p view setting, always spawn in first person
 - always take weapon crosshair/priority/firemode settings from the stock weapon

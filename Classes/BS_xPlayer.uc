@@ -525,26 +525,10 @@ event PlayerTick(float deltatime)
         }
     }
 
-    if (DoubleClickDir == DCLICK_Active && UTComp_xPawn(Pawn) != none)
-    {
-        // Latch the dodge independently of the per-fall MultiDodgesRemaining counter. That
-        // counter is replicated (server->client) AND decremented locally on the client, so
-        // the two writers race and it can differ between sides; keying the "was this a dodge
-        // landing" latch off it desynced the landing-velocity decision (the visible position
-        // correction). DoubleClickDir == DCLICK_Active is identical on both sides and matches
-        // stock NotifyLanded semantics. NotifyLanded reads (and resets) this - see bDodgedThisFall.
-        bDodgedThisFall = true;
-
-        // Consume a multi-dodge and free DoubleClickDir for the next one only while the
-        // counter allows it - this still gates *permission* to chain dodges. The multijump
-        // reset now happens in UTComp_xPawn.Dodge() (the move path); doing it here desynced.
-        if (UTComp_xPawn(Pawn).MultiDodgesRemaining > 0)
-        {
-            UTComp_xPawn(Pawn).MultiDodgesRemaining -= 1;
-            ClearDoubleClick();
-            DoubleClickDir = DCLICK_None;
-        }
-    }
+    // The multi-dodge latch and counter used to live here. It cannot: PlayerTick does not
+    // run on a dedicated server for a remote player, so everything done here was happening
+    // on one side of the connection only. It is in PlayerWalking.ProcessMove now, which is
+    // the shared move path -- see the note there.
 
     // Keep the server's copy of the 3p camera offset in sync with ours. The server needs it
     // for server-authoritative fire (all projectiles, and hitscan when enhanced netcode is
@@ -3235,14 +3219,61 @@ function ClientRestart(Pawn NewPawn)
 
 state PlayerWalking
 {
+    // Multi-dodge bookkeeping, in the one place both sides of the connection execute.
+    //
+    // This used to sit in PlayerTick, and that is why dodge landings stuttered online.
+    // PlayerTick is never called on a dedicated server for a remote player: in
+    // APlayerController::Tick a remote player's controller has RemoteRole ==
+    // ROLE_AutonomousProxy and no local Player, so it takes the first branch -- kick-idler
+    // checks, ProcessState, UpdateTimers, SendClientAdjustment -- and eventPlayerTick is
+    // only reached in the else branch, which needs a local viewport (UnLevTic.cpp:667-742).
+    // So bDodgedThisFall was latched on the client and never on the server, the counter was
+    // decremented on the client and never on the server, and the two sides went into
+    // NotifyLanded asking different questions. The client kept its momentum (x0.8) while the
+    // server killed it (x0.1), or the reverse, and the server's ClientAdjustPosition snapped
+    // the difference back. Whether it bit depended on whether the server's DoubleClickDir
+    // still happened to be DCLICK_Active when it processed the landing -- which is a
+    // question about move batching and packet loss, hence intermittent.
+    //
+    // ProcessMove is the right home because it is the shared path: the client reaches it
+    // through ReplicateMove (and again through MoveAutonomous when replaying saved moves
+    // after a correction), the server through ServerMove -> MoveAutonomous. It is also where
+    // stock puts the same decision -- UnrealPlayer.PlayerWalking.ProcessMove is the only
+    // place DoubleClickDir becomes DCLICK_Active, and stock NotifyLanded reads it straight
+    // back. Setting and reading in the same path is what keeps the two sides agreeing.
+    //
+    // Super runs first because it is what performs the dodge and sets DCLICK_Active.
+    function ProcessMove(float DeltaTime, vector NewAccel, eDoubleClickDir DoubleClickMove, rotator DeltaRot)
+    {
+        Super.ProcessMove(DeltaTime, NewAccel, DoubleClickMove, DeltaRot);
+
+        if (DoubleClickDir != DCLICK_Active || UTComp_xPawn(Pawn) == None)
+            return;
+
+        // Latched rather than read live, because the consume below clears DoubleClickDir
+        // and the landing can come many moves later. NotifyLanded reads and resets it.
+        bDodgedThisFall = true;
+
+        // Consume a multi-dodge and free DoubleClickDir for the next one, but only while
+        // the counter allows it -- this is what gates permission to chain dodges. The
+        // counter is refilled in UTComp_xPawn.Landed, and the multijump refill happens in
+        // UTComp_xPawn.Dodge; both are already on the move path.
+        if (UTComp_xPawn(Pawn).MultiDodgesRemaining > 0)
+        {
+            UTComp_xPawn(Pawn).MultiDodgesRemaining -= 1;
+            ClearDoubleClick();
+            DoubleClickDir = DCLICK_None;
+        }
+    }
+
     function bool NotifyLanded(vector HitNormal)
     {
         local bool bKeep, bWasDodging;
 
         // Was a dodge in progress when we hit the ground? Consider both the live
-        // DoubleClickDir and the stable per-fall flag, since the multi-dodge tick may
-        // have already wiped DoubleClickDir (at a client/server-inconsistent time,
-        // which is what produced the visible landing position correction).
+        // DoubleClickDir and the per-fall latch, since consuming a multi-dodge wipes
+        // DoubleClickDir. Both are now set in ProcessMove, so client and server answer
+        // this identically.
         bWasDodging = (DoubleClickDir == DCLICK_Active) || bDodgedThisFall;
         bDodgedThisFall = false;
 

@@ -759,8 +759,13 @@ function bool PlayerIsReady(Controller C)
 
 replication
 {
+    // bWarmupEnded belongs here alongside bInWarmup. The HUDs suppress their own countdown
+    // while either is set, so that the warmup's UTComp_Warmup_CountDown broadcasts are the
+    // only voice counting down -- but a client only ever saw the default False for this one,
+    // which made the bWarmupEnded half of that test dead on every server. It worked in
+    // standalone and nowhere else.
     reliable if(Role==Role_Authority)
-        bInWarmup;
+        bInWarmup, bWarmupEnded;
 }
 
 defaultproperties
