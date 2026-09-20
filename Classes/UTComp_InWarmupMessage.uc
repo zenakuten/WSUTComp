@@ -16,10 +16,11 @@ static function string GetString(
 
 DefaultProperties
 {
+      bIsUnique=True
       bIsConsoleMessage=False
       bFadeMessage=True
       LifeTime=4
-      StackMode=2
+      StackMode=SM_Down
       PosY=0.93
       FontSize=-2
 }

@@ -8,6 +8,9 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V29
+- fix the warmup message piling up on itself at the bottom of the screen
+
 V28
 - fix dodge landing stutter online, the multidodge bookkeeping only ran on the client
 - replicate warmup ended so the hud countdown stays quiet during warmup online
