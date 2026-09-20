@@ -12,6 +12,7 @@ V29
 - fix the warmup message piling up on itself at the bottom of the screen
 - Flak is back (ty Vapor!)
 - delay autodemo start until the client has finished its initial replication burst
+- allow the join/spectate button to be used before the match starts
 
 V28
 - fix dodge landing stutter online, the multidodge bookkeeping only ran on the client

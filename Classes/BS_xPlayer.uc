@@ -25,6 +25,8 @@ var float LastHitSoundTime;
 var bool bClientInitialized;
 var byte ScreenshotsTaken;
 var bool bAutoDemoStarted;
+// Set while BecomeSpectator/BecomeActivePlayer run with the pre-match block lifted.
+var bool bPreMatchWasWaiting;
 // Client AutoDemoRec is deliberately deferred after join/map load.  Starting
 // a demo while the native actor-channel table is still being populated can
 // crash 3369 in UActorChannel::SetChannelActor / ULevel::TickDemoRecord.
@@ -3283,7 +3285,12 @@ simulated function MatchHudColor()
 
 function BecomeSpectator()
 {
+    local bool bOverridden;
+
+    bOverridden = BeginPreMatchJoinOverride();
     super.BecomeSpectator();
+    if (bOverridden)
+        EndPreMatchJoinOverride();
     ResetUTCompStats();
     ResetNet();
 }
@@ -4137,11 +4144,52 @@ function ServerViewPlayer(int PlayerID)
 	bIsTempSpec = False;
 }
 
+// Stock UT2004 will not let anyone move between playing and spectating until the
+// match has begun: GameInfo.BecomeSpectator and GameInfo.AllowBecomeActivePlayer
+// both test GameReplicationInfo.bMatchHasBegun and answer with GameMessage 12/13.
+// Tell the gametype the match has begun for the length of that one call, so every
+// other rule it has - capacity, teams, ClanArena's round wait, WS3SPN's bot
+// bookkeeping - still runs and still reports normally.  The flag goes back before
+// the next replication pass, so no client ever sees it set.
+function bool BeginPreMatchJoinOverride()
+{
+    if (Role < ROLE_Authority || Level.Game == None || GameReplicationInfo == None
+        || GameReplicationInfo.bMatchHasBegun)
+        return false;
+
+    bPreMatchWasWaiting = Level.Game.bWaitingToStartMatch;
+    GameReplicationInfo.bMatchHasBegun = true;
+    return true;
+}
+
+function EndPreMatchJoinOverride()
+{
+    // BecomeActivePlayer can reach GameInfo.StartMatch when bDelayedStart is off,
+    // and StartMatch sets both of these itself.  If that happened the match really
+    // has begun and the flag has to stay set.
+    if (bPreMatchWasWaiting && !Level.Game.bWaitingToStartMatch)
+        return;
+
+    GameReplicationInfo.bMatchHasBegun = false;
+}
+
+function BecomeActivePlayer()
+{
+    local bool bOverridden;
+
+    bOverridden = BeginPreMatchJoinOverride();
+    Super.BecomeActivePlayer();
+    if (bOverridden)
+        EndPreMatchJoinOverride();
+}
+
 simulated function ClientReceiveLoginMenu(string MenuClass, bool bForce)
 {
     LoginMenuClass = MenuClass;
 	if (/*GameReplicationInfo.GameClass ~= "Onslaught.ONSOnslaughtGame" || */MenuClass ~= "GUI2k4.UT2K4OnslaughtLoginMenu")
 		LoginMenuClass = string(Class'UTComp_ONSLoginMenu');//"ONSPlus.ONSPlusLoginMenu";
+	else if (MenuClass ~= "GUI2k4.UT2K4PlayerLoginMenu")
+		LoginMenuClass = string(Class'UTComp_LoginMenu');
 
 	bForceLoginMenu = bForce;
 }
