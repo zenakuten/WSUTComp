@@ -475,8 +475,19 @@ function projectile SpawnProjectile(Vector Start, Rotator Dir)
                Other=PawnCollisionCopy(Other).CopiedPawn;
                p = Weapon.Spawn(ProjectileClass,,, HitLocation - Vector(dir)*20.0, Dir);
            }
+           else if(Other == None)
+           {
+               // Clear path: keep the progress the catch-up trace already
+               // calculated.  Spawning back at the muzzle makes the server
+               // shard re-fly a stretch the trace had accounted for, so it
+               // trails the client's predicted shard.  (ty Vapor)
+               p = Weapon.Spawn(ProjectileClass,,, End, Dir);
+           }
            else
            {
+               // Blocked by world geometry or a non-pawn actor: spawn at the
+               // muzzle so the shard still flies into it.  This is the flak
+               // primary powernode unreg fix - leave it alone.
                p = Weapon.Spawn(ProjectileClass,,, originalStart, Dir);
            }
         }

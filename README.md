@@ -10,6 +10,7 @@ Release Notes
 
 V29
 - fix the warmup message piling up on itself at the bottom of the screen
+- Flak is back (ty Vapor!)
 
 V28
 - fix dodge landing stutter online, the multidodge bookkeeping only ran on the client
