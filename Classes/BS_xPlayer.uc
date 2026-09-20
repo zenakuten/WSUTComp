@@ -25,6 +25,14 @@ var float LastHitSoundTime;
 var bool bClientInitialized;
 var byte ScreenshotsTaken;
 var bool bAutoDemoStarted;
+// Client AutoDemoRec is deliberately deferred after join/map load.  Starting
+// a demo while the native actor-channel table is still being populated can
+// crash 3369 in UActorChannel::SetChannelActor / ULevel::TickDemoRecord.
+var bool bAutoDemoPending;
+var float AutoDemoEarliestStartTime;
+const AUTODEMO_INITIAL_START_DELAY = 8.0;
+const AUTODEMO_POST_WARMUP_DELAY = 1.0;
+
 var bool clientChangedScoreboard;
 var bool bWantsStats;
 var bool oldbShowScoreBoard;
@@ -511,10 +519,15 @@ event PlayerTick(float deltatime)
     if (Level.NetMode!=NM_DedicatedServer && !bClientInitialized && PlayerReplicationInfo !=None && PlayerReplicationInfo.CustomReplicationInfo!=None && myHud !=None && RepInfo!=None && UTCompPRI!=None)
     {
         if (uWarmup==None || !uWarmup.bInWarmup)
-        	StartDemo();
+            StartDemo();
         InitializeClient();
         bClientInitialized=true;
     }
+
+    // Start a queued AutoDemoRec only after the client/replication state above
+    // has settled.  Manual demorec is untouched.
+    if(Level.NetMode != NM_DedicatedServer && bAutoDemoPending)
+        TryStartAutoDemo();
 
     if(bWaitingOnGrouping)
     {
@@ -755,16 +768,96 @@ simulated function SetInitialColoredName()
     SetColoredNameOldStyle();
 }
 
+// Queue an automatic demo start instead of entering the native demo recorder
+// during the initial client replication burst.  This function is local-only;
+// StartDemo remains the replicated/public entry point used by existing code.
+simulated function QueueAutoDemoStart(float DelaySeconds)
+{
+    if(Level.NetMode == NM_DedicatedServer)
+        return;
+
+    // Never race a demo that the user already started manually, and do not
+    // queue the UTComp auto recorder twice.
+    if(bDemoRecording || bAutoDemoStarted)
+        return;
+
+    bAutoDemoPending = true;
+    AutoDemoEarliestStartTime = Level.TimeSeconds + FMax(0.0, DelaySeconds);
+}
+
 simulated function StartDemo()
 {
-    local string S;
-    S=StripIllegalWindowsCharacters(Settings.DemoRecordingmask);
+    // Historically this started Demorec immediately from the first client
+    // initialization tick.  Defer it until the client has had time to finish
+    // its initial replication/actor-channel setup.
+    QueueAutoDemoStart(AUTODEMO_INITIAL_START_DELAY);
+}
 
-    if (Settings.bEnableUTCompAutoDemorec && (level.NetMode!=NM_DedicatedServer))
+simulated function TryStartAutoDemo()
+{
+    local string S;
+
+    if(!bAutoDemoPending || bAutoDemoStarted)
+        return;
+
+    // If the player manually started a demo while the automatic start was
+    // pending, leave that recording alone and cancel our pending request.
+    if(bDemoRecording)
     {
-        Player.Console.DelayedConsoleCommand("Demorec "$S);
-        bAutoDemoStarted=True;
+        bAutoDemoPending = false;
+        return;
     }
+
+    if(Level.NetMode == NM_DedicatedServer)
+    {
+        bAutoDemoPending = false;
+        return;
+    }
+
+    // Settings are client-owned and may not exist on the very first ticks.
+    if(Settings == None)
+        return;
+
+    if(!Settings.bEnableUTCompAutoDemorec)
+    {
+        bAutoDemoPending = false;
+        return;
+    }
+
+    if(Level.TimeSeconds < AutoDemoEarliestStartTime)
+        return;
+
+    // Require the same core client objects used by UTComp initialization to be
+    // present before creating a DemoRec driver/channel table.
+    if(!bClientInitialized || Player == None || Player.Console == None
+        || PlayerReplicationInfo == None || GameReplicationInfo == None
+        || myHUD == None || RepInfo == None || UTCompPRI == None)
+        return;
+
+    // If warmup replicated after the initial PlayerTick probe, do not mistake
+    // the earlier uWarmup==None state for 'there is no warmup'.
+    if(uWarmup != None && uWarmup.bInWarmup)
+        return;
+
+    // EmoticonsReplicationInfo is one known owner-only initial replication
+    // stream: it waits ~5 seconds, then sends reliable ClientAddEmoticon RPCs.
+    // The crash log showed one of those RPCs entering ProcessDemoRecFunction
+    // while a demo was active.  Emoticons are not disabled or changed here;
+    // when present, just let their initial sync finish first.
+    if(EmoteInfo != None && EmoteInfo.TotalSmileys > 0
+        && EmoteInfo.Smileys.Length < EmoteInfo.TotalSmileys)
+        return;
+
+    S = StripIllegalWindowsCharacters(Settings.DemoRecordingmask);
+    if(S == "")
+    {
+        bAutoDemoPending = false;
+        return;
+    }
+
+    Player.Console.DelayedConsoleCommand("Demorec "$S);
+    bAutoDemoPending = false;
+    bAutoDemoStarted = true;
 }
 
 simulated function string StripIllegalWindowsCharacters(string S)
@@ -2316,13 +2409,20 @@ simulated function NotifyEndWarmup()
         SetClockTime(GameReplicationInfo.TimeLimit*60+1);
     ResetEpicStats();
     ResetUTCompStats();
-    StartDemo();
+    // A client that sat through warmup is already initialized, so only use a
+    // short post-warmup grace period.  TryStartAutoDemo still enforces all
+    // replication/readiness checks before launching the recorder.
+    QueueAutoDemoStart(AUTODEMO_POST_WARMUP_DELAY);
     bInTimedOvertime=false;
 }
 
 simulated function NotifyRestartMap()
 {
     NotReady(true);
+    // Cancel a start that was queued on the old map before stopping a demo that
+    // UTComp itself actually started.
+    bAutoDemoPending = false;
+    AutoDemoEarliestStartTime = 0.0;
     if(bAutoDemoStarted)
     {
         ConsoleCommand("StopDemo");
