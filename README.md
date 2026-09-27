@@ -8,6 +8,8 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V30
+
 V29
 - fix the warmup message piling up on itself at the bottom of the screen
 - Flak is back (ty Vapor!)
