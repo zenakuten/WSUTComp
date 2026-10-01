@@ -173,6 +173,12 @@ var sound HeadshotSound;
 
 var bool bIsTempSpec;
 
+// Leave hook (see Disconnect/Reconnect/Exit/Quit below).
+var string PendingLeaveCommand; // client: command to run once the server has dropped us
+var float LeaveRequestTime;     // client: when ServerLeaving was sent
+var bool bServerLeaving;        // server: ServerLeaving already handled
+const LEAVE_ACK_TIMEOUT = 1.0;
+
 replication
 {
     unreliable if(Role==Role_Authority)
@@ -208,7 +214,10 @@ replication
         DemoReceiveWeaponEffect;
 
     reliable if(Role == ROLE_Authority)
-        ClientResetNetcode;
+        ClientResetNetcode, ClientLeaveAck;
+
+    reliable if(Role < ROLE_Authority)
+        ServerLeaving;
 
     unreliable if (Role==ROLE_Authority)
         HitDamage, bHitContact, HitDamageActor;        
@@ -221,6 +230,79 @@ simulated function DbgLog(coerce string msg)
 {
 	if(Settings != None && Settings.bDebug)
 		Log(msg);
+}
+
+// Leave hook.
+//
+// The close message a client sends to the server when it disconnects isn't
+// acted on by the server, so a player who deliberately leaves stays in the
+// game until ConnectionTimeout runs out (on localhost an ICMP port-unreachable
+// hides this). These execs run before the engine's own Disconnect/Reconnect/
+// Exit/Quit handlers. They ask the server to drop the player first, and run
+// the real command once it has (or after LEAVE_ACK_TIMEOUT if it never
+// answers). Entering the command again while waiting runs it immediately.
+exec function Disconnect(optional string Args)
+{
+    RequestLeave("Disconnect" @ Args);
+}
+
+exec function Reconnect()
+{
+    RequestLeave("Reconnect");
+}
+
+exec function Exit()
+{
+    RequestLeave("Exit");
+}
+
+exec function Quit()
+{
+    RequestLeave("Quit");
+}
+
+function RequestLeave(string Command)
+{
+    // Not connected to a server (offline, listen server host, demo playback),
+    // or asked again while waiting.
+    if (Level.NetMode != NM_Client || bDemoOwner || PendingLeaveCommand != "")
+    {
+        RunLeaveCommand(Command);
+        return;
+    }
+
+    PendingLeaveCommand = Command;
+    LeaveRequestTime = Level.TimeSeconds;
+    ServerLeaving();
+}
+
+function RunLeaveCommand(string Command)
+{
+    PendingLeaveCommand = "";
+
+    // Only PlayerController.ConsoleCommand goes through these execs; on any
+    // other actor it goes straight to the engine.
+    Level.ConsoleCommand(Command);
+}
+
+function ServerLeaving()
+{
+    if (bServerLeaving)
+        return;
+    bServerLeaving = true;
+
+    // Answer before Destroy(): both go out in the same packet, and the client
+    // has to run its command before it sees the close Destroy() sends. Once the
+    // client acknowledges that close, the connection and this controller go
+    // away, like a kick.
+    ClientLeaveAck();
+    Destroy();
+}
+
+function ClientLeaveAck()
+{
+    if (PendingLeaveCommand != "")
+        RunLeaveCommand(PendingLeaveCommand);
 }
 
 simulated function SaveSettings()
@@ -500,6 +582,10 @@ event PlayerTick(float deltatime)
 {
     local int Damage;
     Super.PlayerTick(deltatime);
+
+    // Server never answered the leave request, leave anyway.
+    if (PendingLeaveCommand != "" && Level.TimeSeconds - LeaveRequestTime > LEAVE_ACK_TIMEOUT)
+        RunLeaveCommand(PendingLeaveCommand);
 
     if (RepInfo==None)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
