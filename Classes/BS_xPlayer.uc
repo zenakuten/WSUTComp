@@ -187,7 +187,7 @@ replication
 
     reliable if (Role==Role_Authority)
         StartDemo, NotifyEndWarmup, SetClockTime, NotifyRestartMap, SetClockTimeOnly, SetEndTimeOnly, 
-        SetMenuColor, DenyPlayer, WhitelistCheck, ReceiveStats;
+        SetMenuColor, DenyPlayer, WhitelistCheck, ReceiveStats, ClientPlayEndGameSound;
 
     reliable if(Role<Role_Authority)
         SetbStats, TurnOffNetCode, ServerSetEyeHeightAlgorithm, ServerViewPlayer;
@@ -1762,6 +1762,23 @@ simulated function PlayTeammateHitSound(int Damage)
 
     if (ViewTarget != None)
         ViewTarget.PlaySound(LoadedFriendlySound,,Settings.HitSoundVolume,,,HitSoundPitch);
+}
+
+simulated function ClientPlayEndGameSound(string SoundName)
+{
+    local Sound LoadedSound;
+
+    if(SoundName == "")
+        return;
+
+    LoadedSound = Sound(DynamicLoadObject(SoundName, class'Sound', true));
+    if(LoadedSound == None)
+    {
+        Log("Could not load end-game sound" @ SoundName, 'UTComp');
+        return;
+    }
+
+    ClientPlaySound(LoadedSound);
 }
 
 exec function myMenu()
@@ -5266,6 +5283,10 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
                 if(Vehicle(Pawn) != None)
                     return Pawn.Rotation;
 
+                if (ShieldGun(Pawn.Weapon) != None
+                    && (RepInfo == None || RepInfo.bUseDefault3pShieldGunAim))
+                    return Pawn.Rotation;
+
                 // Core fire skips projectiles for a stable stream; the beam does NOT, so it
                 // can aim at (and combo) a core under the crosshair.
                 return Adjust3pAim(projStart, !FiredAmmunition.bInstantHit);
@@ -5288,6 +5309,10 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
     if (bBehindView)
     {
         if (Vehicle(Pawn) != None)
+            return Pawn.Rotation;
+
+        if (ShieldGun(Pawn.Weapon) != None
+            && (RepInfo == None || RepInfo.bUseDefault3pShieldGunAim))
             return Pawn.Rotation;
 
         // Core fire skips projectiles for a stable stream; the beam does NOT, so it

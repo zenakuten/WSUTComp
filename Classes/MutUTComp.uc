@@ -52,6 +52,7 @@ var config int MaxMultiDodges;
 
 var config int MinNetSpeed;
 var config int MaxNetSpeed;
+var config array<string> EndGameSound;
 
 // CTF-related
 var config int CapBonus, FlagKillBonus, CoverBonus, SealBonus, GrabBonus, MinimalCapBonus;
@@ -88,6 +89,7 @@ var config bool bDamageIndicator;
 var config bool bEnableEmoticons;
 var config bool bFastWeaponSwitch;
 var config bool bKeepMomentumOnLanding;
+var config bool bUseDefault3pShieldGunAim;
 
 // warping fix stuff
 var config int MaxSavedMoves;
@@ -131,6 +133,7 @@ var config bool bUseLinkMesh;
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
 var bool bWarmupDisabled;
+var bool bEndGameSoundPlayed;
 
 var Emoticons EmoteActor;
 
@@ -763,6 +766,12 @@ simulated function Tick(float DeltaTime)
     local Mutator M;
     local int x;
 
+    if(Role == ROLE_Authority && Level.Game != None && Level.Game.bGameEnded && !bEndGameSoundPlayed)
+    {
+        bEndGameSoundPlayed = true;
+        PlayEndGameSound();
+    }
+
     //if(Level.NetMode==NM_DedicatedServer)
     if(Level.NetMode==NM_DedicatedServer || Level.NetMode == NM_ListenServer)
     {
@@ -919,6 +928,7 @@ function SpawnReplicationClass()
     RepInfo.bDamageIndicator = bDamageIndicator;
     RepInfo.bEnableEmoticons = bEnableEmoticons;
     RepInfo.bKeepMomentumOnLanding = bKeepMomentumOnLanding;
+    RepInfo.bUseDefault3pShieldGunAim = bUseDefault3pShieldGunAim;
 
     RepInfo.MaxSavedMoves = MaxSavedMoves;
     RepInfo.NetMoveDelta = NetMoveDelta;
@@ -1004,6 +1014,25 @@ function FixVoice()
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[0]="CODEC_96WB";
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[1]="CODEC_48NB";
 	}
+}
+
+function PlayEndGameSound()
+{
+    local Controller C;
+    local string SoundName;
+
+    if(EndGameSound.Length == 0)
+        return;
+
+    SoundName = EndGameSound[Rand(EndGameSound.Length)];
+    if(SoundName == "")
+        return;
+
+    for(C = Level.ControllerList; C != None; C = C.NextController)
+    {
+        if(BS_xPlayer(C) != None)
+            BS_xPlayer(C).ClientPlayEndGameSound(SoundName);
+    }
 }
 
 simulated function bool InStrNonCaseSensitive(String S, string S2)
@@ -1700,6 +1729,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bUseDefault3pShieldGunAim", "Use default shield gun aim in third person", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoostingVehicles", "Teammates can't knock you around in a vehicle", security, weight,"Check");
@@ -1811,6 +1841,7 @@ static event string GetDescriptionText(string PropName)
         case "bNodeHealBonusForConstructor": return "Player That Started Node Receives Node Heal Bonus";
 
         case "bKeepMomentumOnLanding": return "UTComp style gliding movement";
+        case "bUseDefault3pShieldGunAim": return "Restore the default engine shield gun aiming and shield-jump behavior in third person";
         case "NetMoveDelta": return "How often clients send move updates, lower is faster (default 0.011)";
         case "MaxSavedMoves": return "Maximum saved moves for warping fix (default 300)";
         case "MaxResponseTime": return "server delay for client move update before setting position (default 0.125)";
@@ -2241,6 +2272,7 @@ defaultproperties
      bChargedWeaponsNoSpawnProtection=false
 
      bKeepMomentumOnLanding=true
+     bUseDefault3pShieldGunAim=false
      MaxSavedMoves=750
      NetMoveDelta=0.011
      MaxResponseTime=0.125000

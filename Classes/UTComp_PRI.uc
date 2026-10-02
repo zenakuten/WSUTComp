@@ -331,4 +331,3 @@ defaultproperties
      bSendWepStats=True
      CurrentVoteID=255
 }
-
