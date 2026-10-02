@@ -927,6 +927,52 @@ state GameEnded
         }
         Super.Timer();
     }
+
+    // Stock refuses both switches once the match is over (GameInfo.BecomeSpectator
+    // and AllowBecomeActivePlayer test IsInState('GameEnded'), which can't be lifted
+    // the way the pre-match flag is).  Nothing is left to play on this map, so only
+    // record the choice: flip the PRI and the head counts, and let ClientBecame*
+    // save SpectatorOnly into the client URL so the next map is joined that way.
+    // The pawn, team, score, UTComp stats and controller state are left alone so
+    // the end of match screen stays as it is.  Capacity is still checked, since
+    // the next map's login will refuse a player who doesn't fit.
+    function BecomeSpectator()
+    {
+        if (Role < ROLE_Authority || Level.Game == None || PlayerReplicationInfo == None
+            || PlayerReplicationInfo.bOnlySpectator)
+            return;
+
+        if (Level.Game.NumSpectators >= Level.Game.MaxSpectators)
+        {
+            ReceiveLocalizedMessage(Level.Game.GameMessageClass, 12);
+            return;
+        }
+
+        PlayerReplicationInfo.bOnlySpectator = true;
+        Level.Game.NumSpectators++;
+        Level.Game.NumPlayers--;
+        BroadcastLocalizedMessage(Level.Game.GameMessageClass, 14, PlayerReplicationInfo);
+        ClientBecameSpectator();
+    }
+
+    function BecomeActivePlayer()
+    {
+        if (Role < ROLE_Authority || Level.Game == None || PlayerReplicationInfo == None
+            || !PlayerReplicationInfo.bOnlySpectator)
+            return;
+
+        if (Level.Game.NumPlayers >= Level.Game.MaxPlayers)
+        {
+            ReceiveLocalizedMessage(Level.Game.GameMessageClass, 13);
+            return;
+        }
+
+        PlayerReplicationInfo.bOnlySpectator = false;
+        Level.Game.NumSpectators--;
+        Level.Game.NumPlayers++;
+        BroadcastLocalizedMessage(Level.Game.GameMessageClass, 1, PlayerReplicationInfo);
+        ClientBecameActivePlayer();
+    }
 }
 
 state RoundEnded

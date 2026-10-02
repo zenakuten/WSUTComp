@@ -12,6 +12,7 @@ V30
 - Add end game sound like TAM/Freon end ceremony
 - add client option to restore default 3p shield gun aim and shield jumping
 - prevent original and forced-model pain and death sounds from playing together
+- allow the join/spectate button to be used after the match ends
 
 V29
 - fix the warmup message piling up on itself at the bottom of the screen
