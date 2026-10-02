@@ -12,6 +12,7 @@ var automated GUISlider ghostRSlide, ghostGSlide, ghostBSlide, ghostASlide, ghos
 var automated GUISlider thirdPersonCamDistanceSlide, thirdPersonCamOffsetXSlide, thirdPersonCamOffsetYSlide, thirdPersonCamOffsetZSlide;
 var automated GUILabel thirdPersonCamDistLabel, thirdPersonCamOffsetXLabel, thirdPersonCamOffsetYLabel, thirdPersonCamOffsetZLabel;
 var automated GUIButton bu_Default3P;
+var automated wsCheckBox ch_Default3PShieldAim;
 
 // Live preview dude drawn next to the ghost color sliders. It renders as a solid player
 // mesh tinted with the ghost colors (via ColorModifier over the DeRez materials, exactly
@@ -55,6 +56,7 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     MatchSlidersToColors();
     MatchTextToSliders();
     MatchSlidersToThirdPerson();
+    ch_Default3PShieldAim.Checked(Settings.bUseDefault3pShieldGunAim);
 }
 
 function bool IsWSFixRelevant()
@@ -124,6 +126,10 @@ function InternalOnChange( GUIComponent C )
 
         case thirdPersonCamOffsetZSlide: Settings.TPCamWorldOffset.Z = thirdPersonCamOffsetZSlide.Value;
             UpdatePawnCamDistance();
+            break;
+
+        case ch_Default3PShieldAim:
+            Settings.bUseDefault3pShieldGunAim = ch_Default3PShieldAim.IsChecked();
             break;
     }
 
@@ -403,6 +409,7 @@ function UpdateServerCamDistance()
     bsxplayer = BS_xPlayer(PlayerOwner());
     if(bsxplayer != None)
     {
+        bsxplayer.bUseDefault3pShieldGunAim = Settings.bUseDefault3pShieldGunAim;
         P = UTComp_xPawn(bsxplayer.Pawn);
         if(P != None)
         {
@@ -411,7 +418,8 @@ function UpdateServerCamDistance()
                 P.TPCamDistance,
                 P.TPCamWorldOffset.X,
                 P.TPCamWorldOffset.Y,
-                P.TPCamWorldOffset.Z);
+                P.TPCamWorldOffset.Z,
+                Settings.bUseDefault3pShieldGunAim);
         }
     }
 }
@@ -657,6 +665,18 @@ defaultproperties
          OnKeyEvent=Default3PButton.InternalOnKeyEvent
      End Object
      bu_Default3P=GUIButton'UTComp_Menu_Extra.Default3PButton'
+
+     Begin Object Class=wsCheckBox Name=Default3PShieldAimCheck
+         Caption="Def 3p shieldgun"
+         Hint="Use the original engine shield gun aim and shield-jump behavior in third person"
+         OnCreateComponent=Default3PShieldAimCheck.InternalOnCreateComponent
+         WinWidth=0.125000
+         WinHeight=0.030000
+         WinLeft=0.550000
+         WinTop=0.535000
+         OnChange=UTComp_Menu_Extra.InternalOnChange
+     End Object
+     ch_Default3PShieldAim=wsCheckBox'UTComp_Menu_Extra.Default3PShieldAimCheck'
 
     /////////////////////
 
