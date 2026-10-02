@@ -9,6 +9,9 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 Release Notes
 
 V30
+- Add end game sound like TAM/Freon end ceremony
+- add server option to restore default 3p shield gun aim and shield jumping
+- prevent original and forced-model pain and death sounds from playing together
 
 V29
 - fix the warmup message piling up on itself at the bottom of the screen

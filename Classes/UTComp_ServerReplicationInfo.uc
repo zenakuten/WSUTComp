@@ -68,6 +68,7 @@ var bool bDamageIndicator;
 
 var bool bEnableEmoticons;
 var bool bKeepMomentumOnLanding;
+var bool bUseDefault3pShieldGunAim;
 
 var int MaxSavedMoves;
 var float NetMoveDelta;
@@ -100,7 +101,8 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, 
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding,
+        bUseDefault3pShieldGunAim, NetMoveDelta,
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
 		bDisableCameraShake, bAllowTerrainDodge;
@@ -150,6 +152,7 @@ defaultproperties
 
      bEnableEmoticons=true
      bKeepMomentumOnLanding=true
+     bUseDefault3pShieldGunAim=false
      MaxSavedMoves=750
      NetMoveDelta=0.011
      MaxResponseTime=0.125000
@@ -165,4 +168,3 @@ defaultproperties
 	 bDisableCameraShake=false
 	 bAllowTerrainDodge=false
 }
-

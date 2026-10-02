@@ -67,6 +67,9 @@ replication
 
   unreliable if (Role==Role_authority)
      bShieldActive, bLinkActive, bShockActive, bLGactive, overlayActive;
+
+  unreliable if (Role==ROLE_Authority && !bNetOwner)
+     ClientPlayModelHitSound;
 }
 
 simulated event PostBeginPlay() 
@@ -647,6 +650,60 @@ simulated function Setup(xUtil.PlayerRecord rec, optional bool bLoadNow)
 	if(Level.NetMode==NM_DedicatedServer)
 	    return;
     ColorSkins();
+}
+
+simulated function PlayModelHitSound(class<DamageType> DamageType)
+{
+    if (HeadVolume.bWaterVolume)
+    {
+        if (DamageType != None && DamageType.IsA('Drowned'))
+            DemoPlaySound(GetSound(EST_Drown), SLOT_Pain, 1.5 * TransientSoundVolume);
+        else
+            DemoPlaySound(GetSound(EST_HitUnderwater), SLOT_Pain, 1.5 * TransientSoundVolume);
+        return;
+    }
+
+    DemoPlaySound(SoundGroupClass.static.GetHitSound(), SLOT_Pain, 2 * TransientSoundVolume,, 200);
+}
+
+simulated function ClientPlayModelHitSound(class<DamageType> DamageType)
+{
+    PlayModelHitSound(DamageType);
+}
+
+simulated function PlayTakeHit(vector HitLocation, int Damage, class<DamageType> DamageType)
+{
+    PlayDirectionalHit(HitLocation);
+
+    if (Level.TimeSeconds - LastPainSound < MinTimeBetweenPainSounds)
+        return;
+
+    LastPainSound = Level.TimeSeconds;
+
+    if (Role == ROLE_Authority)
+        ClientPlayModelHitSound(DamageType);
+    else
+        PlayModelHitSound(DamageType);
+}
+
+simulated function PlayDyingSound()
+{
+    if (bSkeletized)
+        return;
+
+    if (bGibbed)
+    {
+        DemoPlaySound(GibGroupClass.static.GibSound(), SLOT_Pain, 3.5 * TransientSoundVolume, true, 500);
+        return;
+    }
+
+    if (HeadVolume.bWaterVolume)
+    {
+        DemoPlaySound(GetSound(EST_Drown), SLOT_Pain, 2.5 * TransientSoundVolume, true, 500);
+        return;
+    }
+
+    DemoPlaySound(SoundGroupClass.static.GetDeathSound(), SLOT_Pain, 2.5 * TransientSoundVolume, true, 500);
 }
 
 simulated function ColorSkins()
