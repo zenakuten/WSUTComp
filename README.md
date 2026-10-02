@@ -10,7 +10,7 @@ Release Notes
 
 V30
 - Add end game sound like TAM/Freon end ceremony
-- add server option to restore default 3p shield gun aim and shield jumping
+- add client option to restore default 3p shield gun aim and shield jumping
 - prevent original and forced-model pain and death sounds from playing together
 
 V29

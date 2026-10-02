@@ -98,6 +98,7 @@ var config color DeResFXColor;
 
 var config float TPCamDistance;
 var config vector TPCamWorldOffset;
+var config bool bUseDefault3pShieldGunAim;
 var config bool bDebug;
 
 var config int MouseDPI; // mouse DPI, used only for the Misc menu cm/360 display
@@ -189,6 +190,7 @@ defaultproperties
     bShowKillsOnScoreboard=True
     TPCamDistance=225.0
     TPCamWorldOffset=(X=-35,Y=0.0,Z=38.000000)
+    bUseDefault3pShieldGunAim=false
 	bDebug=false
     MouseDPI=800
 

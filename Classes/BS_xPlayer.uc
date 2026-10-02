@@ -58,6 +58,7 @@ var bool bDodgedThisFall;
 var vector LastSentCamOffset;
 var float LastSentCamDist;
 var float LastCamSendTime;
+var bool bUseDefault3pShieldGunAim;
 
 var ONSPowerCore oldFoundCore;
 var xweaponbase oldFoundWep;
@@ -5283,8 +5284,7 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
                 if(Vehicle(Pawn) != None)
                     return Pawn.Rotation;
 
-                if (ShieldGun(Pawn.Weapon) != None
-                    && (RepInfo == None || RepInfo.bUseDefault3pShieldGunAim))
+                if (ShieldGun(Pawn.Weapon) != None && bUseDefault3pShieldGunAim)
                     return Pawn.Rotation;
 
                 // Core fire skips projectiles for a stable stream; the beam does NOT, so it
@@ -5311,8 +5311,7 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
         if (Vehicle(Pawn) != None)
             return Pawn.Rotation;
 
-        if (ShieldGun(Pawn.Weapon) != None
-            && (RepInfo == None || RepInfo.bUseDefault3pShieldGunAim))
+        if (ShieldGun(Pawn.Weapon) != None && bUseDefault3pShieldGunAim)
             return Pawn.Rotation;
 
         // Core fire skips projectiles for a stable stream; the beam does NOT, so it
@@ -5382,6 +5381,8 @@ function ClientSetBehindView(bool B)
 {
     super.ClientSetBehindView(B);
 
+    bUseDefault3pShieldGunAim = Settings != None && Settings.bUseDefault3pShieldGunAim;
+
     if (UTComp_xPawn(Pawn) != None)
     {
     	UTComp_xPawn(Pawn).bBehindViewActive = B;
@@ -5390,12 +5391,13 @@ function ClientSetBehindView(bool B)
             UTComp_xPawn(Pawn).TPCamDistance,
             UTComp_xPawn(Pawn).TPCamWorldOffset.X,
             UTComp_xPawn(Pawn).TPCamWorldOffset.Y,
-            UTComp_xPawn(Pawn).TPCamWorldOffset.Z);
+            UTComp_xPawn(Pawn).TPCamWorldOffset.Z,
+            bUseDefault3pShieldGunAim);
     }
 }
 
 // aim will be messed up online if server doesn't know players 3p view
-function ServerSetBehindView(bool bBehind, float d, float x, float y, float z)
+function ServerSetBehindView(bool bBehind, float d, float x, float y, float z, bool bDefaultShieldAim)
 {
     local UTComp_xPawn p;
 
@@ -5404,6 +5406,7 @@ function ServerSetBehindView(bool bBehind, float d, float x, float y, float z)
     // only). Without mirroring it here the server takes the eye-aim branch while the client
     // used Adjust3pAim, so the authoritative shot misses what the crosshair covers online.
     bBehindView = bBehind;
+    bUseDefault3pShieldGunAim = bDefaultShieldAim;
 
     p = UTComp_xPawn(Pawn);
     if (p != None)
@@ -5464,7 +5467,14 @@ function MaybeSendCamOffsetToServer()
     LastSentCamDist = camDist;
     LastCamSendTime = Level.TimeSeconds;
 
-    ServerSetBehindView(bBehindView, camDist, camOffset.X, camOffset.Y, camOffset.Z);
+    bUseDefault3pShieldGunAim = Settings != None && Settings.bUseDefault3pShieldGunAim;
+    ServerSetBehindView(
+        bBehindView,
+        camDist,
+        camOffset.X,
+        camOffset.Y,
+        camOffset.Z,
+        bUseDefault3pShieldGunAim);
 }
 
 defaultproperties
