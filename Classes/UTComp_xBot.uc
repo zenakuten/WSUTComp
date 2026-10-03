@@ -7,11 +7,15 @@ function SetPawnClass(string inClass, string inCharacter)
     local class<UTComp_xPawn> pClass;
 
     if ( inClass != "" )
-	{
 		pClass = class<UTComp_xPawn>(DynamicLoadObject(inClass, class'Class'));
-		if (pClass != None)
-			PawnClass = pClass;
-	}
+    // The roster hands bots XGame.xPawn, which fails the cast above. Without a
+    // PawnClass every respawn falls into GameInfo.GetDefaultPlayerClass, which
+    // on 3374 tries to load "None" and logs a warning before using
+    // DefaultPlayerClassName. Resolve that here once instead.
+    if ( pClass == None )
+		pClass = class<UTComp_xPawn>(DynamicLoadObject(Level.Game.DefaultPlayerClassName, class'Class'));
+    if ( pClass != None )
+		PawnClass = pClass;
     PawnSetupRecord = class'xUtil'.static.FindPlayerRecord(inCharacter);
     PlayerReplicationInfo.SetCharacterName(inCharacter);
 }

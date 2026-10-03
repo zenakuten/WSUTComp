@@ -13,6 +13,7 @@ V30
 - add client option to restore default 3p shield gun aim and shield jumping
 - prevent original and forced-model pain and death sounds from playing together
 - allow the join/spectate button to be used after the match ends
+- fix bots logging a class load warning on every respawn
 
 V29
 - fix the warmup message piling up on itself at the bottom of the screen
