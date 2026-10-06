@@ -36,6 +36,11 @@ const AUTODEMO_INITIAL_START_DELAY = 8.0;
 const AUTODEMO_POST_WARMUP_DELAY = 1.0;
 
 var bool clientChangedScoreboard;
+// The HUD our scoreboard class was last applied to. The class is picked from the
+// GRI's GameName, which can replicate after client init, and ClientSetHUD can
+// replace the HUD (and its scoreboard) after that too, so PlayerTick re-applies
+// it whenever myHUD isn't this one.
+var HUD ScoreboardHUD;
 var bool bWantsStats;
 var bool oldbShowScoreBoard;
 
@@ -613,6 +618,9 @@ event PlayerTick(float deltatime)
         bClientInitialized=true;
     }
 
+    if (bClientInitialized && myHUD != None && myHUD != ScoreboardHUD)
+        InitializeScoreboard();
+
     // Start a queued AutoDemoRec only after the client/replication state above
     // has settled.  Manual demorec is untouched.
     if(Level.NetMode != NM_DedicatedServer && bAutoDemoPending)
@@ -772,6 +780,11 @@ simulated function InitializeScoreboard()
 {
     local class<Scoreboard> ScoreboardClass;
 
+    // Without GameName every gametype falls through to the deathmatch board.
+    // Leave the current one alone; PlayerTick retries once the GRI arrives.
+    if(Level.GRI == None || Level.GRI.GameName == "")
+        return;
+
     if(Settings.bUseDefaultScoreboard)
     {
         if(Level.GRI.GameName ~= "Last Man Standing")
@@ -849,6 +862,7 @@ simulated function InitializeScoreboard()
     {
         log("InitializeScoreboard  SET NEW ScoreBoard="$ScoreboardClass,'MutUTComp BS_xPlayer');
         myHUD.SetScoreBoardClass( ScoreboardClass);
+        ScoreboardHUD = myHUD;
     }
 }
 
