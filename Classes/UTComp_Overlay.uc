@@ -108,13 +108,19 @@ function EmoticonsReplicationInfo GetEmoteReplicationIfEnabled()
 function bool TryDrawEmoteName(Canvas C, coerce string Name)
 {
     local EmoticonsReplicationInfo rep;
+    local EmoticonsParsedText P;
 
     rep = GetEmoteReplicationIfEnabled();
-    if (rep == None || FindNextSmile(rep, Name) < 0)
+    if (rep == None)
+        return false;
+
+    // Cached per string, so a name without emoticons costs one lookup per frame.
+    P = rep.GetParsedText(Name);
+    if (P.IconTex.Length == 0)
         return false;
 
     // 0.5 => half line-height icons; full size looks oversized on the overlay.
-    DrawSmileyText(rep, Name, C,,, 0.5);
+    DrawParsedSmileyText(P, C,,, 0.5);
     return true;
 }
 
