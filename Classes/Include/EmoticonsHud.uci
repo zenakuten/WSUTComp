@@ -1,6 +1,6 @@
 // Created by Eliot & Marco a.k.a .:..:
 
-// Core emoticon rendering helpers (DrawSmileyText / FindNextSmile / ...) are
+// Core emoticon rendering helpers (DrawSmileyText / DrawParsedSmileyText) are
 // shared with the scoreboards.
 #include Classes\Include\EmoticonsDraw.uci
 
