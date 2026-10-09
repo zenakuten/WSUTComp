@@ -792,7 +792,7 @@ simulated function InitializeScoreboard()
         else if(Level.GRI.GameName ~= "Mutant")
             ScoreboardClass = class'BonusPack.MutantScoreboard'; 
         else if(Level.GRI.GameName ~= "Onslaught")
-            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+            ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
         else if(Level.GRI.GameName ~= "Invasion")
             ScoreboardClass = class'Skaarjpack.ScoreboardInvasion'; 
         else if(Level.GRI.GameName ~= "Assault")
@@ -800,23 +800,23 @@ simulated function InitializeScoreboard()
         else if(Level.GRI.GameName ~= "Championship Match")
             ScoreboardClass = class'XInterface.ScoreboardDeathMatch'; 
         else if(Level.GRI.GameName ~= "Instagib CTF")
-            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+            ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
         else if(Level.GRI.GameName ~= "Bombing Run")
-            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+            ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
         else if(Level.GRI.GameName ~= "Capture The Flag")
-            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+            ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
         else if(Level.GRI.GameName ~= "DeathMatch")
             ScoreboardClass = class'XInterface.ScoreboardDeathMatch'; 
         else if(Level.GRI.GameName ~= "Double Domination")
-            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+            ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
         else if(Level.GRI.GameName ~= "Team DeathMatch")
-            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+            ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
         else if(Level.GRI.GameName ~= "Vehicle CTF")
-            ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+            ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
         else
         {
             if(Level.GRI.bTeamGame)
-                ScoreboardClass = class'XInterface.ScoreboardTeamDeathMatch'; 
+                ScoreboardClass = class'UTComp_ScoreBoardStockTeam'; 
             else
                 ScoreboardClass = class'XInterface.ScoreboardDeathMatch'; 
         }
