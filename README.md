@@ -12,6 +12,7 @@ V31
 - Cache emoticons to reduce per-frame cost in chat and scoreboard
 - Fix wrong scoreboard showing after map switch
 - Show colored names in the standard team scoreboard, show PPH >10 players, and hide silent admin(s)
+- Add fractional rotation support to vehicle passenger seats which was missing; you can now much more smoothly move your mouse when (heavily) zoomed in
 
 V30
 - Add end game sound like TAM/Freon end ceremony
