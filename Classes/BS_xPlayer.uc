@@ -141,6 +141,10 @@ var bool bUseNewEyeHeightAlgorithm;
 // Fractional Parts of Pitch/Yaw Input
 var transient float PitchFraction, YawFraction;
 
+// Server: full precision view of the vehicle seat move currently being processed
+var transient bool bExactView;
+var transient rotator ExactView;
+
 var transient PlayerInput PlayerInput2;
 
 var UTComp_Settings Settings;
@@ -3869,6 +3873,31 @@ function int FractionCorrection(float in, out float fraction) {
     return result;
 }
 
+// Stock code packs the view as 15 bit Pitch/2 and Yaw/2, so the server only
+// sees every other rotation unit. This keeps that 30 bit layout and carries
+// the two dropped low bits in the unused bits 30 (yaw) and 31 (pitch).
+// Values packed the stock way decode identically.
+function int PackExactView(rotator R)
+{
+    return ((R.Pitch & 1) << 31) | ((R.Yaw & 1) << 30)
+        | (((R.Pitch >> 1) & 32767) << 15) | ((R.Yaw >> 1) & 32767);
+}
+
+function rotator UnpackExactView(int View)
+{
+    local rotator R;
+
+    R.Pitch = (((View >>> 15) & 32767) << 1) | ((View >>> 31) & 1);
+    R.Yaw = ((View & 32767) << 1) | ((View >>> 30) & 1);
+    return R;
+}
+
+// Strips the extra bits, leaving a view any stock ServerMove can decode
+function int StockView(int View)
+{
+    return View & 1073741823;
+}
+
 //from 3SPHorst
 function UpdateRotation(float DeltaTime, float maxPitch)
 {
@@ -3944,6 +3973,205 @@ function UpdateRotation(float DeltaTime, float maxPitch)
 
         if ( !bRotateToDesired && (Pawn != None) && (!bFreeCamera || !bBehindView) )
             Pawn.FaceRotation(NewRotation, deltatime);
+    }
+}
+
+// Converts a fraction-corrected integer rotation delta back into an input
+// value that ONSWeaponPawn.UpdateRocketAcceleration will truncate to exactly
+// that integer. The half-unit nudge absorbs float error in (32 * dt) / (32 * dt).
+function float TurretInputFor(int Delta, float Scale) {
+    if (Delta > 0)
+        return (Delta + 0.5) / Scale;
+    if (Delta < 0)
+        return (Delta - 0.5) / Scale;
+    return 0;
+}
+
+state PlayerTurreting
+{
+ignores SeePlayer, HearNoise, Bump;
+
+    function PlayerMove(float DeltaTime)
+    {
+        local float OldTurn, OldLookUp, Scale;
+
+        // Only ONSWeaponPawn uses the plain 32 * dt * input formula;
+        // other turrets (e.g. ASTurret) have their own rotation logic
+        if (ONSWeaponPawn(Pawn) == None || DeltaTime <= 0)
+        {
+            Super.PlayerMove(DeltaTime);
+            return;
+        }
+
+        OldTurn = aTurn;
+        OldLookUp = aLookUp;
+        Scale = 32.0 * DeltaTime;
+
+        aTurn = TurretInputFor(FractionCorrection(Scale * aTurn, YawFraction), Scale);
+        aLookUp = TurretInputFor(FractionCorrection(Scale * aLookUp, PitchFraction), Scale);
+
+        Super.PlayerMove(DeltaTime);
+
+        aTurn = OldTurn;
+        aLookUp = OldLookUp;
+    }
+
+    // Same as stock, but the views are sent with full precision.
+    // View is ReplicateMove's stock packing of Rotation, so it is repacked here.
+    function CallServerMove
+    (
+        float               TimeStamp,
+        vector              InAccel,
+        vector              ClientLoc,
+        bool                NewbRun,
+        bool                NewbDuck,
+        bool                NewbPendingJumpStatus,
+        bool                NewbJumpStatus,
+        bool                NewbDoubleJump,
+        eDoubleClickDir     DoubleClickMove,
+        byte                ClientRoll,
+        int                 View,
+        optional byte       OldTimeDelta,
+        optional int        OldAccel
+    )
+    {
+        if ( PendingMove != None )
+        {
+            DualTurretServerMove
+            (
+                PendingMove.TimeStamp,
+                PendingMove.bDuck,
+                ((PendingMove.Rotation.Roll >> 8) & 255),
+                PackExactView(PendingMove.Rotation),
+                TimeStamp,
+                ClientLoc,
+                NewbDuck,
+                ClientRoll,
+                PackExactView(Rotation)
+            );
+        }
+        else
+            TurretServerMove
+            (
+                TimeStamp,
+                ClientLoc,
+                NewbDuck,
+                ClientRoll,
+                PackExactView(Rotation)
+            );
+    }
+
+    function TurretServerMove
+    (
+        float   TimeStamp,
+        vector  ClientLoc,
+        bool    NewbDuck,
+        byte    ClientRoll,
+        int     View
+    )
+    {
+        SetExactView(View);
+        Global.ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
+        bExactView = false;
+    }
+
+    function DualTurretServerMove
+    (
+        float   TimeStamp0,
+        bool    NewbDuck0,
+        byte    ClientRoll0,
+        int     View0,
+        float   TimeStamp,
+        vector  ClientLoc,
+        bool    NewbDuck,
+        byte    ClientRoll,
+        int     View
+    )
+    {
+        SetExactView(View0);
+        Global.ServerMove(TimeStamp0,Vect(0,0,0),vect(0,0,0),false,NewbDuck0,false,false, DCLICK_NONE,ClientRoll0,StockView(View0));
+        SetExactView(View);
+        Global.ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
+        bExactView = false;
+    }
+}
+
+state PlayerDriving
+{
+ignores SeePlayer, HearNoise, Bump;
+
+    // Same as stock, but the view is sent to ServerDrive with full precision
+    function PlayerMove( float DeltaTime )
+    {
+        local Vehicle CurrentVehicle;
+        local float NewPing;
+
+        CurrentVehicle = Vehicle(Pawn);
+
+        // update 'looking' rotation
+        UpdateRotation(DeltaTime, 2);
+
+        // Only servers can actually do the driving logic.
+        if (Role < ROLE_Authority )
+        {
+            if ( (Level.TimeSeconds - LastPingUpdate > 4) && (PlayerReplicationInfo != None) && !bDemoOwner )
+            {
+                LastPingUpdate = Level.TimeSeconds;
+                NewPing = float(ConsoleCommand("GETPING"));
+                if ( ExactPing < 0.006 )
+                    ExactPing = FMin(0.1,0.001 * NewPing);
+                else
+                    ExactPing = 0.99 * ExactPing + 0.0001 * NewPing;
+                PlayerReplicationInfo.Ping = Min(250.0 * ExactPing, 255);
+                PlayerReplicationInfo.bReceivedPing = true;
+                OldPing = ExactPing;
+                ServerUpdatePing(1000 * ExactPing);
+            }
+            if (!bSkippedLastUpdate &&                              // in order to skip this update we must not have skipped the last one
+                (Player.CurrentNetSpeed < 10000) &&                 // and netspeed must be low
+                (Level.TimeSeconds - ClientUpdateTime < 0.0222) &&  // and time since last update must be short
+                bPressedJump == bLastPressedJump &&                 // and update must not contain major changes
+                aUp - aLastUp < 0.01 &&                             // "
+                aForward - aLastForward < 0.01 &&                   // "
+                aStrafe - aLastStrafe < 0.01                        // "
+               )
+            {
+                bSkippedLastUpdate = True;
+                return;
+            }
+            else
+            {
+                bSkippedLastUpdate = False;
+                ClientUpdateTime = Level.TimeSeconds;
+
+                // Save Move
+                bLastPressedJump = bPressedJump;
+                aLastUp = aUp;
+                aLastForward = aForward;
+                aLastStrafe = aStrafe;
+
+                if (CurrentVehicle != None)
+                {
+                    CurrentVehicle.Throttle = FClamp( aForward/5000.0, -1.0, 1.0 );
+                    CurrentVehicle.Steering = FClamp( -aStrafe/5000.0, -1.0, 1.0 );
+                    CurrentVehicle.Rise = FClamp( aUp/5000.0, -1.0, 1.0 );
+                }
+
+                ServerDrive(aForward, aStrafe, aUp, bPressedJump, PackExactView(Rotation));
+            }
+        }
+        else
+            ProcessDrive(aForward, aStrafe, aUp, bPressedJump);
+
+        // If the vehicle is being controlled here - set replicated variables.
+        if (CurrentVehicle != None)
+        {
+            if(bFire == 0 && CurrentVehicle.bWeaponIsFiring)
+                CurrentVehicle.ClientVehicleCeaseFire(False);
+
+            if(bAltFire == 0 && CurrentVehicle.bWeaponIsAltFiring)
+                CurrentVehicle.ClientVehicleCeaseFire(True);
+        }
     }
 }
 
@@ -4908,6 +5136,55 @@ function LongClientAdjustPosition
 	bUpdatePosition = true;
 }
 
+// Vehicle seats send views packed with PackExactView. The exact view is
+// stashed for ServerMove, while the move itself gets the stock packing so
+// state versions of ServerMove that decode it themselves still work.
+function SetExactView(int View)
+{
+    ExactView = UnpackExactView(View);
+    bExactView = true;
+}
+
+function ServerDrive(float InForward, float InStrafe, float aUp, bool InJump, int View)
+{
+    SetRotation(UnpackExactView(View));
+    ProcessDrive(InForward, InStrafe, aUp, InJump);
+}
+
+function TurretServerMove
+(
+    float   TimeStamp,
+    vector  ClientLoc,
+    bool    NewbDuck,
+    byte    ClientRoll,
+    int     View
+)
+{
+    SetExactView(View);
+    ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
+    bExactView = false;
+}
+
+function DualTurretServerMove
+(
+    float   TimeStamp0,
+    bool    NewbDuck0,
+    byte    ClientRoll0,
+    int     View0,
+    float   TimeStamp,
+    vector  ClientLoc,
+    bool    NewbDuck,
+    byte    ClientRoll,
+    int     View
+)
+{
+    SetExactView(View0);
+    ServerMove(TimeStamp0,Vect(0,0,0),vect(0,0,0),false,NewbDuck0,false,false, DCLICK_NONE,ClientRoll0,StockView(View0));
+    SetExactView(View);
+    ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
+    bExactView = false;
+}
+
 /* ServerMove()
 - replicated function sent by client to server - contains client movement and firing info.
 */
@@ -4994,9 +5271,17 @@ function ServerMove
     }
 
     // View components
-    ViewPitch = View/32768;
-    ViewYaw = 2 * (View - 32768 * ViewPitch);
-    ViewPitch *= 2;
+    if ( bExactView )
+    {
+        ViewPitch = ExactView.Pitch;
+        ViewYaw = ExactView.Yaw;
+    }
+    else
+    {
+        ViewPitch = View/32768;
+        ViewYaw = 2 * (View - 32768 * ViewPitch);
+        ViewPitch *= 2;
+    }
     // Make acceleration.
     Accel = InAccel * 0.1;
 
