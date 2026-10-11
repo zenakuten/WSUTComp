@@ -12,7 +12,7 @@ var automated GUISlider ghostRSlide, ghostGSlide, ghostBSlide, ghostASlide, ghos
 var automated GUISlider thirdPersonCamDistanceSlide, thirdPersonCamOffsetXSlide, thirdPersonCamOffsetYSlide, thirdPersonCamOffsetZSlide;
 var automated GUILabel thirdPersonCamDistLabel, thirdPersonCamOffsetXLabel, thirdPersonCamOffsetYLabel, thirdPersonCamOffsetZLabel;
 var automated GUIButton bu_Default3P;
-var automated wsCheckBox ch_Default3PShieldAim;
+var automated wsCheckBox ch_DisableEnhanced3P;
 
 // Live preview dude drawn next to the ghost color sliders. It renders as a solid player
 // mesh tinted with the ghost colors (via ColorModifier over the DeRez materials, exactly
@@ -56,7 +56,30 @@ function InitComponent(GUIController MyController, GUIComponent MyOwner)
     MatchSlidersToColors();
     MatchTextToSliders();
     MatchSlidersToThirdPerson();
-    ch_Default3PShieldAim.Checked(Settings.bUseDefault3pShieldGunAim);
+    ch_DisableEnhanced3P.Checked(Settings.bDisableEnhanced3P);
+    UpdateThirdPersonControls();
+}
+
+// The 3p camera sliders (and their reset button) only drive the enhanced 3p camera, so grey
+// them out while "Stock 3P" is on.
+function UpdateThirdPersonControls()
+{
+    if(Settings.bDisableEnhanced3P)
+    {
+        thirdPersonCamDistanceSlide.DisableMe();
+        thirdPersonCamOffsetXSlide.DisableMe();
+        thirdPersonCamOffsetYSlide.DisableMe();
+        thirdPersonCamOffsetZSlide.DisableMe();
+        bu_Default3P.DisableMe();
+    }
+    else
+    {
+        thirdPersonCamDistanceSlide.EnableMe();
+        thirdPersonCamOffsetXSlide.EnableMe();
+        thirdPersonCamOffsetYSlide.EnableMe();
+        thirdPersonCamOffsetZSlide.EnableMe();
+        bu_Default3P.EnableMe();
+    }
 }
 
 function bool IsWSFixRelevant()
@@ -128,8 +151,9 @@ function InternalOnChange( GUIComponent C )
             UpdatePawnCamDistance();
             break;
 
-        case ch_Default3PShieldAim:
-            Settings.bUseDefault3pShieldGunAim = ch_Default3PShieldAim.IsChecked();
+        case ch_DisableEnhanced3P:
+            Settings.bDisableEnhanced3P = ch_DisableEnhanced3P.IsChecked();
+            UpdateThirdPersonControls();
             break;
     }
 
@@ -409,7 +433,7 @@ function UpdateServerCamDistance()
     bsxplayer = BS_xPlayer(PlayerOwner());
     if(bsxplayer != None)
     {
-        bsxplayer.bUseDefault3pShieldGunAim = Settings.bUseDefault3pShieldGunAim;
+        bsxplayer.bDisableEnhanced3P = Settings.bDisableEnhanced3P;
         P = UTComp_xPawn(bsxplayer.Pawn);
         if(P != None)
         {
@@ -419,7 +443,7 @@ function UpdateServerCamDistance()
                 P.TPCamWorldOffset.X,
                 P.TPCamWorldOffset.Y,
                 P.TPCamWorldOffset.Z,
-                Settings.bUseDefault3pShieldGunAim);
+                Settings.bDisableEnhanced3P);
         }
     }
 }
@@ -653,30 +677,33 @@ defaultproperties
      End Object
      thirdPersonCamOffsetZSlide=wsGUISlider'UTComp_Menu_Extra.thirdCamOffsetZ'
 
-     // Sits under the 3p sliders, right edge aligned with the slider column (0.68 + 0.125 = 0.805).
+     // Sits under the 3p sliders, right edge aligned with the slider column (0.7425 + 0.0625 = 0.805).
+     // Half the slider width so the "Stock 3P" caption to its left isn't cut off at FHD.
      Begin Object Class=GUIButton Name=Default3PButton
-         Caption="Default 3P"
+         Caption="Reset"
          StyleName="WSButton"
-         WinWidth=0.125000
+         WinWidth=0.062500
          WinHeight=0.040000
-         WinLeft=0.680000
+         WinLeft=0.742500
          WinTop=0.530000
          OnClick=UTComp_Menu_Extra.InternalOnClick
          OnKeyEvent=Default3PButton.InternalOnKeyEvent
      End Object
      bu_Default3P=GUIButton'UTComp_Menu_Extra.Default3PButton'
 
-     Begin Object Class=wsCheckBox Name=Default3PShieldAimCheck
-         Caption="Def 3p shieldgun"
-         Hint="Use the original engine shield gun aim and shield-jump behavior in third person"
-         OnCreateComponent=Default3PShieldAimCheck.InternalOnCreateComponent
-         WinWidth=0.125000
+     Begin Object Class=wsCheckBox Name=DisableEnhanced3PCheck
+         Caption="Stock 3P"
+         Hint="Use the original engine third person camera and aiming"
+         OnCreateComponent=DisableEnhanced3PCheck.InternalOnCreateComponent
+         // Fills the space up to the Reset button (0.55 + 0.1875 = 0.7375, button starts at
+         // 0.7425) so the caption has room at FHD.
+         WinWidth=0.187500
          WinHeight=0.030000
          WinLeft=0.550000
          WinTop=0.535000
          OnChange=UTComp_Menu_Extra.InternalOnChange
      End Object
-     ch_Default3PShieldAim=wsCheckBox'UTComp_Menu_Extra.Default3PShieldAimCheck'
+     ch_DisableEnhanced3P=wsCheckBox'UTComp_Menu_Extra.DisableEnhanced3PCheck'
 
     /////////////////////
 

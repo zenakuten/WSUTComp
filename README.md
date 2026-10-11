@@ -13,6 +13,7 @@ V31
 - Fix wrong scoreboard showing after map switch
 - Show colored names in the standard team scoreboard, show PPH >10 players, and hide silent admin(s)
 - Add fractional rotation support to vehicle passenger seats which was missing; you can now much more smoothly move your mouse when (heavily) zoomed in
+- Replace "Def 3p shieldgun" setting with "Stock 3P" checkbox to entirely disable the enhanced 3P mode
 
 V30
 - Add end game sound like TAM/Freon end ceremony

@@ -63,7 +63,11 @@ var bool bDodgedThisFall;
 var vector LastSentCamOffset;
 var float LastSentCamDist;
 var float LastCamSendTime;
-var bool bUseDefault3pShieldGunAim;
+var bool LastSentDisableEnhanced3P;
+// "Stock 3P" (client setting, mirrored to the server by ServerSetBehindView): use
+// the stock engine behind view camera and 3p aim (Pawn.Rotation) instead of the UTComp
+// crosshair-tracking camera/aim.
+var bool bDisableEnhanced3P;
 
 var ONSPowerCore oldFoundCore;
 var xweaponbase oldFoundWep;
@@ -5549,6 +5553,10 @@ simulated function rotator Adjust3pAim(optional vector projStart, optional bool 
     if (UTComp_xPawn(Pawn) == None)
         return Rotation;
 
+    // Enhanced 3p disabled: stock engine behind view aim, which fires along the pawn's facing.
+    if (bDisableEnhanced3P)
+        return Pawn.Rotation;
+
     HitLocation = Get3pCrosshairTarget(fireStart, bSkipProjectiles);
     if (projStart == vect(0,0,0))
         projStart = fireStart;
@@ -5565,7 +5573,7 @@ simulated function bool Is3pShotBlocked()
     local vector AimPoint, projStart, HitLocation, HitNormal;
     local Actor HitActor;
 
-    if (!bBehindView || UTComp_xPawn(Pawn) == None)
+    if (!bBehindView || bDisableEnhanced3P || UTComp_xPawn(Pawn) == None)
         return false;
 
     // Skip projectiles: the cover check is about the wall/enemy under the crosshair, not a
@@ -5626,10 +5634,7 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
             // fix for locked rotation in 3p view
             if (bBehindView)
             {
-                if(Vehicle(Pawn) != None)
-                    return Pawn.Rotation;
-
-                if (ShieldGun(Pawn.Weapon) != None && bUseDefault3pShieldGunAim)
+                if(Vehicle(Pawn) != None || bDisableEnhanced3P)
                     return Pawn.Rotation;
 
                 // Core fire skips projectiles for a stable stream; the beam does NOT, so it
@@ -5651,12 +5656,10 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
     // aims true along the crosshair ray). Aiming here keeps offline and online identical.
     // Hitscan already matched because a bProjTarget hit sets bNoZAdjust, so the assist path
     // barely moves it - this mainly affects projectiles.
-    if (bBehindView)
+    // With enhanced 3p disabled, fall through to the stock engine logic below instead.
+    if (bBehindView && !bDisableEnhanced3P)
     {
         if (Vehicle(Pawn) != None)
-            return Pawn.Rotation;
-
-        if (ShieldGun(Pawn.Weapon) != None && bUseDefault3pShieldGunAim)
             return Pawn.Rotation;
 
         // Core fire skips projectiles for a stable stream; the beam does NOT, so it
@@ -5665,7 +5668,12 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
     }
 
     if ( !bAimingHelp || (Level.NetMode != NM_Standalone) )
-        return Rotation;
+    {
+        if (bBehindView)
+            return Pawn.Rotation;
+        else
+            return Rotation;
+    }
 
     // aim at target - help with leading also
     if ( !FiredAmmunition.bInstantHit )
@@ -5726,7 +5734,7 @@ function ClientSetBehindView(bool B)
 {
     super.ClientSetBehindView(B);
 
-    bUseDefault3pShieldGunAim = Settings != None && Settings.bUseDefault3pShieldGunAim;
+    bDisableEnhanced3P = Settings != None && Settings.bDisableEnhanced3P;
 
     if (UTComp_xPawn(Pawn) != None)
     {
@@ -5737,12 +5745,12 @@ function ClientSetBehindView(bool B)
             UTComp_xPawn(Pawn).TPCamWorldOffset.X,
             UTComp_xPawn(Pawn).TPCamWorldOffset.Y,
             UTComp_xPawn(Pawn).TPCamWorldOffset.Z,
-            bUseDefault3pShieldGunAim);
+            bDisableEnhanced3P);
     }
 }
 
 // aim will be messed up online if server doesn't know players 3p view
-function ServerSetBehindView(bool bBehind, float d, float x, float y, float z, bool bDefaultShieldAim)
+function ServerSetBehindView(bool bBehind, float d, float x, float y, float z, bool bDisableEnhanced)
 {
     local UTComp_xPawn p;
 
@@ -5751,7 +5759,7 @@ function ServerSetBehindView(bool bBehind, float d, float x, float y, float z, b
     // only). Without mirroring it here the server takes the eye-aim branch while the client
     // used Adjust3pAim, so the authoritative shot misses what the crosshair covers online.
     bBehindView = bBehind;
-    bUseDefault3pShieldGunAim = bDefaultShieldAim;
+    bDisableEnhanced3P = bDisableEnhanced;
 
     p = UTComp_xPawn(Pawn);
     if (p != None)
@@ -5803,23 +5811,26 @@ function MaybeSendCamOffsetToServer()
         camDist = p.TPCamDistance;
     }
 
-    if (camOffset == LastSentCamOffset && camDist == LastSentCamDist)
+    bDisableEnhanced3P = Settings != None && Settings.bDisableEnhanced3P;
+
+    if (camOffset == LastSentCamOffset && camDist == LastSentCamDist
+        && bDisableEnhanced3P == LastSentDisableEnhanced3P)
         return;
     if (Level.TimeSeconds - LastCamSendTime < 0.2)
         return;
 
     LastSentCamOffset = camOffset;
     LastSentCamDist = camDist;
+    LastSentDisableEnhanced3P = bDisableEnhanced3P;
     LastCamSendTime = Level.TimeSeconds;
 
-    bUseDefault3pShieldGunAim = Settings != None && Settings.bUseDefault3pShieldGunAim;
     ServerSetBehindView(
         bBehindView,
         camDist,
         camOffset.X,
         camOffset.Y,
         camOffset.Z,
-        bUseDefault3pShieldGunAim);
+        bDisableEnhanced3P);
 }
 
 defaultproperties

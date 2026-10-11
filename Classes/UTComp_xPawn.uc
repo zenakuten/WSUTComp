@@ -1387,6 +1387,10 @@ simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLo
 	if( (player == None) || (player.Viewtarget != self) )
 		return false;
 
+	// "Stock 3P": let the engine's stock CalcBehindView handle the camera.
+	if( BS_xPlayer(player) != None && BS_xPlayer(player).bDisableEnhanced3P )
+		return false;
+
 	if( player.bBehindView )
 		SpecialCalcBehindView(player,ViewActor,CameraLocation,CameraRotation);
 	else
