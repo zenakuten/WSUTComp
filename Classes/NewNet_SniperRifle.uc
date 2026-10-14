@@ -85,8 +85,9 @@ simulated function NewNet_ClientStartFire(int mode)
     {
         if (ReadyToFire(mode) && StartFire(Mode) )
         {
-            R.Pitch = Pawn(Owner).Controller.Rotation.Pitch;
-            R.Yaw = Pawn(Owner).Controller.Rotation.Yaw;
+            // Aligned to the angle the camera is drawn at (see BS_xPlayer.AlignToView)
+            R.Pitch = class'BS_xPlayer'.static.AlignAngle(Pawn(Owner).Controller.Rotation.Pitch);
+            R.Yaw = class'BS_xPlayer'.static.AlignAngle(Pawn(Owner).Controller.Rotation.Yaw);
             STart=Pawn(Owner).Location + Pawn(Owner).EyePosition();
 
             V.X = Start.X;
@@ -106,7 +107,7 @@ simulated function NewNet_ClientStartFire(int mode)
             if(bsp != None && bsp.bBehindView)
                 A = Trace(HN,HL,Start+Vector(bsp.Adjust3pAim(Start))*40000.0,Start,true);
             else
-                A = Trace(HN,HL,Start+Vector(Pawn(Owner).Controller.Rotation)*40000.0,Start,true);
+                A = Trace(HN,HL,Start+Vector(class'BS_xPlayer'.static.AlignToView(Pawn(Owner).Controller.Rotation))*40000.0,Start,true);
             if(A!=None && (A.IsA('xPawn') || A.IsA('Vehicle')))
             {
                 b=true;
@@ -197,7 +198,7 @@ function NewNet_ServerStartFire(byte Mode, byte ClientTimeStamp, float DT, Repli
         NewNet_SniperFire(FireMode[Mode]).BelievedHLDelta.Y = BelievedHLDelta.Y;
         NewNet_SniperFire(FireMode[Mode]).BelievedHLDelta.Z = BelievedHLDelta.Z;
         NewNet_SniperFire(FireMode[Mode]).SavedVec = Pawn(Owner).Location;
-        NewNet_SniperFire(FireMode[Mode]).SavedRot = Pawn(Owner).Controller.Rotation;
+        NewNet_SniperFire(FireMode[Mode]).SavedRot = class'BS_xPlayer'.static.AlignToView(Pawn(Owner).Controller.Rotation);
     */
     }
     else if ( FireMode[Mode].AllowFire() )

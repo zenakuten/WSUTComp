@@ -3877,12 +3877,55 @@ function int FractionCorrection(float in, out float fraction) {
     return result;
 }
 
+// The renderer and Vector()/GetAxes() share a sine table with one entry per 4
+// rotation units, looked up with Angle >> 2. The camera matrix looks up the
+// negated angles, so the view is drawn at the angle rounded UP to a multiple of
+// 4, while Vector() rounds DOWN. Shots therefore land down-left of the crosshair
+// by up to 4 units per axis, which is plain to see when zoomed in.
+// An angle already on a multiple of 4 is drawn and fired identically, so aim is
+// aligned to the angle the camera draws before it is used to shoot.
+static final function int AlignAngle(int Angle)
+{
+    return (Angle + 3) & ~3;
+}
+
+static final function rotator AlignToView(rotator R)
+{
+    R.Pitch = AlignAngle(R.Pitch);
+    R.Yaw = AlignAngle(R.Yaw);
+    return R;
+}
+
+// Vector(R), but with R rounded to the nearest multiple of 4 instead of down.
+// Aim that went through rotator(vector(Aim)) comes back a unit short of the
+// aligned angle, and this recovers it exactly.
+static final function vector AimVector(rotator R)
+{
+    R.Pitch = (R.Pitch + 2) & ~3;
+    R.Yaw = (R.Yaw + 2) & ~3;
+    return Vector(R);
+}
+
+// rotator(Dir), but rounded to the nearest multiple of 4. rotator() truncates
+// and scales by 65535 instead of 65536, then Vector() rounds down again.
+static final function rotator AimRotator(vector Dir)
+{
+    local rotator R;
+
+    R.Pitch = 4 * int(Ceil(Atan(Dir.Z, Sqrt(Dir.X * Dir.X + Dir.Y * Dir.Y)) * 8192.0 / PI - 0.5));
+    R.Yaw = 4 * int(Ceil(Atan(Dir.Y, Dir.X) * 8192.0 / PI - 0.5));
+    return R;
+}
+
 // Stock code packs the view as 15 bit Pitch/2 and Yaw/2, so the server only
 // sees every other rotation unit. This keeps that 30 bit layout and carries
 // the two dropped low bits in the unused bits 30 (yaw) and 31 (pitch).
 // Values packed the stock way decode identically.
+// The view is sent aligned (see AlignToView), so the server aims where the
+// client's camera is drawn.
 function int PackExactView(rotator R)
 {
+    R = AlignToView(R);
     return ((R.Pitch & 1) << 31) | ((R.Yaw & 1) << 30)
         | (((R.Pitch >> 1) & 32767) << 15) | ((R.Yaw >> 1) & 32767);
 }
@@ -3995,6 +4038,18 @@ state PlayerTurreting
 {
 ignores SeePlayer, HearNoise, Bump;
 
+    // Aligns the camera (see AlignToView). It is drawn identically, since the
+    // renderer rounds up to a multiple of 4 anyway, but native ONS gun aim traces
+    // along it and then hits exactly what is on screen. Only vehicle states need
+    // this, and the server calls it for every client every tick to work out
+    // relevancy, so it is kept out of the global state and inlined.
+    event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation)
+    {
+        Global.PlayerCalcView(ViewActor, CameraLocation, CameraRotation);
+        CameraRotation.Pitch = (CameraRotation.Pitch + 3) & ~3;
+        CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
+    }
+
     function PlayerMove(float DeltaTime)
     {
         local float OldTurn, OldLookUp, Scale;
@@ -4103,6 +4158,14 @@ ignores SeePlayer, HearNoise, Bump;
 state PlayerDriving
 {
 ignores SeePlayer, HearNoise, Bump;
+
+    // See PlayerTurreting.PlayerCalcView
+    event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation)
+    {
+        Global.PlayerCalcView(ViewActor, CameraLocation, CameraRotation);
+        CameraRotation.Pitch = (CameraRotation.Pitch + 3) & ~3;
+        CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
+    }
 
     // Same as stock, but the view is sent to ServerDrive with full precision
     function PlayerMove( float DeltaTime )
@@ -4672,6 +4735,7 @@ function ReplicateMove
 {
     local SavedMove NewMove, OldMove, AlmostLastMove, LastMove;
     local byte ClientRoll;
+    local rotator SentView;
     local float OldTimeDelta, NetMoveDelta;
     local int OldAccel;
     local vector BuildAccel, AccelNorm, MoveLoc, CompareAccel;
@@ -4848,6 +4912,10 @@ function ReplicateMove
     else
         MoveLoc = Pawn.Location;
 
+    // Aligned to a multiple of 4 (see AlignToView), which also survives the /2
+    // packing exactly, so the server aims where our camera is drawn.
+    SentView = AlignToView(Rotation);
+
     CallServerMove
     (
         NewMove.TimeStamp,
@@ -4860,7 +4928,7 @@ function ReplicateMove
         NewMove.bDoubleJump,
         NewMove.DoubleClickMove,
         ClientRoll,
-        (32767 & (Rotation.Pitch/2)) * 32768 + (32767 & (Rotation.Yaw/2)),
+        (32767 & (SentView.Pitch/2)) * 32768 + (32767 & (SentView.Yaw/2)),
         OldTimeDelta,
         OldAccel
     );
@@ -5145,13 +5213,27 @@ function LongClientAdjustPosition
 // state versions of ServerMove that decode it themselves still work.
 function SetExactView(int View)
 {
-    ExactView = UnpackExactView(View);
+    ExactView = DecodeSeatView(View);
     bExactView = true;
+}
+
+// With bVehicleFullPrecisionAim off the extra bits are ignored,
+// which decodes exactly like stock
+function rotator DecodeSeatView(int View)
+{
+    if (RepInfo==None)
+        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+
+    if (RepInfo != None && !RepInfo.bVehicleFullPrecisionAim)
+        View = StockView(View);
+
+    return UnpackExactView(View);
 }
 
 function ServerDrive(float InForward, float InStrafe, float aUp, bool InJump, int View)
 {
-    SetRotation(UnpackExactView(View));
+    SetRotation(DecodeSeatView(View));
     ProcessDrive(InForward, InStrafe, aUp, InJump);
 }
 
@@ -5561,7 +5643,7 @@ simulated function rotator Adjust3pAim(optional vector projStart, optional bool 
     if (projStart == vect(0,0,0))
         projStart = fireStart;
 
-    return rotator(Normal(HitLocation - projStart));
+    return AimRotator(HitLocation - projStart);
 }
 
 // True when the weapon's shot can't reach the point under the 3p crosshair -- e.g. the
@@ -5586,6 +5668,56 @@ simulated function bool Is3pShotBlocked()
     return HitActor != None && VSize(HitLocation - AimPoint) > 4.0;
 }
 
+// The ONS gun that is calling AdjustAim, if it can hit what the crosshair is on.
+// ONSWeapon only calls AdjustAim when bCorrectAim, passing its WeaponFireLocation.
+function ONSWeapon AimingVehicleGun(vector projStart)
+{
+    local ONSWeapon Gun;
+    local ONSVehicle V;
+
+    if (ONSWeaponPawn(Pawn) != None)
+        Gun = ONSWeaponPawn(Pawn).Gun;
+    else
+    {
+        V = ONSVehicle(Pawn);
+        if (V != None && V.ActiveWeapon < V.Weapons.Length)
+            Gun = V.Weapons[V.ActiveWeapon];
+    }
+
+    if (Gun != None && Gun.bCorrectAim && Gun.WeaponFireLocation == projStart)
+        return Gun;
+    return None;
+}
+
+// Aim along the crosshair, with no auto-aim applied
+function rotator CrosshairAim(vector projStart, bool bSkipProjectiles)
+{
+    local ONSWeapon Gun;
+
+    // The gun's own aim (CurrentAim) has been through several truncating
+    // rotator/vector conversions natively, so it fires down-left of the
+    // crosshair. Aim straight at the point the crosshair trace hit instead.
+    Gun = AimingVehicleGun(projStart);
+    if (Gun != None)
+        return AimRotator(Gun.CurrentHitLocation - projStart);
+
+    if (bBehindView)
+    {
+        if (Vehicle(Pawn) != None || bDisableEnhanced3P)
+            return Pawn.Rotation;
+
+        // Core fire skips projectiles for a stable stream; the beam does NOT, so it
+        // can aim at (and combo) a core under the crosshair.
+        return Adjust3pAim(projStart, bSkipProjectiles);
+    }
+
+    // ONSWeapon.AdjustAim keeps its own aim only when handed the raw rotation
+    if (ONSVehicle(Pawn) != None || ONSWeaponPawn(Pawn) != None)
+        return Rotation;
+
+    return AlignToView(Rotation);
+}
+
 // override adjust aim to fix 3p view aim
 function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int aimerror)
 {
@@ -5596,7 +5728,7 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
     local bool bNoZAdjust, bLeading;
     local rotator AimRot;
 
-    FireDir = vector(Rotation);
+    FireDir = vector(AlignToView(Rotation));
     if ( FiredAmmunition.bInstantHit )
         HitActor = Trace(HitLocation, HitNormal, projStart + 10000 * FireDir, projStart, true);
     else
@@ -5632,17 +5764,7 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
         {
             // snarf
             // fix for locked rotation in 3p view
-            if (bBehindView)
-            {
-                if(Vehicle(Pawn) != None || bDisableEnhanced3P)
-                    return Pawn.Rotation;
-
-                // Core fire skips projectiles for a stable stream; the beam does NOT, so it
-                // can aim at (and combo) a core under the crosshair.
-                return Adjust3pAim(projStart, !FiredAmmunition.bInstantHit);
-            }
-            else
-				return Rotation;
+            return CrosshairAim(projStart, !FiredAmmunition.bInstantHit);
         }
         OldAim = projStart + FireDir * bestDist;
     }
@@ -5658,22 +5780,10 @@ function rotator AdjustAim(FireProperties FiredAmmunition, vector projStart, int
     // barely moves it - this mainly affects projectiles.
     // With enhanced 3p disabled, fall through to the stock engine logic below instead.
     if (bBehindView && !bDisableEnhanced3P)
-    {
-        if (Vehicle(Pawn) != None)
-            return Pawn.Rotation;
-
-        // Core fire skips projectiles for a stable stream; the beam does NOT, so it
-        // can aim at (and combo) a core under the crosshair.
-        return Adjust3pAim(projStart, !FiredAmmunition.bInstantHit);
-    }
+        return CrosshairAim(projStart, !FiredAmmunition.bInstantHit);
 
     if ( !bAimingHelp || (Level.NetMode != NM_Standalone) )
-    {
-        if (bBehindView)
-            return Pawn.Rotation;
-        else
-            return Rotation;
-    }
+        return CrosshairAim(projStart, !FiredAmmunition.bInstantHit);
 
     // aim at target - help with leading also
     if ( !FiredAmmunition.bInstantHit )

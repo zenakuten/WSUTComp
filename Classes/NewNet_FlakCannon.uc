@@ -84,8 +84,9 @@ simulated event NewNet_ClientStartFire(int Mode)
                 NewNet_FlakAltFire(FireMode[Mode]).DoInstantFireEffect();
             else if(NewNet_FlakFire(FireMode[Mode])!=None)
                 NewNet_FlakFire(FireMode[Mode]).DoInstantFireEffect();
-            R.Pitch = Pawn(Owner).Controller.Rotation.Pitch;
-            R.Yaw = Pawn(Owner).Controller.Rotation.Yaw;
+            // Aligned to the angle the camera is drawn at (see BS_xPlayer.AlignToView)
+            R.Pitch = class'BS_xPlayer'.static.AlignAngle(Pawn(Owner).Controller.Rotation.Pitch);
+            R.Yaw = class'BS_xPlayer'.static.AlignAngle(Pawn(Owner).Controller.Rotation.Yaw);
             STart=Pawn(Owner).Location + Pawn(Owner).EyePosition();
 
             V.X = Start.X;
