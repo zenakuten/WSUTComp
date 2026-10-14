@@ -146,7 +146,9 @@ function TimeTravelPawn(float dt)
     if(CopiedPawn == none || CopiedPawn.DrivenVehicle!=None)
        return;
     StampDT = M.ClientTimeStamp - dt;
-    SetCollision(false);
+    //Usually already off; turning off an actor that is already off does nothing
+    if(bCollideActors)
+        SetCollision(false);
 
     //We cant backtrack, too recent, just go straight to the pawn
     if(PawnHistory.Length == 0 || PawnHistory[PawnHistory.Length-1].TimeStamp < StampDT )
@@ -238,7 +240,7 @@ function TimeTravelPawn(float dt)
          lets just be safe and set it every time for now*/
          if(PawnHistory[Floor].bCrouched)
              SetCollisionSize(CrouchRadius, CrouchHeight);
-         else if(CopiedPawn.IsA('xPawn'))
+         else if(xPawn(CopiedPawn) != None)
              SetCollisionSize(default.CollisionRadius, default.CollisionHeight);
          else if(bUseCylinderCollision)
              SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
@@ -252,7 +254,7 @@ function TimeTravelPawn(float dt)
     if (CopiedPawn != None)
     {
         // If the copied pawn is a vehicle, and it is attached to another vehicle, it's a passenger seat
-        if (CopiedPawn.IsA('Vehicle') && CopiedPawn.Base != None && CopiedPawn.Base.IsA('Vehicle'))
+        if (Vehicle(CopiedPawn) != None && Vehicle(CopiedPawn.Base) != None)
         {
             // Do not enable collision for passenger seats to prevent the phantom cylinder shield
         }
@@ -267,7 +269,9 @@ function TimeTravelPawn(float dt)
 
 function TurnOffCollision()
 {
-    SetCollision(false);
+    //Called on every copy after every shot, most of which were never turned on
+    if(bCollideActors)
+        SetCollision(false);
 }
 
 function AddPawnToList(Pawn Other)
@@ -363,32 +367,25 @@ function Identify()
 
 function tick(float DeltaTime)
 {
+    local int i, NumToRemove;
+    local float Now;
+
     if(CopiedPawn==None)
         return;
 
-    AddHistory();
-    RemoveOutdatedHistory();
-}
+    Now = M.ClientTimeStamp;
 
-function AddHistory()
-{
-    local int i;
-
+    //Add the pawn's current state to the history
     i=Pawnhistory.Length;
     PawnHistory.Length=i+1;
     PawnHistory[i].Location = CopiedPawn.Location;
     PawnHistory[i].Rotation = CopiedPawn.Rotation;
     PawnHistory[i].bCrouched = CopiedPawn.bIsCrouched;
-    PawnHistory[i].TimeStamp = M.ClientTimeStamp;
+    PawnHistory[i].TimeStamp = Now;
     //PawnHistory[i].Physics = CopiedPawn.Physics;
-}
 
-function RemoveOutdatedHistory()
-{
-    local int NumToRemove;
-
-    NumToRemove = 0;
-    while(NumToRemove < PawnHistory.Length && PawnHistory[NumToRemove].TimeStamp + MAX_HISTORY_LENGTH < M.ClientTimeStamp)
+    //Drop history older than MAX_HISTORY_LENGTH
+    while(NumToRemove < PawnHistory.Length && PawnHistory[NumToRemove].TimeStamp + MAX_HISTORY_LENGTH < Now)
         NumToRemove++;
     if(NumToRemove > 0)
         PawnHistory.Remove(0, NumToRemove);
