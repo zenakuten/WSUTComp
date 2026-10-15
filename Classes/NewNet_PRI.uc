@@ -65,7 +65,9 @@ simulated function Ping()
 simulated function Pong()
 {
     bPingReceived = true;
-    PredictedPing = (2.0*PredictedPing + (Level.TimeSeconds - PingSendTime))/PingTweenTime;
+    // Running average: 2/3 old estimate, 1/3 new sample. PingTweenTime is only
+    // the time between pings; dividing by it here broke the average when it wasn't 3
+    PredictedPing = (2.0*PredictedPing + (Level.TimeSeconds - PingSendTime))/3.0;
     default.predictedping=predictedping;
     numPings++;
     if(NumPings < 8)

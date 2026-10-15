@@ -116,6 +116,8 @@ var config bool bEnableEnhancedNetCode;
 var config bool bEnableEnhancedNetCodeVoting;
 var config bool bUseDefaultScoreboardColor;
 var config float PawnCollisionHistoryLength;
+var config bool bLimitLinkBeamTraces;
+var config float LinkBeamTraceInterval;
 var config array<string> IgnoredHitSounds;
 
 var config bool bNoTeamBoosting;
@@ -1745,6 +1747,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (200)", security, weight, "Text","0;0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Tween Time (3.0)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionHistoryLength", "NewNet Pawn Collision History Length (0.35)", security, weight, "Text","0;0.0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "bLimitLinkBeamTraces", "Limit Link Beam Lag-Comp Traces", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp NewNet", "LinkBeamTraceInterval", "Link Beam Lag-Comp Trace Interval (0.020)", security, weight, "Text","0;0.0:1.0",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
     PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
 
@@ -1824,9 +1828,11 @@ static event string GetDescriptionText(string PropName)
 		case "bShowTeamScoresInServerBrowser": return "Check this to show team scores in the server browser";
 		case "bAllowTerrainDodge": return "Allow players to dodge off terrain.";
 
-        case "NewNetUpdateFrequency": return "NewNet Update Frequency (200)";
-        case "PingTweenTime": return "NewNet Ping Tween Time (3.0)";
-        case "PawnCollisionHistoryLength": return "NewNet Pawn Collision History Length (0.35)";
+        case "NewNetUpdateFrequency": return "How many times per second the server re-checks each player's NewNet ping helper for changes. Ping messages are sent immediately regardless, so this doesn't affect hit detection; lower values (e.g. 10) save a little server CPU. 0 uses the default. (default 200)";
+        case "PingTweenTime": return "Seconds between each client's ping measurements. Lower values follow ping changes faster, at the cost of one small message per client each time. The measured ping only times the client's own predicted projectiles; server hit detection doesn't use it. 0 uses the default. (default 3.0)";
+        case "PawnCollisionHistoryLength": return "Seconds of position history the server keeps per player for rewinding hits. Shooters with more ping than this (0.35 = 350 ms) are only compensated up to this amount. Higher values cost a little memory and CPU per player. (default 0.35)";
+        case "bLimitLinkBeamTraces": return "Between hits, the link beam reuses its last lag-compensated trace for up to the trace interval instead of tracing every server tick. Hits always get a fresh trace. (default off)";
+        case "LinkBeamTraceInterval": return "Seconds between lag-compensated link beam traces between hits. Higher saves more CPU; lower keeps linking and other players' view of the beam closer to every tick. (default 0.020)";
         
         case "NodeIsolateBonusPct": return "Power Node Isolate Bonus Pct (20)";
         case "VehicleHealScore": return "Vehicle Heal Score (200)";
@@ -2102,6 +2108,8 @@ defaultproperties
      bEnableEnhancedNetCode=true
      bEnableEnhancedNetCodeVoting=false
      PawnCollisionHistoryLength=0.35
+     bLimitLinkBeamTraces=False
+     LinkBeamTraceInterval=0.020
 
      //original weapons
      WeaponClassNames(0)="XWeapons.ShockRifle"
