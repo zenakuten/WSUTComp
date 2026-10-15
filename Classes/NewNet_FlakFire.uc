@@ -313,7 +313,7 @@ function DoFireEffect()
     local int p, oddeven;
     local int SpawnCount, SpawnPerLine;
     local float theta;
-    local projectile proj;
+    local array<rotator> ChunkDirs;
 
     if(!bUseEnhancedNetCode)
     {
@@ -371,9 +371,7 @@ function DoFireEffect()
         for (p = 0; p < SpawnCount; p++)
         {
             R = NewNet_FlakCannon(Weapon).GetRandRot();
-            proj = SpawnProjectile(StartProj, Rotator(X >> R));
-            if(proj!=None)
-                NewNet_FlakChunk(proj).ChunkNum = p;
+            ChunkDirs[ChunkDirs.Length] = Rotator(X >> R);
         }
         break;
     case SS_Line:
@@ -395,7 +393,7 @@ function DoFireEffect()
             X.Z = 0.0;
 			R = Rotator(X >> Aim);
 			R.Pitch -= 200;
-            SpawnProjectile(StartProj, R);
+            ChunkDirs[ChunkDirs.Length] = R;
         }
         for (p = 0; p < SpawnPerLine+oddeven; p++)
         {
@@ -404,7 +402,7 @@ function DoFireEffect()
             X.Y = Sin(theta);
             X.Z = 0.0;
 			R = Rotator(X >> Aim);
-            SpawnProjectile(StartProj, R);
+            ChunkDirs[ChunkDirs.Length] = R;
         }
         for (p = 0; p < SpawnPerLine; p++)
         {
@@ -414,14 +412,121 @@ function DoFireEffect()
             X.Z = 0.0;
 			R = Rotator(X >> Aim);
 			R.Pitch += 200;
-            SpawnProjectile(StartProj, R);
+            ChunkDirs[ChunkDirs.Length] = R;
         }		
 		
         break;
     default:
-        SpawnProjectile(StartProj, Aim);
+        ChunkDirs[ChunkDirs.Length] = Aim;
     }
+    SpawnChunks(StartProj, ChunkDirs);
     NewNet_FlakCannon(Weapon).SendNewRandSeed();
+}
+
+// Does what calling SpawnProjectile for each chunk did, with the same traces and
+// spawn points. Every chunk in a shot asks for the same catch-up times, so the
+// collision copies are moved once per time step for all chunks, instead of once
+// per time step for each chunk.
+function SpawnChunks(vector StartProj, array<rotator> Dirs)
+{
+    local Projectile p;
+    local Actor Other;
+    local vector HitLocation, HitNormal;
+    local rotator Dir;
+    local float f,g;
+    local int i, NumFlying;
+    local array<vector> Start, End, PawnHitLocation;
+    local array<byte> HitState; // 0 = clear path, 1 = hit a collision copy, 2 = blocked by something else
+
+    if(ProjectileClass == None || PingDT <= 0.0 || Weapon.Owner == None)
+    {
+        // No catch-up to do
+        for(i=0; i<Dirs.Length; i++)
+            SpawnProjectile(StartProj, Dirs[i]);
+        return;
+    }
+
+    Start.Length = Dirs.Length;
+    End.Length = Dirs.Length;
+    PawnHitLocation.Length = Dirs.Length;
+    HitState.Length = Dirs.Length;
+    for(i=0; i<Dirs.Length; i++)
+        Start[i] = StartProj - 1.0*vector(Dirs[i]);
+    NumFlying = Dirs.Length;
+
+    for(f=0.00; f<pingDT + PROJ_TIMESTEP && NumFlying > 0; f+=PROJ_TIMESTEP)
+    {
+        //Make sure the last trace we do is right where we want
+        //the proj to spawn if it makes it to the end
+        g = Fmin(pingdt, f);
+
+        //Put pawns there
+        TimeTravel(pingdt - g);
+
+        for(i=0; i<Dirs.Length; i++)
+        {
+            if(HitState[i] != 0)
+                continue;
+
+            //Where will it be after deltaF
+            Dir = Dirs[i];
+            if(f >= pingDT)
+                End[i] = Start[i] + Extrapolate(Dir, (pingDT-f+PROJ_TIMESTEP));
+            else
+                End[i] = Start[i] + Extrapolate(Dir, PROJ_TIMESTEP);
+
+            //Trace between the start and extrapolated end
+            Other = DoTimeTravelTrace(HitLocation, HitNormal, End[i], Start[i]);
+            if(Other == None)
+            {
+                //repeat
+                Start[i] = End[i];
+                continue;
+            }
+
+            NumFlying--;
+            if(Other.IsA('PawnCollisionCopy'))
+            {
+                // Map the hit onto the real pawn now, while the copy is still
+                // at the time this chunk hit it
+                HitState[i] = 1;
+                PawnHitLocation[i] = HitLocation + PawnCollisionCopy(Other).CopiedPawn.Location - Other.Location;
+            }
+            else
+                HitState[i] = 2;
+        }
+    }
+    UnTimeTravel();
+
+    for(i=0; i<Dirs.Length; i++)
+    {
+        Dir = Dirs[i];
+        if(HitState[i] == 1)
+            p = Weapon.Spawn(ProjectileClass,,, PawnHitLocation[i] - Vector(Dir)*20.0, Dir);
+        else if(HitState[i] == 0)
+        {
+            // Clear path: keep the progress the catch-up trace already
+            // calculated.  Spawning back at the muzzle makes the server
+            // shard re-fly a stretch the trace had accounted for, so it
+            // trails the client's predicted shard.  (ty Vapor)
+            p = Weapon.Spawn(ProjectileClass,,, End[i], Dir);
+        }
+        else
+        {
+            // Blocked by world geometry or a non-pawn actor: spawn at the
+            // muzzle so the shard still flies into it.  This is the flak
+            // primary powernode unreg fix - leave it alone.
+            p = Weapon.Spawn(ProjectileClass,,, StartProj, Dir);
+        }
+
+        if( p != None )
+        {
+            if(NewNet_FlakChunk(p) != None)
+                NewNet_FlakChunk(p).ChunkNum = SpawnIdx;
+            p.Damage *= DamageAtten;
+        }
+        SpawnIdx++;
+    }
 }
 
 function projectile SpawnProjectile(Vector Start, Rotator Dir)
