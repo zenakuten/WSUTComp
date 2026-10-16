@@ -38,8 +38,6 @@ var float MAX_HISTORY_LENGTH;
 var bool bCrouched;
 
 
-var InterpCurve LocCurveX, LocCurveY,LocCurveZ;
-
 function PostBeginPlay()
 {
     super.PostBeginPlay();
@@ -137,18 +135,20 @@ What happens if its not an xpawn and its changing shapes?
 */
 function TimeTravelPawn(float dt)
 {
-    local int i, Floor, Ceiling;
-    local bool bFloor, bCeiling;
+    local int Floor, Ceiling, Lo, Hi, Pivot;
+    local bool bCeiling;
   //  local vector V;
     local vector V2;
     local float StampDT;
-//    local float Alpha;
+    local float Alpha;
   //  local float Interpdt;
 
     if(CopiedPawn == none || CopiedPawn.DrivenVehicle!=None)
        return;
     StampDT = M.ClientTimeStamp - dt;
-    SetCollision(false);
+    //Usually already off; turning off an actor that is already off does nothing
+    if(bCollideActors)
+        SetCollision(false);
 
     //We cant backtrack, too recent, just go straight to the pawn
     if(PawnHistory.Length == 0 || PawnHistory[PawnHistory.Length-1].TimeStamp < StampDT )
@@ -158,23 +158,23 @@ function TimeTravelPawn(float dt)
     }
 
     //Sandwich between 2 history parts Ceiling and Floor
-    for(i=PawnHistory.Length-1; i >= 0; i--)
+    //History is in TimeStamp order, so binary search for Floor (the oldest
+    //entry at or after StampDT). Ceiling is the entry just before it.
+    Lo = 0;
+    Hi = PawnHistory.Length-1;
+    while(Lo < Hi)
     {
-        //This will set the more recent part
-        if(PawnHistory[i].TimeStamp >= StampDT)
-        {
-            bFloor=true;
-            Floor = i;
-        }
-        // we either ran into, or got under the stamp
-        // this is the older stamp
-        // Now we should have a ceiling and floor both
+        Pivot = (Lo + Hi) / 2;
+        if(PawnHistory[Pivot].TimeStamp >= StampDT)
+            Hi = Pivot;
         else
-        {
-            bCeiling=true;
-            Ceiling=i;
-            break;
-        }
+            Lo = Pivot + 1;
+    }
+    Floor = Lo;
+    if(Floor > 0)
+    {
+        bCeiling=true;
+        Ceiling = Floor - 1;
     }
 
     if(bCeiling)
@@ -208,9 +208,10 @@ function TimeTravelPawn(float dt)
          }     */
 
 
-         V2.X = InterpCurveEval(LocCurveX,StampDT);
-         V2.Y = InterpCurveEval(LocCurveY,StampDT);
-         V2.Z = InterpCurveEval(LocCurveZ,StampDT);
+         // Linear blend between the 2 samples, same as InterpCurveEval did
+         // (StampDT is strictly after Ceiling, so the divisor is never 0)
+         Alpha = (StampDT - PawnHistory[Ceiling].TimeStamp) / (PawnHistory[Floor].TimeStamp - PawnHistory[Ceiling].TimeStamp);
+         V2 = PawnHistory[Ceiling].Location + (PawnHistory[Floor].Location - PawnHistory[Ceiling].Location) * Alpha;
 
          SetLocation(V2);
          SetRotation(PawnHistory[Floor].Rotation);
@@ -239,7 +240,7 @@ function TimeTravelPawn(float dt)
          lets just be safe and set it every time for now*/
          if(PawnHistory[Floor].bCrouched)
              SetCollisionSize(CrouchRadius, CrouchHeight);
-         else if(CopiedPawn.IsA('xPawn'))
+         else if(xPawn(CopiedPawn) != None)
              SetCollisionSize(default.CollisionRadius, default.CollisionHeight);
          else if(bUseCylinderCollision)
              SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
@@ -253,7 +254,7 @@ function TimeTravelPawn(float dt)
     if (CopiedPawn != None)
     {
         // If the copied pawn is a vehicle, and it is attached to another vehicle, it's a passenger seat
-        if (CopiedPawn.IsA('Vehicle') && CopiedPawn.Base != None && CopiedPawn.Base.IsA('Vehicle'))
+        if (Vehicle(CopiedPawn) != None && Vehicle(CopiedPawn.Base) != None)
         {
             // Do not enable collision for passenger seats to prevent the phantom cylinder shield
         }
@@ -268,7 +269,9 @@ function TimeTravelPawn(float dt)
 
 function TurnOffCollision()
 {
-    SetCollision(false);
+    //Called on every copy after every shot, most of which were never turned on
+    if(bCollideActors)
+        SetCollision(false);
 }
 
 function AddPawnToList(Pawn Other)
@@ -364,61 +367,28 @@ function Identify()
 
 function tick(float DeltaTime)
 {
+    local int i, NumToRemove;
+    local float Now;
+
     if(CopiedPawn==None)
         return;
 
-    AddHistory();
-    RemoveOutdatedHistory();
-}
+    Now = M.ClientTimeStamp;
 
-function AddHistory()
-{
-    local int i;
-    local InterpCurvePoint XPoint,YPoint,ZPoint;
-
+    //Add the pawn's current state to the history
     i=Pawnhistory.Length;
     PawnHistory.Length=i+1;
     PawnHistory[i].Location = CopiedPawn.Location;
     PawnHistory[i].Rotation = CopiedPawn.Rotation;
     PawnHistory[i].bCrouched = CopiedPawn.bIsCrouched;
-    PawnHistory[i].TimeStamp = M.ClientTimeStamp;
+    PawnHistory[i].TimeStamp = Now;
     //PawnHistory[i].Physics = CopiedPawn.Physics;
 
-    XPoint.InVal = M.ClientTimeStamp;
-    XPoint.OutVal = CopiedPawn.Location.X;
-    LocCurveX.Points.Length = LocCurveX.Points.Length + 1;
-    LocCurveX.Points[LocCurveX.Points.Length-1] = XPoint;
-
-    YPoint.InVal = M.ClientTimeStamp;
-    YPoint.OutVal = CopiedPawn.Location.Y;
-    LocCurveY.Points.Length = LocCurveY.Points.Length + 1;
-    LocCurveY.Points[LocCurveY.Points.Length-1] = YPoint;
-
-    ZPoint.InVal = M.ClientTimeStamp;
-    ZPoint.OutVal = CopiedPawn.Location.Z;
-    LocCurveZ.Points.Length = LocCurveZ.Points.Length + 1;
-    LocCurveZ.Points[LocCurveZ.Points.Length-1] = ZPoint;
-}
-
-function RemoveOutdatedHistory()
-{
-    local int NumToRemove;
-
-    NumToRemove = 0;
-    while(NumToRemove < PawnHistory.Length && PawnHistory[NumToRemove].TimeStamp + MAX_HISTORY_LENGTH < M.ClientTimeStamp)
+    //Drop history older than MAX_HISTORY_LENGTH
+    while(NumToRemove < PawnHistory.Length && PawnHistory[NumToRemove].TimeStamp + MAX_HISTORY_LENGTH < Now)
         NumToRemove++;
     if(NumToRemove > 0)
         PawnHistory.Remove(0, NumToRemove);
-
-    NumToRemove = 0;
-    while(NumToRemove < LocCurveX.Points.Length && LocCurveX.Points[NumToRemove].InVal + MAX_HISTORY_LENGTH < M.ClientTimeStamp)
-        NumToRemove++;
-    if(NumToRemove > 0)
-    {
-        LocCurveX.Points.Remove(0, NumToRemove);
-        LocCurveY.Points.Remove(0, NumToRemove);
-        LocCurveZ.Points.Remove(0, NumToRemove);
-    }
 }
 
 defaultproperties

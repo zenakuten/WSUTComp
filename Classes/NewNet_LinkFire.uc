@@ -7,6 +7,13 @@ class NewNet_LinkFire extends UTComp_LinkFire;
 var float PingDT;
 var bool bUseEnhancedNetCode;
 
+// Last lag-compensated beam trace, reused between hits when
+// MutUTComp.bLimitLinkBeamTraces is on
+var float NextLagCompTraceTime;
+var Actor LastTraceOther;
+var float LastTraceHitDist;
+var Pawn LastTraceLockedPawn;
+
 simulated function ModeTick(float dt)
 {
 	local Vector StartTrace, EndTrace, V, X, Y, Z;
@@ -36,6 +43,9 @@ simulated function ModeTick(float dt)
     if ( !bIsFiring )
     {
 		bInitAimError = true;
+        // The next beam starts with a fresh lag-compensated trace
+        NextLagCompTraceTime = 0;
+        LastTraceOther = None;
         return;
     }
 
@@ -181,23 +191,38 @@ simulated function ModeTick(float dt)
 
     //    Other = Weapon.Trace(HitLocation, HitNormal, EndTrace, StartTrace, true);
 
-        if(PingDT <=0.0)
-            Other = Weapon.Trace(HitLocation,HitNormal,EndTrace,StartTrace,true);
-        else
+        if(PingDT > 0.0 && CanReuseLagCompTrace())
         {
-            TimeTravel(PingDT);
-            bNeedRevert=true;
-            Other = DoTimeTravelTrace(HitLocation, HitNormal, EndTrace, StartTrace);
-        }
-
-        if(Other!=None && Other.IsA('PawnCollisionCopy'))
-        {
-             PawnHitLocation = HitLocation + PawnCollisionCopy(Other).CopiedPawn.Location - Other.Location;
-             Other=PawnCollisionCopy(Other).CopiedPawn;
-        }
-        else
-        {
+            // Between hits, reuse the last lag-compensated trace instead of moving
+            // every collision copy again. The beam still follows the player's aim;
+            // only its length comes from the last trace.
+            Other = LastTraceOther;
+            HitLocation = StartTrace + Normal(EndTrace - StartTrace) * LastTraceHitDist;
             PawnHitLocation = HitLocation;
+        }
+        else
+        {
+            if(PingDT <=0.0)
+                Other = Weapon.Trace(HitLocation,HitNormal,EndTrace,StartTrace,true);
+            else
+            {
+                TimeTravel(PingDT);
+                bNeedRevert=true;
+                Other = DoTimeTravelTrace(HitLocation, HitNormal, EndTrace, StartTrace);
+            }
+
+            if(Other!=None && Other.IsA('PawnCollisionCopy'))
+            {
+                 PawnHitLocation = HitLocation + PawnCollisionCopy(Other).CopiedPawn.Location - Other.Location;
+                 Other=PawnCollisionCopy(Other).CopiedPawn;
+            }
+            else
+            {
+                PawnHitLocation = HitLocation;
+            }
+
+            if(bNeedRevert)
+                SaveLagCompTrace(Other, VSize(HitLocation - StartTrace));
         }
 
         if ( Other != None && Other != Instigator )
@@ -495,6 +520,33 @@ function Actor DoTimeTravelTrace(Out vector Hitlocation, out vector HitNormal, v
     }
 }
 
+// Damage and healing only land on bDoHit ticks, so between hits the beam can
+// reuse its last lag-compensated trace for a short time. A change of linked
+// pawn forces a fresh trace, since the trace aims at the linked pawn.
+function bool CanReuseLagCompTrace()
+{
+    local MutUTComp M;
+
+    M = NewNet_LinkGun(Weapon).M;
+    return !bDoHit && M != None && M.bLimitLinkBeamTraces
+        && Level.TimeSeconds < NextLagCompTraceTime
+        && LockedPawn == LastTraceLockedPawn
+        && (LastTraceOther == None || !LastTraceOther.bDeleteMe);
+}
+
+function SaveLagCompTrace(Actor TraceOther, float HitDist)
+{
+    local MutUTComp M;
+
+    LastTraceOther = TraceOther;
+    LastTraceHitDist = HitDist;
+    LastTraceLockedPawn = LockedPawn;
+
+    M = NewNet_LinkGun(Weapon).M;
+    if(M != None)
+        NextLagCompTraceTime = Level.TimeSeconds + M.LinkBeamTraceInterval;
+}
+
 function TimeTravel(float delta)
 {
     local PawnCollisionCopy PCC;
@@ -504,7 +556,8 @@ function TimeTravel(float delta)
             break;
 
     for(PCC = NewNet_LinkGun(Weapon).M.PCC; PCC!=None; PCC=PCC.Next)
-        PCC.TimeTravelPawn(Delta);
+        if(PCC.CopiedPawn != Instigator) // DoTimeTravelTrace ignores our own copy
+            PCC.TimeTravelPawn(Delta);
 }
 
 function UnTimeTravel()
