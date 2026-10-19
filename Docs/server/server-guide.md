@@ -136,12 +136,14 @@ for the technical background.
 |---------|----------|------|---------|-------|
 | Enable Enhanced Netcode | `bEnableEnhancedNetcode` | Check | On | Master switch for NewNet hit detection. Rewinds other players to where the shooter saw them when checking hits. Players can still turn it off for themselves (UTComp menu, Miscellaneous). Changes apply from the next map. |
 | Limit Link Beam Lag-Comp Traces | `bLimitLinkBeamTraces` | Check | Off | Between hits, the link beam reuses its last lag-compensated trace instead of re-tracing every server tick. Hits always get a fresh trace, so damage and healing are unchanged. |
-| Link Beam Lag-Comp Trace Interval | `LinkBeamTraceInterval` | Text (0-1) | 0.030 | Seconds a link beam trace is reused between hits. Higher saves more CPU; lower keeps link-ups and other players' view of the beam closer to every tick. |
+| Link Beam Lag-Comp Trace Interval | `LinkBeamTraceInterval` | Text (0-1) | 0.020 | Seconds a link beam trace is reused between hits. Higher saves more CPU; lower keeps link-ups and other players' view of the beam closer to every tick. |
 | Maximum NetSpeed for Clients | `MaxNetSpeed` | Text (0-100000000) | 100000000 | Highest netspeed (bytes/sec) clients may use. The server's `MaxClientRate` / `MaxInternetClientRate` still caps it. Admin level 255. |
-| Minimum NetSpeed for Clients | `MinNetSpeed` | Text (0-100000000) | 10000 | Lowest netspeed (bytes/sec) clients may use. Keep this high to stop ignorant players from setting their netspeed too low, resulting in packet loss-like symptoms. Admin level 255. |
+| Minimum NetSpeed for Clients | `MinNetSpeed` | Text (0-100000000) | 10000 | Lowest netspeed (bytes/sec) clients may use. Too low makes other players look choppy on busy servers. Admin level 255. |
 | NewNet Pawn Collision History Length | `PawnCollisionHistoryLength` | Text (0-1000) | 0.35 | Seconds of position history kept per player for rewinding hits. Shooters with more ping than this (0.35 = 350 ms) are only compensated up to it. |
 | NewNet Ping Tween Time | `PingTweenTime` | Text (0-1000) | 3.0 | Seconds between each client's ping measurements. Lower values follow ping changes faster. Only used to time the client's own predicted projectiles, not server hit detection. |
-| NewNet Update Frequency | `NewNetUpdateFrequency` | Text (0-1000) | 200 | How often the server re-checks each player's NewNet ping helper for changes. Doesn't affect hit detection; lower values save a little server CPU. 0 uses the default. |
+| NewNet Update Frequency | `NewNetUpdateFrequency` | Text (0-1000) | 1 | How often the server re-checks each player's NewNet ping helper for changes. It has nothing that changes and its ping messages go out immediately, so this doesn't affect hit detection or ping; higher values only cost server CPU. 0 uses the default. |
+| Only Place Lag-Comp Copies Near Traces | `bPlaceCopiesNearTracesOnly` | Check | Off | Only moves rewound players into place (with collision on) when a lag-compensated trace passes close enough to hit them, instead of moving every player for every shot. Same hits; saves most of the per-shot engine work on busy servers. |
+| Single-Pass Lag-Comp Traces | `bSinglePassTimeTravelTrace` | Check | Off | Finds lag-compensated hits with one engine trace instead of two, saving a trace per shot and per projectile catch-up step. Same hits; hit locations on rewound players can differ only in the last decimal places. |
 
 ---
 

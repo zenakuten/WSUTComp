@@ -128,7 +128,7 @@ defaultproperties
      ServerMaxPlayers=10
      bEnableTimedOvertimeVoting=True
      bEnableTimedOvertime=False
-     NewNetUpdateFrequency=200
+     NewNetUpdateFrequency=1
      PingTweenTime=3.0
 
      NodeIsolateBonusPct=20

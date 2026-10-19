@@ -90,7 +90,7 @@ simulated function Tick(float deltatime)
 defaultproperties
 {
      bPingReceived=True
-     NetUpdateFrequency=200.000000
+     NetUpdateFrequency=1.000000
      NetPriority=5.000000
      PingTweenTime=3.0
 }

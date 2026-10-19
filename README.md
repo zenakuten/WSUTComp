@@ -15,6 +15,7 @@ V31
 - Add fractional rotation support to vehicle passenger seats which was missing; you can now much more smoothly move your mouse when (heavily) zoomed in
 - Replace "Def 3p shieldgun" setting with "Stock 3P" checkbox to entirely disable the enhanced 3P mode
 - Server-side optimizations
+- Make `counter` int instead of float, which stops counting after enough time on an empty server, breaking netcode
 
 V30
 - Add end game sound like TAM/Freon end ceremony

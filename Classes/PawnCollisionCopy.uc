@@ -37,6 +37,14 @@ var float MAX_HISTORY_LENGTH;
 
 var bool bCrouched;
 
+// Set by TimeTravelPawn: where this copy goes for the current time travel. Place
+// moves it there with collision on, either straight away or, when
+// MutUTComp.bPlaceCopiesNearTracesOnly is on, via PlaceNear once a trace can reach it.
+var bool bPendingPlace;
+var vector PendingLocation;
+var rotator PendingRotation;
+var bool bPendingRotation;
+
 
 function PostBeginPlay()
 {
@@ -110,7 +118,8 @@ function GoToPawn()
     if(CopiedPawn == none)
         return;
 
-    SetLocation(CopiedPawn.Location);
+    PendingLocation = CopiedPawn.Location;
+    bPendingRotation = false;
     SetCollisionSize(CopiedPawn.CollisionRadius,CopiedPawn.CollisionHeight);
 
     if(bUseCylinderCollision)
@@ -127,7 +136,7 @@ function GoToPawn()
         }
     }
 
-    SetCollision(true);
+    bPendingPlace = true;
 }
 
 /*
@@ -143,6 +152,7 @@ function TimeTravelPawn(float dt)
     local float Alpha;
   //  local float Interpdt;
 
+    bPendingPlace = false;
     if(CopiedPawn == none || CopiedPawn.DrivenVehicle!=None)
        return;
     StampDT = M.ClientTimeStamp - dt;
@@ -213,8 +223,7 @@ function TimeTravelPawn(float dt)
          Alpha = (StampDT - PawnHistory[Ceiling].TimeStamp) / (PawnHistory[Floor].TimeStamp - PawnHistory[Ceiling].TimeStamp);
          V2 = PawnHistory[Ceiling].Location + (PawnHistory[Floor].Location - PawnHistory[Ceiling].Location) * Alpha;
 
-         SetLocation(V2);
-         SetRotation(PawnHistory[Floor].Rotation);
+         PendingLocation = V2;
 
          if(bUseCylinderCollision)
          {
@@ -245,9 +254,10 @@ function TimeTravelPawn(float dt)
          else if(bUseCylinderCollision)
              SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
 
-         SetLocation(PawnHistory[Floor].Location);
-         SetRotation(PawnHistory[Floor].Rotation);
+         PendingLocation = PawnHistory[Floor].Location;
     }
+    PendingRotation = PawnHistory[Floor].Rotation;
+    bPendingRotation = true;
 
 	// Add checks for vehicles to not use cylinders (and use LinkMesh instead), otherwise it causes hitscan noregs on high ping (>70ms)..
 	// Without LinkMesh enabled, this logic will not let you hit the vehicle if the main seat is occupied (if gunner then works fine) - Calypto
@@ -261,14 +271,56 @@ function TimeTravelPawn(float dt)
         else if (CopiedPawn.bCollideActors)
         {
             // Enable collision for infantry and main vehicles
-            SetCollision(true);
+            bPendingPlace = true;
         }
     }
 }
 
+// Called by MutUTComp.TimeTravelTrace before each trace when
+// bPlaceCopiesNearTracesOnly is on. Moving a copy and turning its collision on
+// are the expensive part of time travel (zone lookups, overlap checks, touch
+// events), so only copies the trace line can reach are placed. The rest stay
+// pending for any later trace in the same shot.
+function PlaceNear(vector Start, vector Dir, float DirSizeSq)
+{
+    local vector P;
+    local float T, Reach;
+
+    // Lag-compensated traces are lines, which can only touch a cylinder if they
+    // pass within its bounding sphere. Mesh collision has no such bound.
+    if(bUseCylinderCollision)
+    {
+        // P = offset from the closest point on the trace to the copy
+        P = PendingLocation - Start;
+        T = P dot Dir;
+        if(T > 0.0)
+        {
+            if(T >= DirSizeSq)
+                P -= Dir;
+            else
+                P -= Dir * (T / DirSizeSq);
+        }
+        Reach = CollisionRadius + CollisionHeight + 1.0;
+        if((P dot P) > Reach * Reach)
+            return;
+    }
+
+    Place();
+}
+
+// Moves the copy to where TimeTravelPawn rewound it and turns its collision on
+function Place()
+{
+    bPendingPlace = false;
+    SetLocation(PendingLocation);
+    if(bPendingRotation)
+        SetRotation(PendingRotation);
+    SetCollision(true);
+}
 
 function TurnOffCollision()
 {
+    bPendingPlace = false;
     //Called on every copy after every shot, most of which were never turned on
     if(bCollideActors)
         SetCollision(false);

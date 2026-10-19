@@ -118,6 +118,8 @@ var config bool bUseDefaultScoreboardColor;
 var config float PawnCollisionHistoryLength;
 var config bool bLimitLinkBeamTraces;
 var config float LinkBeamTraceInterval;
+var config bool bPlaceCopiesNearTracesOnly;
+var config bool bSinglePassTimeTravelTrace;
 var config array<string> IgnoredHitSounds;
 
 var config bool bNoTeamBoosting;
@@ -149,7 +151,7 @@ var string origcontroller;
 var class<PlayerController> origcclass;
 
 var float StampArray[256];
-var float counter;
+var int counter; // ticks; a float stopped counting after 2^24 ticks, which froze the stamps
 var controller countercontroller;
 
 var string FriendlyVersionPrefix;
@@ -651,6 +653,100 @@ function ListPawns()
     local PawnCollisionCopy PCC2;
     for(PCC2=PCC; PCC2!=None; PCC2=PCC2.Next)
        PCC2.Identify();
+}
+
+// Lag compensation for the NewNet weapons. Rewinds every collision copy except
+// the shooter's (traces ignore it) to Delta seconds ago and moves it into place
+// with collision on. With bPlaceCopiesNearTracesOnly, that last step is left to
+// TimeTravelTrace, for only the copies a trace can reach.
+function TimeTravelCopies(float Delta, Pawn Shooter)
+{
+    local PawnCollisionCopy C;
+
+    for(C = PCC; C != None; C = C.Next)
+        if(C.CopiedPawn != Shooter)
+        {
+            C.TimeTravelPawn(Delta);
+            if(!bPlaceCopiesNearTracesOnly && C.bPendingPlace)
+                C.Place();
+        }
+}
+
+function UnTimeTravelCopies()
+{
+    local PawnCollisionCopy C;
+
+    for(C = PCC; C != None; C = C.Next)
+        C.TurnOffCollision();
+}
+
+// Returns the first rewound copy (other than the shooter's) in front of anything
+// that isn't lag compensated, otherwise whatever stopped the trace.
+function Actor TimeTravelTrace(Actor Tracer, Pawn Shooter, out vector HitLocation, out vector HitNormal, vector End, vector Start)
+{
+    local PawnCollisionCopy C, HitCopy;
+    local Actor Other;
+    local vector Dir, NewEnd, CopyHitLocation, CopyHitNormal;
+    local float DirSizeSq;
+
+    if(bPlaceCopiesNearTracesOnly)
+    {
+        Dir = End - Start;
+        DirSizeSq = Dir dot Dir;
+        for(C = PCC; C != None; C = C.Next)
+            if(C.bPendingPlace)
+                C.PlaceNear(Start, Dir, DirSizeSq);
+    }
+
+    HitLocation = vect(0,0,0);
+    HitNormal = vect(0,0,0);
+
+    if(bSinglePassTimeTravelTrace)
+    {
+        // Hits come back nearest first, so the first copy in front of anything
+        // that stops the shot is the one a second trace would have found
+        foreach Tracer.TraceActors(class'Actor', Other, HitLocation, HitNormal, End, Start)
+        {
+            C = PawnCollisionCopy(Other);
+            if(C != None)
+            {
+                if(C.CopiedPawn != None && C.CopiedPawn != Shooter)
+                    break;
+            }
+            else if(Other.bWorldGeometry || ((Other.bBlockActors || Other.bProjTarget) && !IsPredicted(Other)))
+                break;
+            Other = None;
+        }
+        return Other;
+    }
+
+    // First find where the shot stops against anything that isn't lag
+    // compensated, then look for a copy in front of that point
+    foreach Tracer.TraceActors(class'Actor', Other, HitLocation, HitNormal, End, Start)
+    {
+        if(Other.bWorldGeometry || ((Other.bBlockActors || Other.bProjTarget) && !IsPredicted(Other)))
+            break;
+        Other = None;
+    }
+    if(Other != None)
+        NewEnd = HitLocation;
+    else
+        NewEnd = End;
+
+    foreach Tracer.TraceActors(class'PawnCollisionCopy', C, CopyHitLocation, CopyHitNormal, NewEnd, Start)
+    {
+        if(C.CopiedPawn != None && C.CopiedPawn != Shooter)
+        {
+            HitCopy = C;
+            break;
+        }
+    }
+    if(HitCopy == None)
+        return Other;
+
+    HitLocation = CopyHitLocation;
+    HitNormal = CopyHitNormal;
+    return HitCopy;
 }
 
 static function bool IsPredicted(actor A)
@@ -1744,11 +1840,13 @@ static function FillPlayInfo (PlayInfo PlayInfo)
 
     weight++;
     PlayInfo.AddSetting("UTComp NewNet", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", security, weight, "Check");
-    PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (200)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (1)", security, weight, "Text","0;0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Tween Time (3.0)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionHistoryLength", "NewNet Pawn Collision History Length (0.35)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "bLimitLinkBeamTraces", "Limit Link Beam Lag-Comp Traces", security, weight, "Check");
-    PlayInfo.AddSetting("UTComp NewNet", "LinkBeamTraceInterval", "Link Beam Lag-Comp Trace Interval (0.030)", security, weight, "Text","0;0.0:1.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "LinkBeamTraceInterval", "Link Beam Lag-Comp Trace Interval (0.020)", security, weight, "Text","0;0.0:1.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "bPlaceCopiesNearTracesOnly", "Only Place Lag-Comp Copies Near Traces", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp NewNet", "bSinglePassTimeTravelTrace", "Single-Pass Lag-Comp Traces", security, weight, "Check");
     PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
     PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
 
@@ -1828,11 +1926,13 @@ static event string GetDescriptionText(string PropName)
 		case "bShowTeamScoresInServerBrowser": return "Check this to show team scores in the server browser";
 		case "bAllowTerrainDodge": return "Allow players to dodge off terrain.";
 
-        case "NewNetUpdateFrequency": return "How many times per second the server re-checks each player's NewNet ping helper for changes. Ping messages are sent immediately regardless, so this doesn't affect hit detection; lower values (e.g. 10) save a little server CPU. 0 uses the default. (default 200)";
+        case "NewNetUpdateFrequency": return "How many times per second the server re-checks each player's NewNet ping helper for changes. The helper has nothing that changes and its ping messages are sent immediately regardless, so this doesn't affect hit detection or ping; higher values only cost server CPU. 0 uses the default. (default 1)";
         case "PingTweenTime": return "Seconds between each client's ping measurements. Lower values follow ping changes faster, at the cost of one small message per client each time. The measured ping only times the client's own predicted projectiles; server hit detection doesn't use it. 0 uses the default. (default 3.0)";
         case "PawnCollisionHistoryLength": return "Seconds of position history the server keeps per player for rewinding hits. Shooters with more ping than this (0.35 = 350 ms) are only compensated up to this amount. Higher values cost a little memory and CPU per player. (default 0.35)";
         case "bLimitLinkBeamTraces": return "Between hits, the link beam reuses its last lag-compensated trace for up to the trace interval instead of tracing every server tick. Hits always get a fresh trace. (default off)";
-        case "LinkBeamTraceInterval": return "Seconds between lag-compensated link beam traces between hits. Higher saves more CPU; lower keeps linking and other players' view of the beam closer to every tick. (default 0.030)";
+        case "LinkBeamTraceInterval": return "Seconds between lag-compensated link beam traces between hits. Higher saves more CPU; lower keeps linking and other players' view of the beam closer to every tick. (default 0.020)";
+        case "bPlaceCopiesNearTracesOnly": return "Only moves rewound players into place (with collision on) when a lag-compensated trace passes close enough to hit them, instead of moving every player for every shot. Same hits; saves most of the per-shot engine work on busy servers. (default off)";
+        case "bSinglePassTimeTravelTrace": return "Finds lag-compensated hits with one engine trace instead of two, saving a trace per shot and per projectile catch-up step. Same hits; hit locations on rewound players can differ only in the last decimal places. (default off)";
         
         case "NodeIsolateBonusPct": return "Power Node Isolate Bonus Pct (20)";
         case "VehicleHealScore": return "Vehicle Heal Score (200)";
@@ -2097,7 +2197,7 @@ defaultproperties
      bDebugLogging = false
 
 
-     NewNetUpdateFrequency=200
+     NewNetUpdateFrequency=1
      PingTweenTime=3.0
 
      bEnableAdvancedVotingOptions=True
@@ -2109,7 +2209,9 @@ defaultproperties
      bEnableEnhancedNetCodeVoting=false
      PawnCollisionHistoryLength=0.35
      bLimitLinkBeamTraces=False
-     LinkBeamTraceInterval=0.030
+     LinkBeamTraceInterval=0.020
+     bPlaceCopiesNearTracesOnly=false
+     bSinglePassTimeTravelTrace=false
 
      //original weapons
      WeaponClassNames(0)="XWeapons.ShockRifle"
