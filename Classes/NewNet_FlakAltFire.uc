@@ -316,7 +316,8 @@ function TimeTravel(float delta)
             break;
 
     for(PCC = NewNet_FlakCannon(Weapon).M.PCC; PCC!=None; PCC=PCC.Next)
-        PCC.TimeTravelPawn(Delta);
+        if(PCC.CopiedPawn != Instigator) // DoTimeTravelTrace ignores our own copy
+            PCC.TimeTravelPawn(Delta);
 }
 
 function UnTimeTravel()
