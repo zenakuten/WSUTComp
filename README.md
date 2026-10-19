@@ -15,6 +15,8 @@ V31
 - Add fractional rotation support to vehicle passenger seats which was missing; you can now much more smoothly move your mouse when (heavily) zoomed in
 - Replace "Def 3p shieldgun" setting with "Stock 3P" checkbox to entirely disable the enhanced 3P mode
 - Server-side optimizations
+- Add workaround for camera rotation rounding in native logic, which resulted in shots firing down and to the left from screen center
+  - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/565
 
 V30
 - Add end game sound like TAM/Freon end ceremony
