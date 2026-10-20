@@ -78,7 +78,7 @@ function DoTrace(Vector Start, Rotator Dir)
     while (true)
     {
         bDoReflect = false;
-        X = Vector(Dir);
+        X = class'BS_xPlayer'.static.AimVector(Dir); // nearest, not down: see BS_xPlayer.AlignToView
         End = Start + tmpTraceRange * X;
         Other = Weapon.Trace(HitLocation, HitNormal, End, Start, true);
 

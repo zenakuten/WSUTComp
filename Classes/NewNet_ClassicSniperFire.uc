@@ -31,7 +31,7 @@ function DoTrace(Vector Start, Rotator Dir)
 			Weapon.Hand * Weapon.EffectOffset.Y * Y +
 			Weapon.EffectOffset.Z * Z);
 
-    X = Vector(Dir);
+    X = class'BS_xPlayer'.static.AimVector(Dir); // nearest, not down: see BS_xPlayer.AlignToView
     End = Start + TraceRange * X;
     TimeTravel(PingDT);
     if(PingDT <=0.0)

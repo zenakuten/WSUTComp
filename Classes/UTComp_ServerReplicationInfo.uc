@@ -74,6 +74,7 @@ var float NetMoveDelta;
 var float MaxResponseTime;
 var bool bMoveErrorAccumFix;
 var float MoveErrorAccumFixValue;
+var bool bVehicleFullPrecisionAim; // server only, not replicated
 
 var bool bLimitTaunts;
 var int TauntCount;
@@ -155,6 +156,7 @@ defaultproperties
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
+     bVehicleFullPrecisionAim=true
 
      bLimitTaunts=false
      TauntCount=10
