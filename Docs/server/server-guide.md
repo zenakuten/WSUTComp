@@ -144,6 +144,8 @@ for the technical background.
 | NewNet Update Frequency | `NewNetUpdateFrequency` | Text (0-1000) | 1 | How often the server re-checks each player's NewNet ping helper for changes. It has nothing that changes and its ping messages go out immediately, so this doesn't affect hit detection or ping; higher values only cost server CPU. 0 uses the default. |
 | Only Place Lag-Comp Copies Near Traces | `bPlaceCopiesNearTracesOnly` | Check | Off | Only moves rewound players into place (with collision on) when a lag-compensated trace passes close enough to hit them, instead of moving every player for every shot. Same hits; saves most of the per-shot engine work on busy servers. |
 | Single-Pass Lag-Comp Traces | `bSinglePassTimeTravelTrace` | Check | Off | Finds lag-compensated hits with one engine trace instead of two, saving a trace per shot and per projectile catch-up step. Same hits; hit locations on rewound players can differ only in the last decimal places. |
+| Vehicle Update Rate | `VehicleUpdateMode` | Select | `Off` (0) | `0` Off (stock); `1` Move rate, stock while firing; `2` Move rate. How often players in vehicles send their controls and aim to the server. Off is stock: drivers send every frame (about 20 KB/s at 460 fps) and passengers every second frame (about 14 KB/s). The move rate modes send at the `NetMoveDelta` rate (about 90 a second at the default 0.011), about 4-5 KB/s, and immediately whenever a fire button changes, or for drivers throttle, steering, jump or crouch, and for passengers crouch. `1` keeps the stock rate while a fire button is held, so held fire aims exactly as with Off. `2` keeps the lower rate while firing too, so shots fired while turning use aim up to one `NetMoveDelta` older. Players on foot are not affected. |
+| Spectator Update Rate | `SpectatorUpdateRate` | Select | `Off` (0) | `0` Off (stock); `50`, `20` or `10` per second. How often spectators send their camera to the server while it is still: watching, following a player, or waiting for the match. Stock sends every second frame, about 13 KB/s at 460 fps; 50, 20 and 10 per second are about 3, 1.5 and 1 KB/s. Stock already keeps only the newest of these moves, so the only effect is that the server gets the spectator's view a little later, which it only uses to pick what is in view when spectating from behind. A spectator flying the camera keeps the stock rate. Independent of Vehicle Update Rate. |
 
 ---
 
@@ -162,6 +164,7 @@ Client movement and anti-warp tuning. These affect all game types.
 | delay for client move update | `MaxResponseTime` | Text (0.001-0.250) | 0.125 | Client move-update response delay. |
 | use move accum fix | `bMoveErrorAccumFix` | Check | Off | Enables the move-error accumulation fix. |
 | move accum fix value | `MoveErrorAccumFixValue` | Text (0.001-0.018) | 0.009 | Tolerance used by the accum fix. |
+| full precision vehicle aim | `bVehicleFullPrecisionAim` | Check | On | Server uses the full aim sent by vehicle drivers and gunners. Off = stock precision (every other rotation unit). No bandwidth difference either way. |
 
 ---
 

@@ -75,6 +75,8 @@ var float MaxResponseTime;
 var bool bMoveErrorAccumFix;
 var float MoveErrorAccumFixValue;
 var bool bVehicleFullPrecisionAim; // server only, not replicated
+var byte VehicleUpdateMode; // vehicle seat move rate: 0 stock, 1 NetMoveDelta rate but stock while firing, 2 NetMoveDelta rate
+var byte SpectatorUpdateRate; // sends per second for a still spectator camera, 0 = stock
 
 var bool bLimitTaunts;
 var int TauntCount;
@@ -101,7 +103,7 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta,
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, VehicleUpdateMode, SpectatorUpdateRate,
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
 		bDisableCameraShake, bAllowTerrainDodge;
@@ -157,6 +159,8 @@ defaultproperties
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
      bVehicleFullPrecisionAim=true
+     VehicleUpdateMode=0
+     SpectatorUpdateRate=0
 
      bLimitTaunts=false
      TauntCount=10

@@ -32,6 +32,13 @@ struct PawnHistoryElement
 
 var array<PawnHistoryElement> PawnHistory;
 
+// Entries before HistoryStart are outdated. They're removed in batches, because
+// removing from the front of PawnHistory moves the whole history (and often
+// reallocates it twice) every tick. A batch of 64 would add reallocations for
+// histories under ~85 entries.
+var int HistoryStart;
+const HISTORY_REMOVE_BATCH = 32;
+
 //Furthest we will allow backtracking
 var float MAX_HISTORY_LENGTH;
 
@@ -161,7 +168,7 @@ function TimeTravelPawn(float dt)
         SetCollision(false);
 
     //We cant backtrack, too recent, just go straight to the pawn
-    if(PawnHistory.Length == 0 || PawnHistory[PawnHistory.Length-1].TimeStamp < StampDT )
+    if(PawnHistory.Length == HistoryStart || PawnHistory[PawnHistory.Length-1].TimeStamp < StampDT )
     {
         GoToPawn();
         return;
@@ -169,8 +176,8 @@ function TimeTravelPawn(float dt)
 
     //Sandwich between 2 history parts Ceiling and Floor
     //History is in TimeStamp order, so binary search for Floor (the oldest
-    //entry at or after StampDT). Ceiling is the entry just before it.
-    Lo = 0;
+    //live entry at or after StampDT). Ceiling is the entry just before it.
+    Lo = HistoryStart;
     Hi = PawnHistory.Length-1;
     while(Lo < Hi)
     {
@@ -181,7 +188,7 @@ function TimeTravelPawn(float dt)
             Lo = Pivot + 1;
     }
     Floor = Lo;
-    if(Floor > 0)
+    if(Floor > HistoryStart)
     {
         bCeiling=true;
         Ceiling = Floor - 1;
@@ -419,7 +426,7 @@ function Identify()
 
 function tick(float DeltaTime)
 {
-    local int i, NumToRemove;
+    local int i;
     local float Now;
 
     if(CopiedPawn==None)
@@ -437,10 +444,13 @@ function tick(float DeltaTime)
     //PawnHistory[i].Physics = CopiedPawn.Physics;
 
     //Drop history older than MAX_HISTORY_LENGTH
-    while(NumToRemove < PawnHistory.Length && PawnHistory[NumToRemove].TimeStamp + MAX_HISTORY_LENGTH < Now)
-        NumToRemove++;
-    if(NumToRemove > 0)
-        PawnHistory.Remove(0, NumToRemove);
+    while(HistoryStart < PawnHistory.Length && PawnHistory[HistoryStart].TimeStamp + MAX_HISTORY_LENGTH < Now)
+        HistoryStart++;
+    if(HistoryStart >= HISTORY_REMOVE_BATCH)
+    {
+        PawnHistory.Remove(0, HistoryStart);
+        HistoryStart = 0;
+    }
 }
 
 defaultproperties

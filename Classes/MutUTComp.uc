@@ -121,6 +121,8 @@ var config bool bLimitLinkBeamTraces;
 var config float LinkBeamTraceInterval;
 var config bool bPlaceCopiesNearTracesOnly;
 var config bool bSinglePassTimeTravelTrace;
+var config byte VehicleUpdateMode;
+var config byte SpectatorUpdateRate;
 var config array<string> IgnoredHitSounds;
 
 var config bool bNoTeamBoosting;
@@ -862,7 +864,9 @@ simulated function Tick(float DeltaTime)
 {
     local PlayerController PC;
     local Mutator M;
-    local int x;
+    local int x, i;
+    local rotator R;
+    local Pawn P;
 
     if(Role == ROLE_Authority && Level.Game != None && Level.Game.bGameEnded && !bEndGameSoundPlayed)
     {
@@ -889,7 +893,24 @@ simulated function Tick(float DeltaTime)
             counter+=1;
             StampArray[counter%256] = ClientTimeStamp;
             AverDT = (9.0*AverDT + DeltaTime) * 0.1;
-            SetPawnStamp();
+
+            // Send the tick count to clients in the rotation of the TimeStamp pawn
+            if(countercontroller==none)
+                countercontroller = spawn(class'TimeStamp_Controller');
+
+            if(countercontroller != none && countercontroller.Pawn == none)
+            {
+                P = spawn(countercontroller.PawnClass);
+                countercontroller.Possess(P);
+            }
+
+            R.Yaw = (counter%256)*256;
+            i=counter/256;
+            R.Pitch = i*256;
+
+            if(countercontroller.Pawn != None)
+                countercontroller.Pawn.SetRotation(R);
+
             if(ClientTimeStamp > LastReplicatedAverDT + AVERDT_SEND_PERIOD)
             {
                 StampInfo.ReplicatedAverDT(AverDT);
@@ -929,29 +950,6 @@ simulated function Tick(float DeltaTime)
         bHasInteraction=True;
         class'DamTypeLinkShaft'.default.bSkeletize=false;
     }
-}
-
-function SetPawnStamp()
-{
-    local rotator R;
-    local int i;
-    local Pawn P;
-
-    if(countercontroller==none)
-        countercontroller = spawn(class'TimeStamp_Controller');
-
-    if(countercontroller != none && countercontroller.Pawn == none)
-    {
-        P = spawn(countercontroller.PawnClass);
-        countercontroller.Possess(P);
-    }
-
-    R.Yaw = (counter%256)*256;
-    i=counter/256;
-    R.Pitch = i*256;
-
-    if(countercontroller.Pawn != None)
-        countercontroller.Pawn.SetRotation(R);
 }
 
 simulated function float GetStamp(int stamp)
@@ -1033,6 +1031,8 @@ function SpawnReplicationClass()
     RepInfo.bMoveErrorAccumFix = bMoveErrorAccumFix;
     RepInfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
     RepInfo.bVehicleFullPrecisionAim = bVehicleFullPrecisionAim;
+    RepInfo.VehicleUpdateMode = Min(VehicleUpdateMode, 2);
+    RepInfo.SpectatorUpdateRate = SpectatorUpdateRate;
 
     RepInfo.bLimitTaunts = bLimitTaunts;
     RepInfo.TauntCount = TauntCount;
@@ -1849,6 +1849,8 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp NewNet", "LinkBeamTraceInterval", "Link Beam Lag-Comp Trace Interval (0.020)", security, weight, "Text","0;0.0:1.0",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "bPlaceCopiesNearTracesOnly", "Only Place Lag-Comp Copies Near Traces", security, weight, "Check");
     PlayInfo.AddSetting("UTComp NewNet", "bSinglePassTimeTravelTrace", "Single-Pass Lag-Comp Traces", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp NewNet", "VehicleUpdateMode", "Vehicle Update Rate", security, weight, "Select", "0;Off (stock);1;Move rate, stock while firing;2;Move rate");
+    PlayInfo.AddSetting("UTComp NewNet", "SpectatorUpdateRate", "Spectator Update Rate", security, weight, "Select", "0;Off (stock);50;50 per second;20;20 per second;10;10 per second");
     PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
     PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
 
@@ -1899,7 +1901,7 @@ static event string GetDescriptionText(string PropName)
         case "MaxMultiDodges": return "Additional dodges players can perform without landing.";
         case "bEnableTeamOverlay": return "Check this to enable the team overlay.";
         case "bEnablePowerupsOverlay": return "Check this to enable the powerups overlay for spectators.";
-        case "bEnableEnhancedNetcode": return "Check this to enable the enhanced netcode.";
+        case "bEnableEnhancedNetcode": return "Rewinds other players to where the shooter saw them when checking hits, so hits register properly at higher pings. Players can still turn it off for themselves in the UTComp menu. Changes apply from the next map. (default on)";
         case "bEnableVoting": return "Check this to enable voting.";
         case "bEnableBrightSkinsVoting": return "Check this to enable voting for brightskins.";
         case "bEnablehitsoundsVoting": return "Check this to enable voting for hitsounds.";
@@ -1910,8 +1912,8 @@ static event string GetDescriptionText(string PropName)
         case "bEnableMapVoting": return "Check this to enable voting for Maps.";
         case "WarmupTime": return "Time for warmup. Set this to 0 for unlimited, otherwise it is the time in seconds.";
         case "EnableWarmupWeaponsMode": return "Warmup weapon mode: 0) none 1) utcomp 2) tam 3) ons+tam";
-        case "MinNetSpeed": return "Minimum NetSpeed for clients on this server";
-        case "MaxNetSpeed": return "Maximum NetSpeed for clients on this server";
+        case "MinNetSpeed": return "Lowest netspeed (bytes per second) clients may use; lower client settings are raised to this. Keep this high to stop ignorant players from setting their netspeed too low, resulting in packet loss-like symptoms. (default 10000)";
+        case "MaxNetSpeed": return "Highest netspeed (bytes per second) clients may use; higher client settings are lowered to this. The server's MaxClientRate / MaxInternetClientRate still caps it, so higher values have no effect. (default 100000000)";
         case "SuicideInterval": return "Minimum time between two suicides";
         case "bShowSpawnsDuringWarmup": return "Show spawn points during warmup by spawning dummies on every one of them";
         case "bEnableEmoticons": return "Enable emoticons";
@@ -1936,6 +1938,8 @@ static event string GetDescriptionText(string PropName)
         case "LinkBeamTraceInterval": return "Seconds between lag-compensated link beam traces between hits. Higher saves more CPU; lower keeps linking and other players' view of the beam closer to every tick. (default 0.020)";
         case "bPlaceCopiesNearTracesOnly": return "Only moves rewound players into place (with collision on) when a lag-compensated trace passes close enough to hit them, instead of moving every player for every shot. Same hits; saves most of the per-shot engine work on busy servers. (default off)";
         case "bSinglePassTimeTravelTrace": return "Finds lag-compensated hits with one engine trace instead of two, saving a trace per shot and per projectile catch-up step. Same hits; hit locations on rewound players can differ only in the last decimal places. (default off)";
+        case "VehicleUpdateMode": return "How often players in vehicles send their controls and aim to the server. Off is stock: drivers send every frame (about 20 KB/s at 460 fps) and passengers every second frame (about 14 KB/s). The move rate modes send at the NetMoveDelta rate, about 4-5 KB/s, and immediately whenever a fire button changes, or for drivers throttle, steering, jump or crouch, and for passengers crouch. 'Stock while firing' keeps the stock rate while a fire button is held, so held fire aims exactly as with Off. 'Move rate' keeps the lower rate while firing too, so shots fired while turning use aim up to one NetMoveDelta older. (default off)";
+        case "SpectatorUpdateRate": return "How often spectators send their camera to the server while it is still: watching, following a player, or waiting for the match. Stock sends every second frame, about 13 KB/s at 460 fps; 50, 20 and 10 per second are about 3, 1.5 and 1 KB/s. Stock already keeps only the newest of these moves, so the only effect is that the server gets the spectator's view a little later, which it only uses to pick what is in view when spectating from behind. A spectator flying the camera keeps the stock rate. (default off)";
         
         case "NodeIsolateBonusPct": return "Power Node Isolate Bonus Pct (20)";
         case "VehicleHealScore": return "Vehicle Heal Score (200)";
@@ -2052,7 +2056,7 @@ function Reset()
             BS_xPlayer(C).ClientResetNetcode();
     }
 
-    // delete these server side, the get recreated in SetPawnStamp function
+    // delete these server side, they get recreated in Tick
     if(countercontroller != None)
     {
         if(countercontroller.Pawn != None)
@@ -2216,6 +2220,8 @@ defaultproperties
      LinkBeamTraceInterval=0.020
      bPlaceCopiesNearTracesOnly=false
      bSinglePassTimeTravelTrace=false
+     VehicleUpdateMode=0
+     SpectatorUpdateRate=0
 
      //original weapons
      WeaponClassNames(0)="XWeapons.ShockRifle"
