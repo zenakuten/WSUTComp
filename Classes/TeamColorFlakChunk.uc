@@ -132,6 +132,12 @@ simulated function SetColors()
 
 simulated function Tick(float DT)
 {
+    // Colouring is client-side, so a dedicated server stops ticking this
+    if(Level.NetMode == NM_DedicatedServer)
+    {
+        Disable('Tick');
+        return;
+    }
     super.Tick(DT);
     SetColors();
 }

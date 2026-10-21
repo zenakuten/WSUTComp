@@ -149,6 +149,13 @@ var transient float PitchFraction, YawFraction;
 var transient bool bExactView;
 var transient rotator ExactView;
 
+// Client: what the last ServerDrive or turret move carried, for VehicleUpdateMode
+// (see PlayerDriving.PlayerMove and PlayerTurreting.TurretMoveWaits)
+var transient float LastDriveThrottle, LastDriveSteering, LastDriveRise;
+var transient int LastDriveView;
+var transient byte LastSentFire, LastSentAltFire;
+var transient bool bLastSentDuck;
+
 var transient PlayerInput PlayerInput2;
 
 var UTComp_Settings Settings;
@@ -4077,6 +4084,9 @@ ignores SeePlayer, HearNoise, Bump;
 
     // Same as stock, but the views are sent with full precision.
     // View is ReplicateMove's stock packing of Rotation, so it is repacked here.
+    // With VehicleUpdateMode on, the pending move was held back by
+    // TurretMoveWaits and this one supersedes it, so it only goes along at the
+    // stock rate.
     function CallServerMove
     (
         float               TimeStamp,
@@ -4094,7 +4104,12 @@ ignores SeePlayer, HearNoise, Bump;
         optional int        OldAccel
     )
     {
-        if ( PendingMove != None )
+        bLastSentDuck = NewbDuck;
+        LastSentFire = bFire;
+        LastSentAltFire = bAltFire;
+
+        if ( PendingMove != None
+            && (RepInfo == None || RepInfo.VehicleUpdateMode == 0 || (RepInfo.VehicleUpdateMode == 1 && (bFire != 0 || bAltFire != 0))) )
         {
             DualTurretServerMove
             (
@@ -4118,6 +4133,28 @@ ignores SeePlayer, HearNoise, Bump;
                 ClientRoll,
                 PackExactView(Rotation)
             );
+    }
+
+    // Turret moves can't be combined, so stock sends each one with the pending
+    // move on the next frame. They carry no acceleration, and the server only
+    // acts on the newest one's timestamp, view and duck, so with
+    // VehicleUpdateMode on a move waits for the NetMoveDelta rate instead, and
+    // replaces the pending move, which is never sent. Duck and fire button
+    // changes don't wait, and in mode 1 nothing waits while a fire button is
+    // held, so held fire aims as with Off.
+    function bool TurretMoveWaits(SavedMove NewMove)
+    {
+        local float MoveDelta;
+
+        if (NewMove.bDuck != bLastSentDuck || bFire != LastSentFire || bAltFire != LastSentAltFire
+            || (RepInfo.VehicleUpdateMode == 1 && (bFire != 0 || bAltFire != 0)))
+            return false;
+
+        MoveDelta = RepInfo.NetMoveDelta;
+        if (MoveDelta <= 0)
+            MoveDelta = 0.011;
+
+        return (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 < MoveDelta;
     }
 
     function TurretServerMove
@@ -4167,11 +4204,20 @@ ignores SeePlayer, HearNoise, Bump;
         CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
     }
 
-    // Same as stock, but the view is sent to ServerDrive with full precision
+    // Same as stock, but the view is sent to ServerDrive with full precision.
+    // Stock sends ServerDrive every frame, and each one goes out in its own
+    // packet, mostly UDP/IP header. ServerDrive only sets state (inputs and
+    // view) that the server reads once per tick, and each call carries all of
+    // it, so with VehicleUpdateMode on it is sent at the NetMoveDelta rate, and
+    // at once whenever an input the server acts on (throttle, steering, rise,
+    // jump, fire buttons) changes. Mode 1 also sends every frame the view
+    // changes while a fire button is held, so held fire aims as in mode 0.
     function PlayerMove( float DeltaTime )
     {
         local Vehicle CurrentVehicle;
-        local float NewPing;
+        local float NewPing, NewThrottle, NewSteering, NewRise, MoveDelta;
+        local int View;
+        local bool bSend;
 
         CurrentVehicle = Vehicle(Pawn);
 
@@ -4194,7 +4240,53 @@ ignores SeePlayer, HearNoise, Bump;
                 OldPing = ExactPing;
                 ServerUpdatePing(1000 * ExactPing);
             }
-            if (!bSkippedLastUpdate &&                              // in order to skip this update we must not have skipped the last one
+            if (RepInfo != None && RepInfo.VehicleUpdateMode != 0)
+            {
+                // Compared as ProcessDrive will use them; the raw axes jitter every frame
+                NewThrottle = FClamp( aForward/5000.0, -1.0, 1.0 );
+                NewSteering = FClamp( -aStrafe/5000.0, -1.0, 1.0 );
+                NewRise = FClamp( aUp/5000.0, -1.0, 1.0 );
+
+                MoveDelta = RepInfo.NetMoveDelta;
+                if (MoveDelta <= 0)
+                    MoveDelta = 0.011;
+
+                // The time test is ReplicateMove's
+                bSend = NewThrottle != LastDriveThrottle || NewSteering != LastDriveSteering || NewRise != LastDriveRise
+                    || bPressedJump != bLastPressedJump || bFire != LastSentFire || bAltFire != LastSentAltFire
+                    || (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 >= MoveDelta;
+
+                if (bSend)
+                    View = PackExactView(Rotation);
+                else if (RepInfo.VehicleUpdateMode == 1 && (bFire != 0 || bAltFire != 0))
+                {
+                    View = PackExactView(Rotation);
+                    bSend = View != LastDriveView;
+                }
+
+                if (bSend)
+                {
+                    ClientUpdateTime = Level.TimeSeconds;
+
+                    LastDriveThrottle = NewThrottle;
+                    LastDriveSteering = NewSteering;
+                    LastDriveRise = NewRise;
+                    bLastPressedJump = bPressedJump;
+                    LastSentFire = bFire;
+                    LastSentAltFire = bAltFire;
+                    LastDriveView = View;
+
+                    if (CurrentVehicle != None)
+                    {
+                        CurrentVehicle.Throttle = NewThrottle;
+                        CurrentVehicle.Steering = NewSteering;
+                        CurrentVehicle.Rise = NewRise;
+                    }
+
+                    ServerDrive(aForward, aStrafe, aUp, bPressedJump, View);
+                }
+            }
+            else if (!bSkippedLastUpdate &&                         // in order to skip this update we must not have skipped the last one
                 (Player.CurrentNetSpeed < 10000) &&                 // and netspeed must be low
                 (Level.TimeSeconds - ClientUpdateTime < 0.0222) &&  // and time since last update must be short
                 bPressedJump == bLastPressedJump &&                 // and update must not contain major changes
@@ -4875,6 +4967,16 @@ function ReplicateMove
 			return;
 		}
 	}
+	// A move that couldn't be combined goes out with the pending one now,
+	// unless a vehicle seat (PlayerTurreting.TurretMoveWaits) or a still
+	// spectator camera (SpectatorMoveWaits) lets it wait
+	else if ( RepInfo != None
+		&& ((RepInfo.VehicleUpdateMode != 0 && TurretMoveWaits(NewMove))
+			|| (RepInfo.SpectatorUpdateRate != 0 && SpectatorMoveWaits(NewMove))) )
+	{
+		PendingMove = NewMove;
+		return;
+	}
 
     ClientUpdateTime = Level.TimeSeconds;
 
@@ -4933,6 +5035,26 @@ function ReplicateMove
         OldAccel
     );
 	PendingMove = None;
+}
+
+// Whether a move that couldn't be combined may wait instead of going out with
+// the pending move. Only vehicle seats let it (PlayerTurreting).
+function bool TurretMoveWaits(SavedMove NewMove)
+{
+    return false;
+}
+
+// Spectator cameras (SpectatorUpdateRate): a still move may wait. Stock
+// CallServerMove drops a still pending move anyway and sends a
+// ShortServerMove, so waiting only delays the view the server has.
+function bool SpectatorMoveWaits(SavedMove NewMove)
+{
+    if (Pawn != None || !IsSpectating()
+        || NewMove.Acceleration != vect(0,0,0) || PendingMove.Acceleration != vect(0,0,0)
+        || Velocity != vect(0,0,0))
+        return false;
+
+    return (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 * RepInfo.SpectatorUpdateRate < 1.0;
 }
 
 // Get the next free move, maintaining a maximum of MaxSavedMoves.

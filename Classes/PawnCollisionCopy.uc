@@ -32,10 +32,25 @@ struct PawnHistoryElement
 
 var array<PawnHistoryElement> PawnHistory;
 
+// Entries before HistoryStart are outdated. They're removed in batches, because
+// removing from the front of PawnHistory moves the whole history (and often
+// reallocates it twice) every tick. A batch of 64 would add reallocations for
+// histories under ~85 entries.
+var int HistoryStart;
+const HISTORY_REMOVE_BATCH = 32;
+
 //Furthest we will allow backtracking
 var float MAX_HISTORY_LENGTH;
 
 var bool bCrouched;
+
+// Set by TimeTravelPawn: where this copy goes for the current time travel. Place
+// moves it there with collision on, either straight away or, when
+// MutUTComp.bPlaceCopiesNearTracesOnly is on, via PlaceNear once a trace can reach it.
+var bool bPendingPlace;
+var vector PendingLocation;
+var rotator PendingRotation;
+var bool bPendingRotation;
 
 
 function PostBeginPlay()
@@ -110,7 +125,8 @@ function GoToPawn()
     if(CopiedPawn == none)
         return;
 
-    SetLocation(CopiedPawn.Location);
+    PendingLocation = CopiedPawn.Location;
+    bPendingRotation = false;
     SetCollisionSize(CopiedPawn.CollisionRadius,CopiedPawn.CollisionHeight);
 
     if(bUseCylinderCollision)
@@ -127,7 +143,7 @@ function GoToPawn()
         }
     }
 
-    SetCollision(true);
+    bPendingPlace = true;
 }
 
 /*
@@ -143,6 +159,7 @@ function TimeTravelPawn(float dt)
     local float Alpha;
   //  local float Interpdt;
 
+    bPendingPlace = false;
     if(CopiedPawn == none || CopiedPawn.DrivenVehicle!=None)
        return;
     StampDT = M.ClientTimeStamp - dt;
@@ -151,7 +168,7 @@ function TimeTravelPawn(float dt)
         SetCollision(false);
 
     //We cant backtrack, too recent, just go straight to the pawn
-    if(PawnHistory.Length == 0 || PawnHistory[PawnHistory.Length-1].TimeStamp < StampDT )
+    if(PawnHistory.Length == HistoryStart || PawnHistory[PawnHistory.Length-1].TimeStamp < StampDT )
     {
         GoToPawn();
         return;
@@ -159,8 +176,8 @@ function TimeTravelPawn(float dt)
 
     //Sandwich between 2 history parts Ceiling and Floor
     //History is in TimeStamp order, so binary search for Floor (the oldest
-    //entry at or after StampDT). Ceiling is the entry just before it.
-    Lo = 0;
+    //live entry at or after StampDT). Ceiling is the entry just before it.
+    Lo = HistoryStart;
     Hi = PawnHistory.Length-1;
     while(Lo < Hi)
     {
@@ -171,7 +188,7 @@ function TimeTravelPawn(float dt)
             Lo = Pivot + 1;
     }
     Floor = Lo;
-    if(Floor > 0)
+    if(Floor > HistoryStart)
     {
         bCeiling=true;
         Ceiling = Floor - 1;
@@ -213,8 +230,7 @@ function TimeTravelPawn(float dt)
          Alpha = (StampDT - PawnHistory[Ceiling].TimeStamp) / (PawnHistory[Floor].TimeStamp - PawnHistory[Ceiling].TimeStamp);
          V2 = PawnHistory[Ceiling].Location + (PawnHistory[Floor].Location - PawnHistory[Ceiling].Location) * Alpha;
 
-         SetLocation(V2);
-         SetRotation(PawnHistory[Floor].Rotation);
+         PendingLocation = V2;
 
          if(bUseCylinderCollision)
          {
@@ -245,9 +261,10 @@ function TimeTravelPawn(float dt)
          else if(bUseCylinderCollision)
              SetCollisionSize(CopiedPawn.CollisionRadius, CopiedPawn.CollisionHeight);
 
-         SetLocation(PawnHistory[Floor].Location);
-         SetRotation(PawnHistory[Floor].Rotation);
+         PendingLocation = PawnHistory[Floor].Location;
     }
+    PendingRotation = PawnHistory[Floor].Rotation;
+    bPendingRotation = true;
 
 	// Add checks for vehicles to not use cylinders (and use LinkMesh instead), otherwise it causes hitscan noregs on high ping (>70ms)..
 	// Without LinkMesh enabled, this logic will not let you hit the vehicle if the main seat is occupied (if gunner then works fine) - Calypto
@@ -261,14 +278,56 @@ function TimeTravelPawn(float dt)
         else if (CopiedPawn.bCollideActors)
         {
             // Enable collision for infantry and main vehicles
-            SetCollision(true);
+            bPendingPlace = true;
         }
     }
 }
 
+// Called by MutUTComp.TimeTravelTrace before each trace when
+// bPlaceCopiesNearTracesOnly is on. Moving a copy and turning its collision on
+// are the expensive part of time travel (zone lookups, overlap checks, touch
+// events), so only copies the trace line can reach are placed. The rest stay
+// pending for any later trace in the same shot.
+function PlaceNear(vector Start, vector Dir, float DirSizeSq)
+{
+    local vector P;
+    local float T, Reach;
+
+    // Lag-compensated traces are lines, which can only touch a cylinder if they
+    // pass within its bounding sphere. Mesh collision has no such bound.
+    if(bUseCylinderCollision)
+    {
+        // P = offset from the closest point on the trace to the copy
+        P = PendingLocation - Start;
+        T = P dot Dir;
+        if(T > 0.0)
+        {
+            if(T >= DirSizeSq)
+                P -= Dir;
+            else
+                P -= Dir * (T / DirSizeSq);
+        }
+        Reach = CollisionRadius + CollisionHeight + 1.0;
+        if((P dot P) > Reach * Reach)
+            return;
+    }
+
+    Place();
+}
+
+// Moves the copy to where TimeTravelPawn rewound it and turns its collision on
+function Place()
+{
+    bPendingPlace = false;
+    SetLocation(PendingLocation);
+    if(bPendingRotation)
+        SetRotation(PendingRotation);
+    SetCollision(true);
+}
 
 function TurnOffCollision()
 {
+    bPendingPlace = false;
     //Called on every copy after every shot, most of which were never turned on
     if(bCollideActors)
         SetCollision(false);
@@ -367,7 +426,7 @@ function Identify()
 
 function tick(float DeltaTime)
 {
-    local int i, NumToRemove;
+    local int i;
     local float Now;
 
     if(CopiedPawn==None)
@@ -385,10 +444,13 @@ function tick(float DeltaTime)
     //PawnHistory[i].Physics = CopiedPawn.Physics;
 
     //Drop history older than MAX_HISTORY_LENGTH
-    while(NumToRemove < PawnHistory.Length && PawnHistory[NumToRemove].TimeStamp + MAX_HISTORY_LENGTH < Now)
-        NumToRemove++;
-    if(NumToRemove > 0)
-        PawnHistory.Remove(0, NumToRemove);
+    while(HistoryStart < PawnHistory.Length && PawnHistory[HistoryStart].TimeStamp + MAX_HISTORY_LENGTH < Now)
+        HistoryStart++;
+    if(HistoryStart >= HISTORY_REMOVE_BATCH)
+    {
+        PawnHistory.Remove(0, HistoryStart);
+        HistoryStart = 0;
+    }
 }
 
 defaultproperties

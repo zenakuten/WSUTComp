@@ -433,80 +433,24 @@ function vector Extrapolate(out rotator Dir, float dF)
     return vector(Dir)*class'NewNet_RocketProj'.default.speed*dF;
 }
 
-// We need to do 2 traces. First, one that ignores the things which have already been copied
-// and a second one that looks only for things that are copied
+// Lag-compensated trace, see MutUTComp.TimeTravelTrace
 function Actor DoTimeTravelTrace(Out vector Hitlocation, out vector HitNormal, vector End, vector Start)
 {
-    local Actor Other;
-    local bool bFoundPCC;
-    local vector NewEnd, WorldHitNormal,WorldHitLocation;
-    local vector PCCHitNormal,PCCHitLocation;
-    local PawnCollisionCopy PCC, returnPCC;
-
-    //First, lets set the extent of our trace.  End once we hit an actor which won't
-    //be checked by an unlagged copy.
-    foreach Owner.TraceActors(class'Actor', Other,WorldHitLocation,WorldHitNormal,End,Start)
-    {
-       if((Other.bBlockActors || Other.bProjTarget || Other.bWorldGeometry) && !class'MutUTComp'.static.IsPredicted(Other))
-       {
-           break;
-       }
-       Other=None;
-    }
-    if(Other!=None)
-        NewEnd=WorldHitlocation;
-    else
-        NewEnd=End;
-
-
-    //Now, lets see if we run into any copies, we stop at the location
-    //determined by the previous trace.
-    foreach Owner.TraceActors(class'PawnCollisionCopy', PCC, PCCHitLocation, PCCHitNormal, NewEnd,Start)
-    {
-        if(PCC!=None && PCC.CopiedPawn!=None && PCC.CopiedPawn!=Instigator)
-        {
-            bFoundPCC=True;
-            returnPCC=PCC;
-            break;
-        }
-    }
-
-    // Give back the corresponding info depending on whether or not
-    // we found a copy
-
-    if(bFoundPCC)
-    {
-        HitLocation = PCCHitLocation;
-        HitNormal = PCCHitNormal;
-        return returnPCC;
-    }
-    else
-    {
-        HitLocation = WorldHitLocation;
-        HitNormal = WorldHitNormal;
-        return Other;
-    }
+    return M.TimeTravelTrace(Owner, Instigator, HitLocation, HitNormal, End, Start);
 }
 
 function TimeTravel(float delta)
 {
-    local PawnCollisionCopy PCC;
-
     if(M == none)
         foreach DynamicActors(class'MutUTComp',M)
             break;
 
-    for(PCC = M.PCC; PCC!=None; PCC=PCC.Next)
-        if(PCC.CopiedPawn != Instigator) // DoTimeTravelTrace ignores our own copy
-            PCC.TimeTravelPawn(Delta);
+    M.TimeTravelCopies(Delta, Instigator);
 }
 
 function UnTimeTravel()
 {
-    local PawnCollisionCopy PCC;
-    //Now, lets turn off the old hits
-    for(PCC = M.PCC; PCC!=None; PCC=PCC.Next)
-        PCC.TurnOffCollision();
+    M.UnTimeTravelCopies();
 }
 
 DefaultProperties

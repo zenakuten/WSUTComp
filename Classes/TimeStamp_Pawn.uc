@@ -25,6 +25,12 @@ function destroyed()
 
 simulated event tick(float deltatime)
 {
+   // TimeStamp and DT are only read by the NewNet weapons' client-side fire code
+   if(Level.NetMode != NM_Client)
+   {
+       Disable('Tick');
+       return;
+   }
    Super.tick(deltatime);
    NewTimeStamp = (Rotation.Yaw+Rotation.Pitch*256)/256;
    DT+=deltatime;

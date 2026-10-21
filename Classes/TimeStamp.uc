@@ -21,6 +21,12 @@ simulated function PostBeginPlay()
 
 simulated function tick(float DeltaTime)
 {
+    // default.AverDT is only read by client-side fake projectile code
+    if(Level.NetMode != NM_Client)
+    {
+        Disable('Tick');
+        return;
+    }
    // ClientTimeStamp+=deltatime;
     //Log(ClientTimeStamp);
     default.AverDT = Averdt;

@@ -86,6 +86,13 @@ simulated function FindFPM()
 
 simulated function Tick(float deltatime)
 {
+    // Fake projectile matching is client-side, so a dedicated server stops
+    // ticking this
+    if(Level.NetMode == NM_DedicatedServer)
+    {
+        Disable('Tick');
+        return;
+    }
     super.Tick(deltatime);
     if(Level.NetMode != NM_Client)
         return;

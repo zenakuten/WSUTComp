@@ -34,6 +34,13 @@ var UTComp_HUDSettings HUDSettings;
 
 var bool InSpawnProtection;
 var bool OldInSpawnProtection;
+
+// Server: last seen values of the replicated properties the engine changes natively
+// without marking the pawn net-dirty (see Tick)
+var Material RepOverlayMaterial;
+var float RepOverlayTimer;
+var name RepAnimAction;
+var bool bRepSimulateGravity;
 var float lastSkinUpdateTime;
 var Material DeResMatColored0, DeResMatColored1;
 var ColorModifier DeResModifier0;
@@ -433,15 +440,35 @@ simulated static function string IsAcceptable(string S)
 simulated function Tick(float DeltaTime)
 {
     local UTComp_PRI uPRI;
+    local bool bProtected;
 
     if(RepInfo==None)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
             break;
 
-    super.Tick(DeltaTime);
-    
+    // ModernPawn's and xPawn's Ticks do nothing on a dedicated server
+    if(Level.NetMode != NM_DedicatedServer)
+        super.Tick(DeltaTime);
+
     if(Role == ROLE_Authority && Level != None && Level.Game != None)
-        InSpawnProtection = Level.TimeSeconds - SpawnTime < DeathMatch(Level.Game).SpawnProtectionTime;
+    {
+        // Any script write to a replicated variable marks the pawn net-dirty for
+        // every connection, even when the value is unchanged, so only write on a
+        // change. The engine changes the four Rep* properties natively without
+        // marking the pawn dirty. Writing every tick used to get those changes sent
+        // straight away, so a change to one of them still triggers the write.
+        bProtected = Level.TimeSeconds - SpawnTime < DeathMatch(Level.Game).SpawnProtectionTime;
+        if(bProtected != InSpawnProtection
+            || OverlayMaterial != RepOverlayMaterial || OverlayTimer != RepOverlayTimer
+            || AnimAction != RepAnimAction || bSimulateGravity != bRepSimulateGravity)
+        {
+            InSpawnProtection = bProtected;
+            RepOverlayMaterial = OverlayMaterial;
+            RepOverlayTimer = OverlayTimer;
+            RepAnimAction = AnimAction;
+            bRepSimulateGravity = bSimulateGravity;
+        }
+    }
 
     if(Level.NetMode==NM_DedicatedServer)
     {
@@ -1266,6 +1293,17 @@ event UpdateEyeHeight( float DeltaTime )
         return;
     }
 
+    // Both eye height algorithms only do this on a dedicated server, where this
+    // runs every tick for every human player
+    if ( Level.NetMode == NM_DedicatedServer )
+    {
+        if ( Controller == None )
+            EyeHeight = 0;
+        else
+            Eyeheight = BaseEyeheight;
+        return;
+    }
+
     if (BS_xPlayer(Controller) == none || BS_xPlayer(Controller).bUseNewEyeHeightAlgorithm == false) {
         super.UpdateEyeHeight(DeltaTime);
         return;
@@ -1274,11 +1312,6 @@ event UpdateEyeHeight( float DeltaTime )
     if ( Controller == None )
     {
         EyeHeight = 0;
-        return;
-    }
-    if ( Level.NetMode == NM_DedicatedServer )
-    {
-        Eyeheight = BaseEyeheight;
         return;
     }
     if ( bTearOff )
@@ -1383,18 +1416,17 @@ simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLo
 
 	player = PlayerController(Controller);
 
-	// Only do this mode we have a playercontroller
-	if( (player == None) || (player.Viewtarget != self) )
+	// Only do this mode we have a playercontroller. 1p uses the regular nonspecial
+	// calc view; it's checked first because the server calls this for every client
+	// every tick.
+	if( (player == None) || (player.Viewtarget != self) || !player.bBehindView )
 		return false;
 
 	// "Stock 3P": let the engine's stock CalcBehindView handle the camera.
 	if( BS_xPlayer(player) != None && BS_xPlayer(player).bDisableEnhanced3P )
 		return false;
 
-	if( player.bBehindView )
-		SpecialCalcBehindView(player,ViewActor,CameraLocation,CameraRotation);
-	else
-        return false; //regular nonspecial calc view for 1p view
+	SpecialCalcBehindView(player,ViewActor,CameraLocation,CameraRotation);
 
 	LastCameraCalcTime = Level.TimeSeconds;
 
