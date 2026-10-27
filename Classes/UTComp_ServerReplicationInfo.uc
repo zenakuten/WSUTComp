@@ -88,6 +88,8 @@ var float TeamRadarCullDistance;
 var bool bDisableCameraShake;
 var bool bAllowTerrainDodge;
 
+var bool bSpectatorVoiceChat;
+
 replication
 {
     reliable if(Role==Role_Authority)
@@ -106,11 +108,23 @@ replication
         bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, VehicleUpdateMode, SpectatorUpdateRate,
         MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
-		bDisableCameraShake, bAllowTerrainDodge;
+		bDisableCameraShake, bAllowTerrainDodge, bSpectatorVoiceChat;
+}
+
+// These properties don't fit in one bunch, so the engine sends the rest in later updates and the
+// client's BS_xPlayer.InitializeClient() can run before they arrive. Re-apply whenever they do.
+simulated event PostNetReceive()
+{
+    local BS_xPlayer PC;
+
+    PC = BS_xPlayer(Level.GetLocalPlayerController());
+    if (PC != None && PC.bClientInitialized)
+        PC.ApplyServerSettings();
 }
 
 defaultproperties
 {
+     bNetNotify=True
      bEnableVoting=False
      EnableBrightSkinsMode=3
      bEnableClanSkins=True

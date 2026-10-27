@@ -136,6 +136,8 @@ var config int StartingArmor;
 
 var config bool bUseLinkMesh;
 
+var config bool bSpectatorVoiceChat;
+
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
 var bool bWarmupDisabled;
@@ -218,6 +220,21 @@ var UTComp_ONSGameRules ONSGameRules;
 var UTComp_Whitelist Whitelist;
 
 var string OriginalStatsClass;
+
+// Spectator voice chat: spectators who log in wait this long before joining Public. In DM the
+// client runs its own auto-join, which fails for spectators; ServerSpeak() toggles, so the
+// talk channel must be set after that request lands.
+const SPECVOICE_JOIN_DELAY = 3.0;
+
+struct SpecVoicePending
+{
+    var BS_xPlayer PC;
+    var float JoinTime;
+};
+
+var int SpecVoiceNextID; // every PlayerID below this has already been looked at
+var array<SpecVoicePending> SpecVoiceQueue;
+var bool bSpecVoiceMasksFixed;
 
 var config bool bDisableCameraShake;
 var config bool bAllowTerrainDodge;
@@ -1028,6 +1045,9 @@ function SpawnReplicationClass()
     RepInfo.MaxSavedMoves = MaxSavedMoves;
     RepInfo.NetMoveDelta = NetMoveDelta;
     RepInfo.MaxResponseTime = MaxResponseTime;
+    // ServerMove() clamps with the instance value, which PlayerController.PostBeginPlay() copies
+    // from the class default; clients set their own default from RepInfo
+    class'BS_xPlayer'.default.MaxResponseTime = MaxResponseTime;
     RepInfo.bMoveErrorAccumFix = bMoveErrorAccumFix;
     RepInfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
     RepInfo.bVehicleFullPrecisionAim = bVehicleFullPrecisionAim;
@@ -1043,6 +1063,7 @@ function SpawnReplicationClass()
 	
 	RepInfo.bDisableCameraShake = bDisableCameraShake;
 	RepInfo.bAllowTerrainDodge = bAllowTerrainDodge;
+    RepInfo.bSpectatorVoiceChat = bSpectatorVoiceChat;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -1075,6 +1096,8 @@ function PostBeginPlay()
     SetupWarmup();
     SpawnReplicationClass();
 	FixVoice();
+    if (bSpectatorVoiceChat)
+        SetTimer(1.0, true);
 
     G = spawn(class'UTComp_GameRules');
     G.UTCompMutator=self;
@@ -1112,6 +1135,72 @@ function FixVoice()
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[0]="CODEC_96WB";
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[1]="CODEC_48NB";
 	}
+}
+
+// Keep public channels working once a mask goes negative; see UTComp_SpecVoiceMaskFix.
+// The voice info exists by our PostBeginPlay, but makes its channels in its PostNetBeginPlay, which
+// runs after ours while the level is loading, so this is done from the first Timer() instead.
+function SpecVoiceFixMasks()
+{
+    local VoiceChatReplicationInfo VRI;
+    local array<VoiceChatRoom> Rooms;
+    local VoiceChatRoom Fix;
+    local int i;
+
+    VRI = Level.Game.VoiceReplicationInfo;
+    if (VRI == None)
+        return;
+
+    Rooms = VRI.GetPublicChannels();
+    for (i = 0; i < Rooms.Length; i++)
+    {
+        Fix = Spawn(class'UTComp_SpecVoiceMaskFix', Rooms[i]);
+        if (Fix != None)
+            Rooms[i].AddChild(Fix);
+    }
+    bSpecVoiceMasksFixed = Rooms.Length > 0 || !VRI.bEnableVoiceChat;
+}
+
+// Only runs with bSpectatorVoiceChat. Stock never lets someone who connects as a spectator into a
+// voice channel (see BS_xPlayer.SpecVoiceAutoJoin), so queue each one and join them to Public.
+function Timer()
+{
+    local Controller C;
+    local BS_xPlayer PC;
+    local int i;
+
+    if (!bSpecVoiceMasksFixed)
+        SpecVoiceFixMasks();
+
+    // PlayerIDs come from GameInfo.CurrentID++, so the list is only walked after someone logs in.
+    // UTV proxies stay out: their viewers would hear Public.
+    if (Level.Game.CurrentID != SpecVoiceNextID)
+    {
+        for (C = Level.ControllerList; C != None; C = C.NextController)
+        {
+            PC = BS_xPlayer(C);
+            if (PC != None && PC.PlayerReplicationInfo != None && PC.PlayerReplicationInfo.PlayerID >= SpecVoiceNextID
+                && PC.PlayerReplicationInfo.bOnlySpectator && UTV_BS_xPlayer(PC) == None && NetConnection(PC.Player) != None)
+            {
+                i = SpecVoiceQueue.Length;
+                SpecVoiceQueue.Length = i + 1;
+                SpecVoiceQueue[i].PC = PC;
+                SpecVoiceQueue[i].JoinTime = Level.TimeSeconds + SPECVOICE_JOIN_DELAY;
+            }
+        }
+        SpecVoiceNextID = Level.Game.CurrentID;
+    }
+
+    for (i = SpecVoiceQueue.Length - 1; i >= 0; i--)
+    {
+        if (SpecVoiceQueue[i].PC == None || SpecVoiceQueue[i].PC.bDeleteMe)
+            SpecVoiceQueue.Remove(i, 1);
+        else if (Level.TimeSeconds >= SpecVoiceQueue[i].JoinTime)
+        {
+            SpecVoiceQueue[i].PC.SpecVoiceAutoJoin();
+            SpecVoiceQueue.Remove(i, 1);
+        }
+    }
 }
 
 function PlayEndGameSound()
@@ -1826,6 +1915,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     weight++;
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bSpectatorVoiceChat", "Spectator voice chat", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", security, weight,"Check");
@@ -1917,6 +2007,7 @@ static event string GetDescriptionText(string PropName)
         case "SuicideInterval": return "Minimum time between two suicides";
         case "bShowSpawnsDuringWarmup": return "Show spawn points during warmup by spawning dummies on every one of them";
         case "bEnableEmoticons": return "Enable emoticons";
+        case "bSpectatorVoiceChat": return "Stock UT2004 keeps anyone who connects as a spectator out of voice chat. With this on, spectators join the Public channel and talk on it, and coaches (SpecLockRed/SpecLockBlue) also join their team's channel and talk on that. Spectators also get the talk meter and talker portraits on their HUD, and their speech menu key opens a voice chat menu. Changes apply from the next map. (default off)";
         case "bFastWeaponSwitch": return "Enable UT2003 style fast weapon switch";
         case "bAllowColorWeapons": return "Enable color weapons";
         case "bNoTeamBoosting": return "Teammates can't knock you around with weapons";
@@ -2222,6 +2313,7 @@ defaultproperties
      bSinglePassTimeTravelTrace=false
      VehicleUpdateMode=0
      SpectatorUpdateRate=0
+     bSpectatorVoiceChat=False
 
      //original weapons
      WeaponClassNames(0)="XWeapons.ShockRifle"

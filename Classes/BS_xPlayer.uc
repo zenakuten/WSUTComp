@@ -136,6 +136,7 @@ var vector PlayerMouse;
 var float LastHUDSizeX;
 var float LastHUDSizeY;
 var UTComp_OVerlay Overlay;
+var UTComp_SpecVoice SpecVoice; // client: spectator voice HUD and menu, only with bSpectatorVoiceChat
 
 
 var UTComp_PRI currentStatDraw;
@@ -218,7 +219,8 @@ replication
         serverfindprevnode, servergotonode, ServerGoToWepBase, speclockRed, speclockBlue, ServerGoToTarget, CallVote;
 
     reliable if(Role<Role_Authority)
-        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist, ServerSetTauntCount, ServerSetBehindView;
+        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist, ServerSetBehindView,
+        ServerSpecVoiceJoin, ServerSpecVoiceLeave;
 
     unreliable if(role < Role_Authority)
         RequestStats, RequestCTFStats;
@@ -405,6 +407,18 @@ simulated function PostBeginPlay()
     {
         NodeDamageHook = spawn(class'UTComp_NodeDamageHook', self);
         NodeDamageHook.Tag = 'UTComp_ONSNodeDamaged';
+    }
+
+    // Server: the taunt limit comes from the server's own settings, never from the client
+    if (Level.NetMode != NM_Client)
+    {
+        foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+        if (RepInfo != None)
+        {
+            TauntCount = RepInfo.TauntCount;
+            bLimitTaunts = RepInfo.bLimitTaunts;
+        }
     }
 }
 
@@ -739,22 +753,20 @@ function SetMaxSavedMoves()
 }
 
 
-function SetTauntCount()
-{
-    if(RepInfo != None)
-        ServerSetTauntCount(RepInfo.TauntCount, RepInfo.bLimitTaunts);
-}
-
-function ServerSetTauntCount(int tc, bool blt)
-{
-    TauntCount = tc;
-    bLimitTaunts = blt;
-}
-
 function SetMaxResponseTime()
 {
     if(RepInfo != None)
         Default.MaxResponseTime = RepInfo.MaxResponseTime;
+}
+
+// Client: settings taken from RepInfo. Called from InitializeClient() and again from
+// RepInfo.PostNetReceive(), because RepInfo's later properties can arrive after InitializeClient().
+simulated function ApplyServerSettings()
+{
+    SetMaxSavedMoves();
+    SetMaxResponseTime();
+    if (SpecVoice == None && RepInfo.bSpectatorVoiceChat)
+        SpecVoice = UTComp_SpecVoice(Player.InteractionMaster.AddInteraction(string(class'UTComp_SpecVoice'), Player));
 }
 
 simulated function InitializeClient()
@@ -764,9 +776,7 @@ simulated function InitializeClient()
     SetShowSelf(Settings.bShowSelfInTeamOverlay);
     SetBStats(class'UTComp_Scoreboard'.default.bDrawStats || class'UTComp_Scoreboard'.default.bOverrideDisplayStats);
     SetEyeHeightAlgorithm(Settings.bUseNewEyeHeightAlgorithm);
-    SetMaxSavedMoves();
-    SetTauntCount();
-    SetMaxResponseTime();
+    ApplyServerSettings();
     if(Settings.bFirstRun)
     {
         Settings.bFirstRun=False;
@@ -2392,6 +2402,7 @@ exec function SpecLockRed()
     {
         UTCompPRI.SetCoachTeam(0);
         Level.Game.Broadcast(self, PlayerReplicationInfo.PlayerName@"has become a coach for the Red Team.");
+        SpecVoiceCoach();
     }
     else
         ClientMessage("Sorry, there are no Red players ingame.  Try again later.");
@@ -2419,9 +2430,129 @@ exec function SpecLockBlue()
     {
         UTCompPRI.SetCoachTeam(1);
         Level.Game.Broadcast(self, PlayerReplicationInfo.PlayerName@"has become a coach for the Blue Team.");
+        SpecVoiceCoach();
     }
     else
         ClientMessage("Sorry, there are no Blue players ingame.  Try again later.");
+}
+
+// =====================================================================================================================
+//  Spectator voice chat (MutUTComp.bSpectatorVoiceChat)
+// =====================================================================================================================
+// Stock UT2004 never lets someone who connects as a spectator into a voice channel:
+// UnrealChatRoom.JoinChannel() rejects bOnlySpectator for every non-private room,
+// TeamVoiceReplicationInfo.JoinChannelAt() rejects anyone without a team, and in team games the
+// client doesn't even try, since xPlayer.PostNetReceive() waits for a Team spectators never get.
+// The native router (UVoiceChannel::AllowVoiceTransmission) only checks the speaker's server-side
+// ActiveRoom and the listener's membership, so the server adds spectators itself.
+
+// Public, or the Team room of the team this spectator coaches
+simulated function VoiceChatRoom GetSpecVoiceRoom(bool bTeam)
+{
+    local VoiceChatRoom Room;
+    local int i;
+
+    if (VoiceReplicationInfo == None)
+        return None;
+
+    if (!bTeam)
+        return VoiceReplicationInfo.GetChannelAt(0); // Public is always the first room
+
+    if (UTCompPRI == None)
+        UTCompPRI = class'UTComp_Util'.static.GetUTCompPRI(PlayerReplicationInfo);
+    if (UTCompPRI == None || UTCompPRI.CoachTeam > 1 || TeamVoiceReplicationInfo(VoiceReplicationInfo) == None)
+        return None;
+
+    // TeamVoiceReplicationInfo makes Public, Local (unless disabled), then a Team room per team.
+    // Checked by bLocal rather than IsTeamChannel(), which takes index 1 for a public room.
+    for (i = 1; i < 4; i++)
+    {
+        Room = VoiceReplicationInfo.GetChannelAt(i);
+        if (Room != None && !Room.bLocal && Room.GetTeam() == UTCompPRI.CoachTeam)
+            return Room;
+    }
+    return None;
+}
+
+// Server. AddMember() is what ServerJoinVoiceChannel() ends up calling, minus JoinChannel()'s
+// spectator checks, and a no-op for a member. No VoiceID < 32 check: 3374 servers hand out IDs
+// past 31 (bit VoiceID & 31), and late spectators in a full game get them.
+function bool SpecVoiceJoin(VoiceChatRoom Room, bool bTalk)
+{
+    if (Room == None || PlayerReplicationInfo == None || !PlayerReplicationInfo.bOnlySpectator)
+        return false;
+
+    Room.AddMember(PlayerReplicationInfo);
+
+    // ServerSpeak() without the toggle. The client drops ChatRoomMessage() for Public and Team.
+    if (bTalk && ActiveRoom != Room)
+    {
+        ActiveRoom = Room;
+        PlayerReplicationInfo.ActiveChannel = Room.ChannelIndex;
+        ClientSetActiveRoom(Room.ChannelIndex);
+    }
+    return true;
+}
+
+function bool SpecVoiceAllowed()
+{
+    if (RepInfo == None)
+        foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+    return RepInfo != None && RepInfo.bSpectatorVoiceChat;
+}
+
+// Server, from MutUTComp.Timer() a few seconds after a spectator logs in
+function SpecVoiceAutoJoin()
+{
+    // Server-side bVoiceChatEnabled is only cleared by the client's ServerChangeVoiceChatMode(false),
+    // i.e. a DM client with VoIP turned off
+    if (!bVoiceChatEnabled || !SpecVoiceJoin(GetSpecVoiceRoom(false), ActiveRoom == None))
+        return;
+
+    // A team-game spectator's client never ran xPlayer.InitializeVoiceChat(), so it never asked for
+    // the players already on the server. Without their hashes, its ChatManager can't mute them.
+    if (!PlayerReplicationInfo.bNoTeam)
+        ServerRequestBanInfo(-1);
+}
+
+// Server, after SpecLockRed/SpecLockBlue: coaches join their team's channel and talk on it
+function SpecVoiceCoach()
+{
+    if (SpecVoiceAllowed())
+        SpecVoiceJoin(GetSpecVoiceRoom(true), true);
+}
+
+// From the client's UTComp_SpecVoice menu; the stock Join refuses spectators. The team comes
+// from the server's own CoachTeam.
+function ServerSpecVoiceJoin(bool bTeam, bool bTalk)
+{
+    if (SpecVoiceAllowed())
+        SpecVoiceJoin(GetSpecVoiceRoom(bTeam), bTalk);
+}
+
+// From the client's UTComp_SpecVoice menu. Stock RemoveMember() checks IsMember(PRI, true), which
+// a negative mask breaks (see UTComp_SpecVoiceMaskFix), so clear the member bit directly.
+function ServerSpecVoiceLeave(bool bTeam)
+{
+    local VoiceChatRoom Room;
+    local PlayerReplicationInfo PRI;
+
+    PRI = PlayerReplicationInfo;
+    if (!SpecVoiceAllowed() || PRI == None || !PRI.bOnlySpectator)
+        return;
+
+    Room = GetSpecVoiceRoom(bTeam);
+    if (Room == None)
+        return;
+
+    VoiceReplicationInfo.SetMask(Room, Room.GetMask() & ~(1 << (PRI.VoiceID & 31)));
+    if (ActiveRoom == Room)
+    {
+        ActiveRoom = None;
+        PRI.ActiveChannel = -1;
+        ClientSetActiveRoom(-1);
+    }
 }
 
 exec function ToggleBehindView()
