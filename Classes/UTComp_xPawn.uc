@@ -30,7 +30,6 @@ var int IgnoreZChangeTicks;
 var float EyeHeightOffset;
 
 var UTComp_Settings Settings;
-var UTComp_HUDSettings HUDSettings;
 
 var bool InSpawnProtection;
 var bool OldInSpawnProtection;
@@ -83,15 +82,18 @@ simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    foreach AllObjects(class'UTComp_Settings', Settings)
-        break;
-    if (Settings == none && Bot(Controller) == None)
-        Warn(self@"Settings object not found!");
-
-    foreach AllObjects(class'UTComp_HUDSettings', HUDSettings)
-        break;
-    if (HUDSettings == none && Bot(Controller) == None)
-        Warn(self@"HUDSettings object not found!");
+    // AllObjects walks the whole object table, so use the instance BS_xPlayer caches.
+    // It is unset between BS_xPlayer's PostBeginPlay and PostNetBeginPlay on a client,
+    // and BS_xPlayer.Destroyed clears it on the server whenever any player leaves:
+    // fall back to the scan once, then re-cache so later pawns skip it.
+    Settings = class'UTComp_Settings'.default.instance;
+    if (Settings == None)
+    {
+        foreach AllObjects(class'UTComp_Settings', Settings)
+            break;
+        if (Settings != None)
+            class'UTComp_Settings'.default.instance = Settings;
+    }
 }
 
 simulated event PostNetBeginPlay()
