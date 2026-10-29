@@ -21,6 +21,7 @@ V31
 - Make `counter` int instead of float, which stops counting after enough time on an empty server, breaking netcode
 - Add spectator voice chat support (default off)
 - Fix replication for MaxResponseTime, MaxSavedMoves, taunt limit
+- Add a workaround for players sticking to slopes, or clipping through in the case of terrain
 
 V30
 - Add end game sound like TAM/Freon end ceremony

@@ -22,6 +22,10 @@ var byte OldLocalPCTeam;
 var EDoubleClickDir OldDodgeDir;
 var int MultiDodgesRemaining;
 
+// Steep slope clearance (see ApplySlopeClearance)
+var vector SlopeNormal;
+var UTComp_SlopeClearance SlopeHelper;
+
 // UpdateEyeHeight related
 var EPhysics OldPhysics2;
 var vector OldLocation;
@@ -1397,6 +1401,8 @@ function ServerChangedWeapon(Weapon OldWeapon, Weapon NewWeapon)
 
 simulated function Destroyed()
 {
+    if(SlopeHelper != None)
+        SlopeHelper.Destroy();
     if(DeResModifier0 != None)
         Level.ObjectPool.FreeObject(DeResModifier0);
     if(DeResModifier1 != None)
@@ -1637,6 +1643,87 @@ function ResetAirJumpsForMultiDodge()
         MultiJumpRemaining = MaxMultiJump;
 }
 
+function PossessedBy(Controller C)
+{
+    Super.PossessedBy(C);
+    // Bots navigate with NotifyHitWall, which bDirectHitWall bypasses
+    bDirectHitWall = PlayerController(C) != None;
+}
+
+// Players only get HitWall with bDirectHitWall: Controller.MinHitWall is -1, so the
+// native processHitWall returns before the event. Sliding on something too steep to
+// walk on, queue ApplySlopeClearance for the end of this physics step.
+event HitWall(vector HitNormal, actor Wall)
+{
+    local Actor A;
+    local int i;
+
+    if (Physics != PHYS_Falling || Wall == None || !Wall.bWorldGeometry
+        || RepInfo == None || RepInfo.SlopeClearance <= 0)
+        return;
+
+    if (SlopeHelper == None)
+    {
+        SlopeHelper = Spawn(class'UTComp_SlopeClearance', self);
+        if (SlopeHelper == None)
+            return;
+    }
+
+    // Once per step: the engine pops one PendingTouch at the end of each physics step
+    for (A = PendingTouch; A != None && A != SlopeHelper && i < 8; A = A.PendingTouch)
+        i++;
+    if (A == SlopeHelper)
+        SlopeNormal += HitNormal;
+    else
+    {
+        SlopeNormal = HitNormal;
+        SlopeHelper.PendingTouch = PendingTouch;
+        PendingTouch = SlopeHelper;
+    }
+}
+
+// MoveActor stops 2 uu short along the move, so a slide leaves a gap of about
+// 2.5 * sin(approach angle). physFalling makes Velocity parallel to the slope after
+// each hit and only a frame of gravity points the next move back in, so at high fps
+// the gap shrinks to float rounding and the next trace starts inside: BSP and meshes
+// then block every move, terrain lets the pawn fall through. Restoring a fixed gap
+// leaves Velocity alone, so gravity brings the pawn back at an angle that doesn't
+// depend on fps, like a spectator's MoveSmooth. Called by UTComp_SlopeClearance.
+function ApplySlopeClearance()
+{
+    local vector N, Dir, Start, HitLocation, HitNormal, Extent;
+    local float Gap;
+
+    N = Normal(SlopeNormal);
+    SlopeNormal = vect(0,0,0);
+    if (Physics != PHYS_Falling || N == vect(0,0,0) || RepInfo == None)
+        return;
+
+    Extent.X = CollisionRadius;
+    Extent.Y = CollisionRadius;
+    Extent.Z = CollisionHeight;
+    // Over a 5 uu trace BSP, meshes and terrain all pull their hit back exactly 0.5 uu,
+    // so starting 2.5 uu out the gap is Dist - 2 (and -2 means the start is obstructed)
+    Start = Location + 2.5 * N;
+    if (Trace(HitLocation, HitNormal, Location - 2.5 * N, Start, false, Extent) == None)
+        return;
+    Gap = ((Start - HitLocation) Dot N) - 2.0;
+    if (Gap <= -2.0 || Gap >= RepInfo.SlopeClearance)
+        return;
+
+    // Never push up: along the normal, every step spent moving into the slope lifted
+    // the pawn, ratcheting it up the slope at high fps. Pushed sideways, moving back in
+    // only undoes the push and falling back lands lower. A ditch has no sideways out.
+    Dir = N;
+    if (Dir.Z > 0)
+    {
+        Dir.Z = 0;
+        Dir = Normal(Dir);
+    }
+    if ((Dir Dot N) >= 0.5)
+        Move(((RepInfo.SlopeClearance - Gap) / (Dir Dot N)) * Dir);
+}
+
 defaultproperties
 {
     bAlwaysRelevant=True
@@ -1669,4 +1756,7 @@ defaultproperties
     //TPCamWorldOffset=(X=50.0,Z=50.000000)
     TPCamWorldOffset=(X=-35,Y=0.0,Z=38.000000)
     bSpecialCalcView=true
+
+    // The owning client's pawn never gets PossessedBy, so players are the default
+    bDirectHitWall=true
 }

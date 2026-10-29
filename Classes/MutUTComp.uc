@@ -97,6 +97,7 @@ var config float MaxResponseTime;
 var config bool bMoveErrorAccumFix;
 var config float MoveErrorAccumFixValue;
 var config bool bVehicleFullPrecisionAim;
+var config float SlopeClearance;
 
 var config bool bLimitTaunts;
 var config int TauntCount;
@@ -1053,6 +1054,7 @@ function SpawnReplicationClass()
     RepInfo.bVehicleFullPrecisionAim = bVehicleFullPrecisionAim;
     RepInfo.VehicleUpdateMode = Min(VehicleUpdateMode, 2);
     RepInfo.SpectatorUpdateRate = SpectatorUpdateRate;
+    RepInfo.SlopeClearance = FClamp(SlopeClearance, 0.0, 1.0);
 
     RepInfo.bLimitTaunts = bLimitTaunts;
     RepInfo.TauntCount = TauntCount;
@@ -1962,6 +1964,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Movement", "bMoveErrorAccumFix", "use move accum fix (default false)", security, weight, "Check");
     PlayInfo.AddSetting("UTComp Movement", "MoveErrorAccumFixValue", "move accum fix value (default 0.009)", security, weight, "Text", "0.009:0.001:0.018",,false, false);
     PlayInfo.AddSetting("UTComp Movement", "bVehicleFullPrecisionAim", "full precision vehicle aim (default true)", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Movement", "SlopeClearance", "Steep slope clearance (default 0.25, 0 = off)", security, weight, "Text","0.25;0.0:1.0",,False,False);
 
     weight++;
     PlayInfo.AddSetting("UTComp Voting", "bEnableVoting", "Enable Voting", security, weight, "Check");
@@ -2048,6 +2051,7 @@ static event string GetDescriptionText(string PropName)
         case "bMoveErrorAccumFix": return "use server define movement accumulation (default false)";
         case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
         case "bVehicleFullPrecisionAim": return "server uses full precision aim for vehicle drivers and gunners instead of every other rotation unit (default true)";
+        case "SlopeClearance": return "Keeps players this far (uu) off steep ramps and terrain they slide on, so high fps can't sink them in (stuck on BSP/meshes, falling through terrain). Larger gaps let air control work next to slopes at very high fps. 0 disables. (default 0.25)";
         case "StartingHealth": return "Starting health of players (100)";
         case "StartingArmor": return "Starting armor of players (0)";
         case "bUseLinkMesh": return "Use linkmesh logic for vehicle netcode (true)";
@@ -2486,6 +2490,7 @@ defaultproperties
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
      bVehicleFullPrecisionAim=true
+     SlopeClearance=0.1
 
      bLimitTaunts=false
      TauntCount=10
