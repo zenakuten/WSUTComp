@@ -144,7 +144,6 @@ simulated function bool AltReadyToFire(int Mode)
 simulated function WeaponTick(float deltatime)
 {
    lastDT = deltatime;
-   Super.tick(deltatime);
 }
 
 //// client & server ////

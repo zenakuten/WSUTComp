@@ -97,6 +97,7 @@ var config float MaxResponseTime;
 var config bool bMoveErrorAccumFix;
 var config float MoveErrorAccumFixValue;
 var config bool bVehicleFullPrecisionAim;
+var config float SlopeClearance;
 
 var config bool bLimitTaunts;
 var config int TauntCount;
@@ -119,6 +120,10 @@ var config bool bUseDefaultScoreboardColor;
 var config float PawnCollisionHistoryLength;
 var config bool bLimitLinkBeamTraces;
 var config float LinkBeamTraceInterval;
+var config bool bPlaceCopiesNearTracesOnly;
+var config bool bSinglePassTimeTravelTrace;
+var config byte VehicleUpdateMode;
+var config byte SpectatorUpdateRate;
 var config array<string> IgnoredHitSounds;
 
 var config bool bNoTeamBoosting;
@@ -131,6 +136,8 @@ var config int StartingHealth;
 var config int StartingArmor;
 
 var config bool bUseLinkMesh;
+
+var config bool bSpectatorVoiceChat;
 
 var bool bDemoStarted;
 var bool bEnableDoubleDamageVoting;
@@ -150,7 +157,7 @@ var string origcontroller;
 var class<PlayerController> origcclass;
 
 var float StampArray[256];
-var float counter;
+var int counter; // ticks; a float stopped counting after 2^24 ticks, which froze the stamps
 var controller countercontroller;
 
 var string FriendlyVersionPrefix;
@@ -214,6 +221,21 @@ var UTComp_ONSGameRules ONSGameRules;
 var UTComp_Whitelist Whitelist;
 
 var string OriginalStatsClass;
+
+// Spectator voice chat: spectators who log in wait this long before joining Public. In DM the
+// client runs its own auto-join, which fails for spectators; ServerSpeak() toggles, so the
+// talk channel must be set after that request lands.
+const SPECVOICE_JOIN_DELAY = 3.0;
+
+struct SpecVoicePending
+{
+    var BS_xPlayer PC;
+    var float JoinTime;
+};
+
+var int SpecVoiceNextID; // every PlayerID below this has already been looked at
+var array<SpecVoicePending> SpecVoiceQueue;
+var bool bSpecVoiceMasksFixed;
 
 var config bool bDisableCameraShake;
 var config bool bAllowTerrainDodge;
@@ -654,6 +676,100 @@ function ListPawns()
        PCC2.Identify();
 }
 
+// Lag compensation for the NewNet weapons. Rewinds every collision copy except
+// the shooter's (traces ignore it) to Delta seconds ago and moves it into place
+// with collision on. With bPlaceCopiesNearTracesOnly, that last step is left to
+// TimeTravelTrace, for only the copies a trace can reach.
+function TimeTravelCopies(float Delta, Pawn Shooter)
+{
+    local PawnCollisionCopy C;
+
+    for(C = PCC; C != None; C = C.Next)
+        if(C.CopiedPawn != Shooter)
+        {
+            C.TimeTravelPawn(Delta);
+            if(!bPlaceCopiesNearTracesOnly && C.bPendingPlace)
+                C.Place();
+        }
+}
+
+function UnTimeTravelCopies()
+{
+    local PawnCollisionCopy C;
+
+    for(C = PCC; C != None; C = C.Next)
+        C.TurnOffCollision();
+}
+
+// Returns the first rewound copy (other than the shooter's) in front of anything
+// that isn't lag compensated, otherwise whatever stopped the trace.
+function Actor TimeTravelTrace(Actor Tracer, Pawn Shooter, out vector HitLocation, out vector HitNormal, vector End, vector Start)
+{
+    local PawnCollisionCopy C, HitCopy;
+    local Actor Other;
+    local vector Dir, NewEnd, CopyHitLocation, CopyHitNormal;
+    local float DirSizeSq;
+
+    if(bPlaceCopiesNearTracesOnly)
+    {
+        Dir = End - Start;
+        DirSizeSq = Dir dot Dir;
+        for(C = PCC; C != None; C = C.Next)
+            if(C.bPendingPlace)
+                C.PlaceNear(Start, Dir, DirSizeSq);
+    }
+
+    HitLocation = vect(0,0,0);
+    HitNormal = vect(0,0,0);
+
+    if(bSinglePassTimeTravelTrace)
+    {
+        // Hits come back nearest first, so the first copy in front of anything
+        // that stops the shot is the one a second trace would have found
+        foreach Tracer.TraceActors(class'Actor', Other, HitLocation, HitNormal, End, Start)
+        {
+            C = PawnCollisionCopy(Other);
+            if(C != None)
+            {
+                if(C.CopiedPawn != None && C.CopiedPawn != Shooter)
+                    break;
+            }
+            else if(Other.bWorldGeometry || ((Other.bBlockActors || Other.bProjTarget) && !IsPredicted(Other)))
+                break;
+            Other = None;
+        }
+        return Other;
+    }
+
+    // First find where the shot stops against anything that isn't lag
+    // compensated, then look for a copy in front of that point
+    foreach Tracer.TraceActors(class'Actor', Other, HitLocation, HitNormal, End, Start)
+    {
+        if(Other.bWorldGeometry || ((Other.bBlockActors || Other.bProjTarget) && !IsPredicted(Other)))
+            break;
+        Other = None;
+    }
+    if(Other != None)
+        NewEnd = HitLocation;
+    else
+        NewEnd = End;
+
+    foreach Tracer.TraceActors(class'PawnCollisionCopy', C, CopyHitLocation, CopyHitNormal, NewEnd, Start)
+    {
+        if(C.CopiedPawn != None && C.CopiedPawn != Shooter)
+        {
+            HitCopy = C;
+            break;
+        }
+    }
+    if(HitCopy == None)
+        return Other;
+
+    HitLocation = CopyHitLocation;
+    HitNormal = CopyHitNormal;
+    return HitCopy;
+}
+
 static function bool IsPredicted(actor A)
 {
    if(A == none || A.IsA('xPawn'))
@@ -766,7 +882,9 @@ simulated function Tick(float DeltaTime)
 {
     local PlayerController PC;
     local Mutator M;
-    local int x;
+    local int x, i;
+    local rotator R;
+    local Pawn P;
 
     if(Role == ROLE_Authority && Level.Game != None && Level.Game.bGameEnded && !bEndGameSoundPlayed)
     {
@@ -793,7 +911,24 @@ simulated function Tick(float DeltaTime)
             counter+=1;
             StampArray[counter%256] = ClientTimeStamp;
             AverDT = (9.0*AverDT + DeltaTime) * 0.1;
-            SetPawnStamp();
+
+            // Send the tick count to clients in the rotation of the TimeStamp pawn
+            if(countercontroller==none)
+                countercontroller = spawn(class'TimeStamp_Controller');
+
+            if(countercontroller != none && countercontroller.Pawn == none)
+            {
+                P = spawn(countercontroller.PawnClass);
+                countercontroller.Possess(P);
+            }
+
+            R.Yaw = (counter%256)*256;
+            i=counter/256;
+            R.Pitch = i*256;
+
+            if(countercontroller.Pawn != None)
+                countercontroller.Pawn.SetRotation(R);
+
             if(ClientTimeStamp > LastReplicatedAverDT + AVERDT_SEND_PERIOD)
             {
                 StampInfo.ReplicatedAverDT(AverDT);
@@ -833,29 +968,6 @@ simulated function Tick(float DeltaTime)
         bHasInteraction=True;
         class'DamTypeLinkShaft'.default.bSkeletize=false;
     }
-}
-
-function SetPawnStamp()
-{
-    local rotator R;
-    local int i;
-    local Pawn P;
-
-    if(countercontroller==none)
-        countercontroller = spawn(class'TimeStamp_Controller');
-
-    if(countercontroller != none && countercontroller.Pawn == none)
-    {
-        P = spawn(countercontroller.PawnClass);
-        countercontroller.Possess(P);
-    }
-
-    R.Yaw = (counter%256)*256;
-    i=counter/256;
-    R.Pitch = i*256;
-
-    if(countercontroller.Pawn != None)
-        countercontroller.Pawn.SetRotation(R);
 }
 
 simulated function float GetStamp(int stamp)
@@ -934,9 +1046,15 @@ function SpawnReplicationClass()
     RepInfo.MaxSavedMoves = MaxSavedMoves;
     RepInfo.NetMoveDelta = NetMoveDelta;
     RepInfo.MaxResponseTime = MaxResponseTime;
+    // ServerMove() clamps with the instance value, which PlayerController.PostBeginPlay() copies
+    // from the class default; clients set their own default from RepInfo
+    class'BS_xPlayer'.default.MaxResponseTime = MaxResponseTime;
     RepInfo.bMoveErrorAccumFix = bMoveErrorAccumFix;
     RepInfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
     RepInfo.bVehicleFullPrecisionAim = bVehicleFullPrecisionAim;
+    RepInfo.VehicleUpdateMode = Min(VehicleUpdateMode, 2);
+    RepInfo.SpectatorUpdateRate = SpectatorUpdateRate;
+    RepInfo.SlopeClearance = FClamp(SlopeClearance, 0.0, 1.0);
 
     RepInfo.bLimitTaunts = bLimitTaunts;
     RepInfo.TauntCount = TauntCount;
@@ -947,6 +1065,7 @@ function SpawnReplicationClass()
 	
 	RepInfo.bDisableCameraShake = bDisableCameraShake;
 	RepInfo.bAllowTerrainDodge = bAllowTerrainDodge;
+    RepInfo.bSpectatorVoiceChat = bSpectatorVoiceChat;
 
     for(i=0; i<VotingGametype.Length && i<ArrayCount(RepInfo.VotingNames); i++)
         RepInfo.VotingNames[i]=VotingGametype[i].GameTypeName;
@@ -979,6 +1098,8 @@ function PostBeginPlay()
     SetupWarmup();
     SpawnReplicationClass();
 	FixVoice();
+    if (bSpectatorVoiceChat)
+        SetTimer(1.0, true);
 
     G = spawn(class'UTComp_GameRules');
     G.UTCompMutator=self;
@@ -1016,6 +1137,72 @@ function FixVoice()
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[0]="CODEC_96WB";
 		Level.Game.VoiceReplicationInfo.VoIPInternetCodecs[1]="CODEC_48NB";
 	}
+}
+
+// Keep public channels working once a mask goes negative; see UTComp_SpecVoiceMaskFix.
+// The voice info exists by our PostBeginPlay, but makes its channels in its PostNetBeginPlay, which
+// runs after ours while the level is loading, so this is done from the first Timer() instead.
+function SpecVoiceFixMasks()
+{
+    local VoiceChatReplicationInfo VRI;
+    local array<VoiceChatRoom> Rooms;
+    local VoiceChatRoom Fix;
+    local int i;
+
+    VRI = Level.Game.VoiceReplicationInfo;
+    if (VRI == None)
+        return;
+
+    Rooms = VRI.GetPublicChannels();
+    for (i = 0; i < Rooms.Length; i++)
+    {
+        Fix = Spawn(class'UTComp_SpecVoiceMaskFix', Rooms[i]);
+        if (Fix != None)
+            Rooms[i].AddChild(Fix);
+    }
+    bSpecVoiceMasksFixed = Rooms.Length > 0 || !VRI.bEnableVoiceChat;
+}
+
+// Only runs with bSpectatorVoiceChat. Stock never lets someone who connects as a spectator into a
+// voice channel (see BS_xPlayer.SpecVoiceAutoJoin), so queue each one and join them to Public.
+function Timer()
+{
+    local Controller C;
+    local BS_xPlayer PC;
+    local int i;
+
+    if (!bSpecVoiceMasksFixed)
+        SpecVoiceFixMasks();
+
+    // PlayerIDs come from GameInfo.CurrentID++, so the list is only walked after someone logs in.
+    // UTV proxies stay out: their viewers would hear Public.
+    if (Level.Game.CurrentID != SpecVoiceNextID)
+    {
+        for (C = Level.ControllerList; C != None; C = C.NextController)
+        {
+            PC = BS_xPlayer(C);
+            if (PC != None && PC.PlayerReplicationInfo != None && PC.PlayerReplicationInfo.PlayerID >= SpecVoiceNextID
+                && PC.PlayerReplicationInfo.bOnlySpectator && UTV_BS_xPlayer(PC) == None && NetConnection(PC.Player) != None)
+            {
+                i = SpecVoiceQueue.Length;
+                SpecVoiceQueue.Length = i + 1;
+                SpecVoiceQueue[i].PC = PC;
+                SpecVoiceQueue[i].JoinTime = Level.TimeSeconds + SPECVOICE_JOIN_DELAY;
+            }
+        }
+        SpecVoiceNextID = Level.Game.CurrentID;
+    }
+
+    for (i = SpecVoiceQueue.Length - 1; i >= 0; i--)
+    {
+        if (SpecVoiceQueue[i].PC == None || SpecVoiceQueue[i].PC.bDeleteMe)
+            SpecVoiceQueue.Remove(i, 1);
+        else if (Level.TimeSeconds >= SpecVoiceQueue[i].JoinTime)
+        {
+            SpecVoiceQueue[i].PC.SpecVoiceAutoJoin();
+            SpecVoiceQueue.Remove(i, 1);
+        }
+    }
 }
 
 function PlayEndGameSound()
@@ -1730,6 +1917,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     weight++;
     PlayInfo.AddSetting("UTComp Settings", "bShowSpawnsDuringWarmup", "Show Spawns during Warmup", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bEnableEmoticons", "Enable Emoticons", security, weight,"Check");
+    PlayInfo.AddSetting("UTComp Settings", "bSpectatorVoiceChat", "Spectator voice chat", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bFastWeaponSwitch", "Fast weapon switch", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bAllowColorWeapons", "Enable color weapons", security, weight,"Check");
     PlayInfo.AddSetting("UTComp Settings", "bNoTeamBoosting", "Teammates can't knock you around with weapons", security, weight,"Check");
@@ -1746,11 +1934,15 @@ static function FillPlayInfo (PlayInfo PlayInfo)
 
     weight++;
     PlayInfo.AddSetting("UTComp NewNet", "bEnableEnhancedNetcode", "Enable Enhanced Netcode", security, weight, "Check");
-    PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (200)", security, weight, "Text","0;0:1000",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "NewNetUpdateFrequency", "NewNet Update Frequency (1)", security, weight, "Text","0;0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PingTweenTime", "NewNet Ping Tween Time (3.0)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "PawnCollisionHistoryLength", "NewNet Pawn Collision History Length (0.35)", security, weight, "Text","0;0.0:1000",,False,False);
     PlayInfo.AddSetting("UTComp NewNet", "bLimitLinkBeamTraces", "Limit Link Beam Lag-Comp Traces", security, weight, "Check");
-    PlayInfo.AddSetting("UTComp NewNet", "LinkBeamTraceInterval", "Link Beam Lag-Comp Trace Interval (0.030)", security, weight, "Text","0;0.0:1.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "LinkBeamTraceInterval", "Link Beam Lag-Comp Trace Interval (0.020)", security, weight, "Text","0;0.0:1.0",,False,False);
+    PlayInfo.AddSetting("UTComp NewNet", "bPlaceCopiesNearTracesOnly", "Only Place Lag-Comp Copies Near Traces", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp NewNet", "bSinglePassTimeTravelTrace", "Single-Pass Lag-Comp Traces", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp NewNet", "VehicleUpdateMode", "Vehicle Update Rate", security, weight, "Select", "0;Off (stock);1;Move rate, stock while firing;2;Move rate");
+    PlayInfo.AddSetting("UTComp NewNet", "SpectatorUpdateRate", "Spectator Update Rate", security, weight, "Select", "0;Off (stock);50;50 per second;20;20 per second;10;10 per second");
     PlayInfo.AddSetting("UTComp NewNet", "MinNetSpeed", "Minimum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
     PlayInfo.AddSetting("UTComp NewNet", "MaxNetSpeed", "Maximum NetSpeed for Clients",255, weight, "Text","0;0:100000000",);
 
@@ -1772,6 +1964,7 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Movement", "bMoveErrorAccumFix", "use move accum fix (default false)", security, weight, "Check");
     PlayInfo.AddSetting("UTComp Movement", "MoveErrorAccumFixValue", "move accum fix value (default 0.009)", security, weight, "Text", "0.009:0.001:0.018",,false, false);
     PlayInfo.AddSetting("UTComp Movement", "bVehicleFullPrecisionAim", "full precision vehicle aim (default true)", security, weight, "Check");
+    PlayInfo.AddSetting("UTComp Movement", "SlopeClearance", "Steep slope clearance (default 0.1, 0 = off)", security, weight, "Text","0.1;0.0:1.0",,False,False);
 
     weight++;
     PlayInfo.AddSetting("UTComp Voting", "bEnableVoting", "Enable Voting", security, weight, "Check");
@@ -1801,7 +1994,7 @@ static event string GetDescriptionText(string PropName)
         case "MaxMultiDodges": return "Additional dodges players can perform without landing.";
         case "bEnableTeamOverlay": return "Check this to enable the team overlay.";
         case "bEnablePowerupsOverlay": return "Check this to enable the powerups overlay for spectators.";
-        case "bEnableEnhancedNetcode": return "Check this to enable the enhanced netcode.";
+        case "bEnableEnhancedNetcode": return "Rewinds other players to where the shooter saw them when checking hits, so hits register properly at higher pings. Players can still turn it off for themselves in the UTComp menu. Changes apply from the next map. (default on)";
         case "bEnableVoting": return "Check this to enable voting.";
         case "bEnableBrightSkinsVoting": return "Check this to enable voting for brightskins.";
         case "bEnablehitsoundsVoting": return "Check this to enable voting for hitsounds.";
@@ -1812,11 +2005,12 @@ static event string GetDescriptionText(string PropName)
         case "bEnableMapVoting": return "Check this to enable voting for Maps.";
         case "WarmupTime": return "Time for warmup. Set this to 0 for unlimited, otherwise it is the time in seconds.";
         case "EnableWarmupWeaponsMode": return "Warmup weapon mode: 0) none 1) utcomp 2) tam 3) ons+tam";
-        case "MinNetSpeed": return "Minimum NetSpeed for clients on this server";
-        case "MaxNetSpeed": return "Maximum NetSpeed for clients on this server";
+        case "MinNetSpeed": return "Lowest netspeed (bytes per second) clients may use; lower client settings are raised to this. Keep this high to stop ignorant players from setting their netspeed too low, resulting in packet loss-like symptoms. (default 10000)";
+        case "MaxNetSpeed": return "Highest netspeed (bytes per second) clients may use; higher client settings are lowered to this. The server's MaxClientRate / MaxInternetClientRate still caps it, so higher values have no effect. (default 100000000)";
         case "SuicideInterval": return "Minimum time between two suicides";
         case "bShowSpawnsDuringWarmup": return "Show spawn points during warmup by spawning dummies on every one of them";
         case "bEnableEmoticons": return "Enable emoticons";
+        case "bSpectatorVoiceChat": return "Stock UT2004 keeps anyone who connects as a spectator out of voice chat. With this on, spectators join the Public channel and talk on it, and coaches (SpecLockRed/SpecLockBlue) also join their team's channel and talk on that. Spectators also get the talk meter and talker portraits on their HUD, and their speech menu key opens a voice chat menu. Changes apply from the next map. (default off)";
         case "bFastWeaponSwitch": return "Enable UT2003 style fast weapon switch";
         case "bAllowColorWeapons": return "Enable color weapons";
         case "bNoTeamBoosting": return "Teammates can't knock you around with weapons";
@@ -1831,11 +2025,15 @@ static event string GetDescriptionText(string PropName)
 		case "bShowTeamScoresInServerBrowser": return "Check this to show team scores in the server browser";
 		case "bAllowTerrainDodge": return "Allow players to dodge off terrain.";
 
-        case "NewNetUpdateFrequency": return "How many times per second the server re-checks each player's NewNet ping helper for changes. Ping messages are sent immediately regardless, so this doesn't affect hit detection; lower values (e.g. 10) save a little server CPU. 0 uses the default. (default 200)";
+        case "NewNetUpdateFrequency": return "How many times per second the server re-checks each player's NewNet ping helper for changes. The helper has nothing that changes and its ping messages are sent immediately regardless, so this doesn't affect hit detection or ping; higher values only cost server CPU. 0 uses the default. (default 1)";
         case "PingTweenTime": return "Seconds between each client's ping measurements. Lower values follow ping changes faster, at the cost of one small message per client each time. The measured ping only times the client's own predicted projectiles; server hit detection doesn't use it. 0 uses the default. (default 3.0)";
         case "PawnCollisionHistoryLength": return "Seconds of position history the server keeps per player for rewinding hits. Shooters with more ping than this (0.35 = 350 ms) are only compensated up to this amount. Higher values cost a little memory and CPU per player. (default 0.35)";
         case "bLimitLinkBeamTraces": return "Between hits, the link beam reuses its last lag-compensated trace for up to the trace interval instead of tracing every server tick. Hits always get a fresh trace. (default off)";
-        case "LinkBeamTraceInterval": return "Seconds between lag-compensated link beam traces between hits. Higher saves more CPU; lower keeps linking and other players' view of the beam closer to every tick. (default 0.030)";
+        case "LinkBeamTraceInterval": return "Seconds between lag-compensated link beam traces between hits. Higher saves more CPU; lower keeps linking and other players' view of the beam closer to every tick. (default 0.020)";
+        case "bPlaceCopiesNearTracesOnly": return "Only moves rewound players into place (with collision on) when a lag-compensated trace passes close enough to hit them, instead of moving every player for every shot. Same hits; saves most of the per-shot engine work on busy servers. (default off)";
+        case "bSinglePassTimeTravelTrace": return "Finds lag-compensated hits with one engine trace instead of two, saving a trace per shot and per projectile catch-up step. Same hits; hit locations on rewound players can differ only in the last decimal places. (default off)";
+        case "VehicleUpdateMode": return "How often players in vehicles send their controls and aim to the server. Off is stock: drivers send every frame (about 20 KB/s at 460 fps) and passengers every second frame (about 14 KB/s). The move rate modes send at the NetMoveDelta rate, about 4-5 KB/s, and immediately whenever a fire button changes, or for drivers throttle, steering, jump or crouch, and for passengers crouch. 'Stock while firing' keeps the stock rate while a fire button is held, so held fire aims exactly as with Off. 'Move rate' keeps the lower rate while firing too, so shots fired while turning use aim up to one NetMoveDelta older. (default off)";
+        case "SpectatorUpdateRate": return "How often spectators send their camera to the server while it is still: watching, following a player, or waiting for the match. Stock sends every second frame, about 13 KB/s at 460 fps; 50, 20 and 10 per second are about 3, 1.5 and 1 KB/s. Stock already keeps only the newest of these moves, so the only effect is that the server gets the spectator's view a little later, which it only uses to pick what is in view when spectating from behind. A spectator flying the camera keeps the stock rate. (default off)";
         
         case "NodeIsolateBonusPct": return "Power Node Isolate Bonus Pct (20)";
         case "VehicleHealScore": return "Vehicle Heal Score (200)";
@@ -1853,6 +2051,7 @@ static event string GetDescriptionText(string PropName)
         case "bMoveErrorAccumFix": return "use server define movement accumulation (default false)";
         case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
         case "bVehicleFullPrecisionAim": return "server uses full precision aim for vehicle drivers and gunners instead of every other rotation unit (default true)";
+        case "SlopeClearance": return "Keeps players this far (uu) off steep ramps and terrain they slide on, so high fps can't sink them in (stuck on BSP/meshes, falling through terrain). Larger gaps let air control work next to slopes at very high fps. 0 disables. (default 0.1)";
         case "StartingHealth": return "Starting health of players (100)";
         case "StartingArmor": return "Starting armor of players (0)";
         case "bUseLinkMesh": return "Use linkmesh logic for vehicle netcode (true)";
@@ -1952,7 +2151,7 @@ function Reset()
             BS_xPlayer(C).ClientResetNetcode();
     }
 
-    // delete these server side, the get recreated in SetPawnStamp function
+    // delete these server side, they get recreated in Tick
     if(countercontroller != None)
     {
         if(countercontroller.Pawn != None)
@@ -2040,7 +2239,7 @@ defaultproperties
      FriendlyName="Wicked Sick UTComp"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V30"
+     FriendlyVersionNumber="V31"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
@@ -2101,7 +2300,7 @@ defaultproperties
      bDebugLogging = false
 
 
-     NewNetUpdateFrequency=200
+     NewNetUpdateFrequency=1
      PingTweenTime=3.0
 
      bEnableAdvancedVotingOptions=True
@@ -2113,7 +2312,12 @@ defaultproperties
      bEnableEnhancedNetCodeVoting=false
      PawnCollisionHistoryLength=0.35
      bLimitLinkBeamTraces=False
-     LinkBeamTraceInterval=0.030
+     LinkBeamTraceInterval=0.020
+     bPlaceCopiesNearTracesOnly=false
+     bSinglePassTimeTravelTrace=false
+     VehicleUpdateMode=0
+     SpectatorUpdateRate=0
+     bSpectatorVoiceChat=False
 
      //original weapons
      WeaponClassNames(0)="XWeapons.ShockRifle"
@@ -2286,6 +2490,7 @@ defaultproperties
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
      bVehicleFullPrecisionAim=true
+     SlopeClearance=0.1
 
      bLimitTaunts=false
      TauntCount=10

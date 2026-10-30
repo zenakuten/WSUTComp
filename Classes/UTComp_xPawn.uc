@@ -22,6 +22,10 @@ var byte OldLocalPCTeam;
 var EDoubleClickDir OldDodgeDir;
 var int MultiDodgesRemaining;
 
+// Steep slope clearance (see ApplySlopeClearance)
+var vector SlopeNormal;
+var UTComp_SlopeClearance SlopeHelper;
+
 // UpdateEyeHeight related
 var EPhysics OldPhysics2;
 var vector OldLocation;
@@ -30,10 +34,16 @@ var int IgnoreZChangeTicks;
 var float EyeHeightOffset;
 
 var UTComp_Settings Settings;
-var UTComp_HUDSettings HUDSettings;
 
 var bool InSpawnProtection;
 var bool OldInSpawnProtection;
+
+// Server: last seen values of the replicated properties the engine changes natively
+// without marking the pawn net-dirty (see Tick)
+var Material RepOverlayMaterial;
+var float RepOverlayTimer;
+var name RepAnimAction;
+var bool bRepSimulateGravity;
 var float lastSkinUpdateTime;
 var Material DeResMatColored0, DeResMatColored1;
 var ColorModifier DeResModifier0;
@@ -76,15 +86,18 @@ simulated event PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    foreach AllObjects(class'UTComp_Settings', Settings)
-        break;
-    if (Settings == none && Bot(Controller) == None)
-        Warn(self@"Settings object not found!");
-
-    foreach AllObjects(class'UTComp_HUDSettings', HUDSettings)
-        break;
-    if (HUDSettings == none && Bot(Controller) == None)
-        Warn(self@"HUDSettings object not found!");
+    // AllObjects walks the whole object table, so use the instance BS_xPlayer caches.
+    // It is unset between BS_xPlayer's PostBeginPlay and PostNetBeginPlay on a client,
+    // and BS_xPlayer.Destroyed clears it on the server whenever any player leaves:
+    // fall back to the scan once, then re-cache so later pawns skip it.
+    Settings = class'UTComp_Settings'.default.instance;
+    if (Settings == None)
+    {
+        foreach AllObjects(class'UTComp_Settings', Settings)
+            break;
+        if (Settings != None)
+            class'UTComp_Settings'.default.instance = Settings;
+    }
 }
 
 simulated event PostNetBeginPlay()
@@ -433,15 +446,35 @@ simulated static function string IsAcceptable(string S)
 simulated function Tick(float DeltaTime)
 {
     local UTComp_PRI uPRI;
+    local bool bProtected;
 
     if(RepInfo==None)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
             break;
 
-    super.Tick(DeltaTime);
-    
+    // ModernPawn's and xPawn's Ticks do nothing on a dedicated server
+    if(Level.NetMode != NM_DedicatedServer)
+        super.Tick(DeltaTime);
+
     if(Role == ROLE_Authority && Level != None && Level.Game != None)
-        InSpawnProtection = Level.TimeSeconds - SpawnTime < DeathMatch(Level.Game).SpawnProtectionTime;
+    {
+        // Any script write to a replicated variable marks the pawn net-dirty for
+        // every connection, even when the value is unchanged, so only write on a
+        // change. The engine changes the four Rep* properties natively without
+        // marking the pawn dirty. Writing every tick used to get those changes sent
+        // straight away, so a change to one of them still triggers the write.
+        bProtected = Level.TimeSeconds - SpawnTime < DeathMatch(Level.Game).SpawnProtectionTime;
+        if(bProtected != InSpawnProtection
+            || OverlayMaterial != RepOverlayMaterial || OverlayTimer != RepOverlayTimer
+            || AnimAction != RepAnimAction || bSimulateGravity != bRepSimulateGravity)
+        {
+            InSpawnProtection = bProtected;
+            RepOverlayMaterial = OverlayMaterial;
+            RepOverlayTimer = OverlayTimer;
+            RepAnimAction = AnimAction;
+            bRepSimulateGravity = bSimulateGravity;
+        }
+    }
 
     if(Level.NetMode==NM_DedicatedServer)
     {
@@ -1266,6 +1299,17 @@ event UpdateEyeHeight( float DeltaTime )
         return;
     }
 
+    // Both eye height algorithms only do this on a dedicated server, where this
+    // runs every tick for every human player
+    if ( Level.NetMode == NM_DedicatedServer )
+    {
+        if ( Controller == None )
+            EyeHeight = 0;
+        else
+            Eyeheight = BaseEyeheight;
+        return;
+    }
+
     if (BS_xPlayer(Controller) == none || BS_xPlayer(Controller).bUseNewEyeHeightAlgorithm == false) {
         super.UpdateEyeHeight(DeltaTime);
         return;
@@ -1274,11 +1318,6 @@ event UpdateEyeHeight( float DeltaTime )
     if ( Controller == None )
     {
         EyeHeight = 0;
-        return;
-    }
-    if ( Level.NetMode == NM_DedicatedServer )
-    {
-        Eyeheight = BaseEyeheight;
         return;
     }
     if ( bTearOff )
@@ -1362,6 +1401,8 @@ function ServerChangedWeapon(Weapon OldWeapon, Weapon NewWeapon)
 
 simulated function Destroyed()
 {
+    if(SlopeHelper != None)
+        SlopeHelper.Destroy();
     if(DeResModifier0 != None)
         Level.ObjectPool.FreeObject(DeResModifier0);
     if(DeResModifier1 != None)
@@ -1383,18 +1424,17 @@ simulated function bool SpecialCalcView(out actor ViewActor, out vector CameraLo
 
 	player = PlayerController(Controller);
 
-	// Only do this mode we have a playercontroller
-	if( (player == None) || (player.Viewtarget != self) )
+	// Only do this mode we have a playercontroller. 1p uses the regular nonspecial
+	// calc view; it's checked first because the server calls this for every client
+	// every tick.
+	if( (player == None) || (player.Viewtarget != self) || !player.bBehindView )
 		return false;
 
 	// "Stock 3P": let the engine's stock CalcBehindView handle the camera.
 	if( BS_xPlayer(player) != None && BS_xPlayer(player).bDisableEnhanced3P )
 		return false;
 
-	if( player.bBehindView )
-		SpecialCalcBehindView(player,ViewActor,CameraLocation,CameraRotation);
-	else
-        return false; //regular nonspecial calc view for 1p view
+	SpecialCalcBehindView(player,ViewActor,CameraLocation,CameraRotation);
 
 	LastCameraCalcTime = Level.TimeSeconds;
 
@@ -1603,6 +1643,87 @@ function ResetAirJumpsForMultiDodge()
         MultiJumpRemaining = MaxMultiJump;
 }
 
+function PossessedBy(Controller C)
+{
+    Super.PossessedBy(C);
+    // Bots navigate with NotifyHitWall, which bDirectHitWall bypasses
+    bDirectHitWall = PlayerController(C) != None;
+}
+
+// Players only get HitWall with bDirectHitWall: Controller.MinHitWall is -1, so the
+// native processHitWall returns before the event. Sliding on something too steep to
+// walk on, queue ApplySlopeClearance for the end of this physics step.
+event HitWall(vector HitNormal, actor Wall)
+{
+    local Actor A;
+    local int i;
+
+    if (Physics != PHYS_Falling || Wall == None || !Wall.bWorldGeometry
+        || RepInfo == None || RepInfo.SlopeClearance <= 0)
+        return;
+
+    if (SlopeHelper == None)
+    {
+        SlopeHelper = Spawn(class'UTComp_SlopeClearance', self);
+        if (SlopeHelper == None)
+            return;
+    }
+
+    // Once per step: the engine pops one PendingTouch at the end of each physics step
+    for (A = PendingTouch; A != None && A != SlopeHelper && i < 8; A = A.PendingTouch)
+        i++;
+    if (A == SlopeHelper)
+        SlopeNormal += HitNormal;
+    else
+    {
+        SlopeNormal = HitNormal;
+        SlopeHelper.PendingTouch = PendingTouch;
+        PendingTouch = SlopeHelper;
+    }
+}
+
+// MoveActor stops 2 uu short along the move, so a slide leaves a gap of about
+// 2.5 * sin(approach angle). physFalling makes Velocity parallel to the slope after
+// each hit and only a frame of gravity points the next move back in, so at high fps
+// the gap shrinks to float rounding and the next trace starts inside: BSP and meshes
+// then block every move, terrain lets the pawn fall through. Restoring a fixed gap
+// leaves Velocity alone, so gravity brings the pawn back at an angle that doesn't
+// depend on fps, like a spectator's MoveSmooth. Called by UTComp_SlopeClearance.
+function ApplySlopeClearance()
+{
+    local vector N, Dir, Start, HitLocation, HitNormal, Extent;
+    local float Gap;
+
+    N = Normal(SlopeNormal);
+    SlopeNormal = vect(0,0,0);
+    if (Physics != PHYS_Falling || N == vect(0,0,0) || RepInfo == None)
+        return;
+
+    Extent.X = CollisionRadius;
+    Extent.Y = CollisionRadius;
+    Extent.Z = CollisionHeight;
+    // Over a 5 uu trace BSP, meshes and terrain all pull their hit back exactly 0.5 uu,
+    // so starting 2.5 uu out the gap is Dist - 2 (and -2 means the start is obstructed)
+    Start = Location + 2.5 * N;
+    if (Trace(HitLocation, HitNormal, Location - 2.5 * N, Start, false, Extent) == None)
+        return;
+    Gap = ((Start - HitLocation) Dot N) - 2.0;
+    if (Gap <= -2.0 || Gap >= RepInfo.SlopeClearance)
+        return;
+
+    // Never push up: along the normal, every step spent moving into the slope lifted
+    // the pawn, ratcheting it up the slope at high fps. Pushed sideways, moving back in
+    // only undoes the push and falling back lands lower. A ditch has no sideways out.
+    Dir = N;
+    if (Dir.Z > 0)
+    {
+        Dir.Z = 0;
+        Dir = Normal(Dir);
+    }
+    if ((Dir Dot N) >= 0.5)
+        Move(((RepInfo.SlopeClearance - Gap) / (Dir Dot N)) * Dir);
+}
+
 defaultproperties
 {
     bAlwaysRelevant=True
@@ -1635,4 +1756,7 @@ defaultproperties
     //TPCamWorldOffset=(X=50.0,Z=50.000000)
     TPCamWorldOffset=(X=-35,Y=0.0,Z=38.000000)
     bSpecialCalcView=true
+
+    // The owning client's pawn never gets PossessedBy, so players are the default
+    bDirectHitWall=true
 }

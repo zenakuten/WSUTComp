@@ -136,6 +136,7 @@ var vector PlayerMouse;
 var float LastHUDSizeX;
 var float LastHUDSizeY;
 var UTComp_OVerlay Overlay;
+var UTComp_SpecVoice SpecVoice; // client: spectator voice HUD and menu, only with bSpectatorVoiceChat
 
 
 var UTComp_PRI currentStatDraw;
@@ -148,6 +149,13 @@ var transient float PitchFraction, YawFraction;
 // Server: full precision view of the vehicle seat move currently being processed
 var transient bool bExactView;
 var transient rotator ExactView;
+
+// Client: what the last ServerDrive or turret move carried, for VehicleUpdateMode
+// (see PlayerDriving.PlayerMove and PlayerTurreting.TurretMoveWaits)
+var transient float LastDriveThrottle, LastDriveSteering, LastDriveRise;
+var transient int LastDriveView;
+var transient byte LastSentFire, LastSentAltFire;
+var transient bool bLastSentDuck;
 
 var transient PlayerInput PlayerInput2;
 
@@ -211,7 +219,8 @@ replication
         serverfindprevnode, servergotonode, ServerGoToWepBase, speclockRed, speclockBlue, ServerGoToTarget, CallVote;
 
     reliable if(Role<Role_Authority)
-        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist, ServerSetTauntCount, ServerSetBehindView;
+        BroadCastVote, BroadCastReady, ServerSetMenuColor, ServerWhitelistCheck, ServerUseWhitelist, ServerSetBehindView,
+        ServerSpecVoiceJoin, ServerSpecVoiceLeave;
 
     unreliable if(role < Role_Authority)
         RequestStats, RequestCTFStats;
@@ -398,6 +407,18 @@ simulated function PostBeginPlay()
     {
         NodeDamageHook = spawn(class'UTComp_NodeDamageHook', self);
         NodeDamageHook.Tag = 'UTComp_ONSNodeDamaged';
+    }
+
+    // Server: the taunt limit comes from the server's own settings, never from the client
+    if (Level.NetMode != NM_Client)
+    {
+        foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+        if (RepInfo != None)
+        {
+            TauntCount = RepInfo.TauntCount;
+            bLimitTaunts = RepInfo.bLimitTaunts;
+        }
     }
 }
 
@@ -732,22 +753,20 @@ function SetMaxSavedMoves()
 }
 
 
-function SetTauntCount()
-{
-    if(RepInfo != None)
-        ServerSetTauntCount(RepInfo.TauntCount, RepInfo.bLimitTaunts);
-}
-
-function ServerSetTauntCount(int tc, bool blt)
-{
-    TauntCount = tc;
-    bLimitTaunts = blt;
-}
-
 function SetMaxResponseTime()
 {
     if(RepInfo != None)
         Default.MaxResponseTime = RepInfo.MaxResponseTime;
+}
+
+// Client: settings taken from RepInfo. Called from InitializeClient() and again from
+// RepInfo.PostNetReceive(), because RepInfo's later properties can arrive after InitializeClient().
+simulated function ApplyServerSettings()
+{
+    SetMaxSavedMoves();
+    SetMaxResponseTime();
+    if (SpecVoice == None && RepInfo.bSpectatorVoiceChat)
+        SpecVoice = UTComp_SpecVoice(Player.InteractionMaster.AddInteraction(string(class'UTComp_SpecVoice'), Player));
 }
 
 simulated function InitializeClient()
@@ -757,9 +776,7 @@ simulated function InitializeClient()
     SetShowSelf(Settings.bShowSelfInTeamOverlay);
     SetBStats(class'UTComp_Scoreboard'.default.bDrawStats || class'UTComp_Scoreboard'.default.bOverrideDisplayStats);
     SetEyeHeightAlgorithm(Settings.bUseNewEyeHeightAlgorithm);
-    SetMaxSavedMoves();
-    SetTauntCount();
-    SetMaxResponseTime();
+    ApplyServerSettings();
     if(Settings.bFirstRun)
     {
         Settings.bFirstRun=False;
@@ -2385,6 +2402,7 @@ exec function SpecLockRed()
     {
         UTCompPRI.SetCoachTeam(0);
         Level.Game.Broadcast(self, PlayerReplicationInfo.PlayerName@"has become a coach for the Red Team.");
+        SpecVoiceCoach();
     }
     else
         ClientMessage("Sorry, there are no Red players ingame.  Try again later.");
@@ -2412,9 +2430,129 @@ exec function SpecLockBlue()
     {
         UTCompPRI.SetCoachTeam(1);
         Level.Game.Broadcast(self, PlayerReplicationInfo.PlayerName@"has become a coach for the Blue Team.");
+        SpecVoiceCoach();
     }
     else
         ClientMessage("Sorry, there are no Blue players ingame.  Try again later.");
+}
+
+// =====================================================================================================================
+//  Spectator voice chat (MutUTComp.bSpectatorVoiceChat)
+// =====================================================================================================================
+// Stock UT2004 never lets someone who connects as a spectator into a voice channel:
+// UnrealChatRoom.JoinChannel() rejects bOnlySpectator for every non-private room,
+// TeamVoiceReplicationInfo.JoinChannelAt() rejects anyone without a team, and in team games the
+// client doesn't even try, since xPlayer.PostNetReceive() waits for a Team spectators never get.
+// The native router (UVoiceChannel::AllowVoiceTransmission) only checks the speaker's server-side
+// ActiveRoom and the listener's membership, so the server adds spectators itself.
+
+// Public, or the Team room of the team this spectator coaches
+simulated function VoiceChatRoom GetSpecVoiceRoom(bool bTeam)
+{
+    local VoiceChatRoom Room;
+    local int i;
+
+    if (VoiceReplicationInfo == None)
+        return None;
+
+    if (!bTeam)
+        return VoiceReplicationInfo.GetChannelAt(0); // Public is always the first room
+
+    if (UTCompPRI == None)
+        UTCompPRI = class'UTComp_Util'.static.GetUTCompPRI(PlayerReplicationInfo);
+    if (UTCompPRI == None || UTCompPRI.CoachTeam > 1 || TeamVoiceReplicationInfo(VoiceReplicationInfo) == None)
+        return None;
+
+    // TeamVoiceReplicationInfo makes Public, Local (unless disabled), then a Team room per team.
+    // Checked by bLocal rather than IsTeamChannel(), which takes index 1 for a public room.
+    for (i = 1; i < 4; i++)
+    {
+        Room = VoiceReplicationInfo.GetChannelAt(i);
+        if (Room != None && !Room.bLocal && Room.GetTeam() == UTCompPRI.CoachTeam)
+            return Room;
+    }
+    return None;
+}
+
+// Server. AddMember() is what ServerJoinVoiceChannel() ends up calling, minus JoinChannel()'s
+// spectator checks, and a no-op for a member. No VoiceID < 32 check: 3374 servers hand out IDs
+// past 31 (bit VoiceID & 31), and late spectators in a full game get them.
+function bool SpecVoiceJoin(VoiceChatRoom Room, bool bTalk)
+{
+    if (Room == None || PlayerReplicationInfo == None || !PlayerReplicationInfo.bOnlySpectator)
+        return false;
+
+    Room.AddMember(PlayerReplicationInfo);
+
+    // ServerSpeak() without the toggle. The client drops ChatRoomMessage() for Public and Team.
+    if (bTalk && ActiveRoom != Room)
+    {
+        ActiveRoom = Room;
+        PlayerReplicationInfo.ActiveChannel = Room.ChannelIndex;
+        ClientSetActiveRoom(Room.ChannelIndex);
+    }
+    return true;
+}
+
+function bool SpecVoiceAllowed()
+{
+    if (RepInfo == None)
+        foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+    return RepInfo != None && RepInfo.bSpectatorVoiceChat;
+}
+
+// Server, from MutUTComp.Timer() a few seconds after a spectator logs in
+function SpecVoiceAutoJoin()
+{
+    // Server-side bVoiceChatEnabled is only cleared by the client's ServerChangeVoiceChatMode(false),
+    // i.e. a DM client with VoIP turned off
+    if (!bVoiceChatEnabled || !SpecVoiceJoin(GetSpecVoiceRoom(false), ActiveRoom == None))
+        return;
+
+    // A team-game spectator's client never ran xPlayer.InitializeVoiceChat(), so it never asked for
+    // the players already on the server. Without their hashes, its ChatManager can't mute them.
+    if (!PlayerReplicationInfo.bNoTeam)
+        ServerRequestBanInfo(-1);
+}
+
+// Server, after SpecLockRed/SpecLockBlue: coaches join their team's channel and talk on it
+function SpecVoiceCoach()
+{
+    if (SpecVoiceAllowed())
+        SpecVoiceJoin(GetSpecVoiceRoom(true), true);
+}
+
+// From the client's UTComp_SpecVoice menu; the stock Join refuses spectators. The team comes
+// from the server's own CoachTeam.
+function ServerSpecVoiceJoin(bool bTeam, bool bTalk)
+{
+    if (SpecVoiceAllowed())
+        SpecVoiceJoin(GetSpecVoiceRoom(bTeam), bTalk);
+}
+
+// From the client's UTComp_SpecVoice menu. Stock RemoveMember() checks IsMember(PRI, true), which
+// a negative mask breaks (see UTComp_SpecVoiceMaskFix), so clear the member bit directly.
+function ServerSpecVoiceLeave(bool bTeam)
+{
+    local VoiceChatRoom Room;
+    local PlayerReplicationInfo PRI;
+
+    PRI = PlayerReplicationInfo;
+    if (!SpecVoiceAllowed() || PRI == None || !PRI.bOnlySpectator)
+        return;
+
+    Room = GetSpecVoiceRoom(bTeam);
+    if (Room == None)
+        return;
+
+    VoiceReplicationInfo.SetMask(Room, Room.GetMask() & ~(1 << (PRI.VoiceID & 31)));
+    if (ActiveRoom == Room)
+    {
+        ActiveRoom = None;
+        PRI.ActiveChannel = -1;
+        ClientSetActiveRoom(-1);
+    }
 }
 
 exec function ToggleBehindView()
@@ -4077,6 +4215,9 @@ ignores SeePlayer, HearNoise, Bump;
 
     // Same as stock, but the views are sent with full precision.
     // View is ReplicateMove's stock packing of Rotation, so it is repacked here.
+    // With VehicleUpdateMode on, the pending move was held back by
+    // TurretMoveWaits and this one supersedes it, so it only goes along at the
+    // stock rate.
     function CallServerMove
     (
         float               TimeStamp,
@@ -4094,7 +4235,12 @@ ignores SeePlayer, HearNoise, Bump;
         optional int        OldAccel
     )
     {
-        if ( PendingMove != None )
+        bLastSentDuck = NewbDuck;
+        LastSentFire = bFire;
+        LastSentAltFire = bAltFire;
+
+        if ( PendingMove != None
+            && (RepInfo == None || RepInfo.VehicleUpdateMode == 0 || (RepInfo.VehicleUpdateMode == 1 && (bFire != 0 || bAltFire != 0))) )
         {
             DualTurretServerMove
             (
@@ -4118,6 +4264,28 @@ ignores SeePlayer, HearNoise, Bump;
                 ClientRoll,
                 PackExactView(Rotation)
             );
+    }
+
+    // Turret moves can't be combined, so stock sends each one with the pending
+    // move on the next frame. They carry no acceleration, and the server only
+    // acts on the newest one's timestamp, view and duck, so with
+    // VehicleUpdateMode on a move waits for the NetMoveDelta rate instead, and
+    // replaces the pending move, which is never sent. Duck and fire button
+    // changes don't wait, and in mode 1 nothing waits while a fire button is
+    // held, so held fire aims as with Off.
+    function bool TurretMoveWaits(SavedMove NewMove)
+    {
+        local float MoveDelta;
+
+        if (NewMove.bDuck != bLastSentDuck || bFire != LastSentFire || bAltFire != LastSentAltFire
+            || (RepInfo.VehicleUpdateMode == 1 && (bFire != 0 || bAltFire != 0)))
+            return false;
+
+        MoveDelta = RepInfo.NetMoveDelta;
+        if (MoveDelta <= 0)
+            MoveDelta = 0.011;
+
+        return (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 < MoveDelta;
     }
 
     function TurretServerMove
@@ -4167,11 +4335,20 @@ ignores SeePlayer, HearNoise, Bump;
         CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
     }
 
-    // Same as stock, but the view is sent to ServerDrive with full precision
+    // Same as stock, but the view is sent to ServerDrive with full precision.
+    // Stock sends ServerDrive every frame, and each one goes out in its own
+    // packet, mostly UDP/IP header. ServerDrive only sets state (inputs and
+    // view) that the server reads once per tick, and each call carries all of
+    // it, so with VehicleUpdateMode on it is sent at the NetMoveDelta rate, and
+    // at once whenever an input the server acts on (throttle, steering, rise,
+    // jump, fire buttons) changes. Mode 1 also sends every frame the view
+    // changes while a fire button is held, so held fire aims as in mode 0.
     function PlayerMove( float DeltaTime )
     {
         local Vehicle CurrentVehicle;
-        local float NewPing;
+        local float NewPing, NewThrottle, NewSteering, NewRise, MoveDelta;
+        local int View;
+        local bool bSend;
 
         CurrentVehicle = Vehicle(Pawn);
 
@@ -4194,7 +4371,53 @@ ignores SeePlayer, HearNoise, Bump;
                 OldPing = ExactPing;
                 ServerUpdatePing(1000 * ExactPing);
             }
-            if (!bSkippedLastUpdate &&                              // in order to skip this update we must not have skipped the last one
+            if (RepInfo != None && RepInfo.VehicleUpdateMode != 0)
+            {
+                // Compared as ProcessDrive will use them; the raw axes jitter every frame
+                NewThrottle = FClamp( aForward/5000.0, -1.0, 1.0 );
+                NewSteering = FClamp( -aStrafe/5000.0, -1.0, 1.0 );
+                NewRise = FClamp( aUp/5000.0, -1.0, 1.0 );
+
+                MoveDelta = RepInfo.NetMoveDelta;
+                if (MoveDelta <= 0)
+                    MoveDelta = 0.011;
+
+                // The time test is ReplicateMove's
+                bSend = NewThrottle != LastDriveThrottle || NewSteering != LastDriveSteering || NewRise != LastDriveRise
+                    || bPressedJump != bLastPressedJump || bFire != LastSentFire || bAltFire != LastSentAltFire
+                    || (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 >= MoveDelta;
+
+                if (bSend)
+                    View = PackExactView(Rotation);
+                else if (RepInfo.VehicleUpdateMode == 1 && (bFire != 0 || bAltFire != 0))
+                {
+                    View = PackExactView(Rotation);
+                    bSend = View != LastDriveView;
+                }
+
+                if (bSend)
+                {
+                    ClientUpdateTime = Level.TimeSeconds;
+
+                    LastDriveThrottle = NewThrottle;
+                    LastDriveSteering = NewSteering;
+                    LastDriveRise = NewRise;
+                    bLastPressedJump = bPressedJump;
+                    LastSentFire = bFire;
+                    LastSentAltFire = bAltFire;
+                    LastDriveView = View;
+
+                    if (CurrentVehicle != None)
+                    {
+                        CurrentVehicle.Throttle = NewThrottle;
+                        CurrentVehicle.Steering = NewSteering;
+                        CurrentVehicle.Rise = NewRise;
+                    }
+
+                    ServerDrive(aForward, aStrafe, aUp, bPressedJump, View);
+                }
+            }
+            else if (!bSkippedLastUpdate &&                         // in order to skip this update we must not have skipped the last one
                 (Player.CurrentNetSpeed < 10000) &&                 // and netspeed must be low
                 (Level.TimeSeconds - ClientUpdateTime < 0.0222) &&  // and time since last update must be short
                 bPressedJump == bLastPressedJump &&                 // and update must not contain major changes
@@ -4875,6 +5098,16 @@ function ReplicateMove
 			return;
 		}
 	}
+	// A move that couldn't be combined goes out with the pending one now,
+	// unless a vehicle seat (PlayerTurreting.TurretMoveWaits) or a still
+	// spectator camera (SpectatorMoveWaits) lets it wait
+	else if ( RepInfo != None
+		&& ((RepInfo.VehicleUpdateMode != 0 && TurretMoveWaits(NewMove))
+			|| (RepInfo.SpectatorUpdateRate != 0 && SpectatorMoveWaits(NewMove))) )
+	{
+		PendingMove = NewMove;
+		return;
+	}
 
     ClientUpdateTime = Level.TimeSeconds;
 
@@ -4933,6 +5166,26 @@ function ReplicateMove
         OldAccel
     );
 	PendingMove = None;
+}
+
+// Whether a move that couldn't be combined may wait instead of going out with
+// the pending move. Only vehicle seats let it (PlayerTurreting).
+function bool TurretMoveWaits(SavedMove NewMove)
+{
+    return false;
+}
+
+// Spectator cameras (SpectatorUpdateRate): a still move may wait. Stock
+// CallServerMove drops a still pending move anyway and sends a
+// ShortServerMove, so waiting only delays the view the server has.
+function bool SpectatorMoveWaits(SavedMove NewMove)
+{
+    if (Pawn != None || !IsSpectating()
+        || NewMove.Acceleration != vect(0,0,0) || PendingMove.Acceleration != vect(0,0,0)
+        || Velocity != vect(0,0,0))
+        return false;
+
+    return (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 * RepInfo.SpectatorUpdateRate < 1.0;
 }
 
 // Get the next free move, maintaining a maximum of MaxSavedMoves.

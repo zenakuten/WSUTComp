@@ -74,7 +74,10 @@ var float NetMoveDelta;
 var float MaxResponseTime;
 var bool bMoveErrorAccumFix;
 var float MoveErrorAccumFixValue;
+var float SlopeClearance; // see UTComp_xPawn.ApplySlopeClearance, 0 = off
 var bool bVehicleFullPrecisionAim; // server only, not replicated
+var byte VehicleUpdateMode; // vehicle seat move rate: 0 stock, 1 NetMoveDelta rate but stock while firing, 2 NetMoveDelta rate
+var byte SpectatorUpdateRate; // sends per second for a still spectator camera, 0 = stock
 
 var bool bLimitTaunts;
 var int TauntCount;
@@ -85,6 +88,8 @@ var float TeamRadarCullDistance;
 
 var bool bDisableCameraShake;
 var bool bAllowTerrainDodge;
+
+var bool bSpectatorVoiceChat;
 
 replication
 {
@@ -101,14 +106,26 @@ replication
         NodeIsolateBonusPct, VehicleHealScore, VehicleDamagePoints, PowerNodeScore, PowerCoreScore, NodeHealBonusPct, 
         bNodeHealBonusForLockedNodes, bNodeHealBonusForConstructor, bSilentAdmin, bUseDefaultScoreboardColor, 
         bEnableWhitelist, bUseWhitelist, WhitelistBanMessage, bDebugLogging,
-        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta,
-        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, bLimitTaunts, TauntCount,
+        bAllowColorWeapons, bDamageIndicator, MaxSavedMoves, bEnableEmoticons, bKeepMomentumOnLanding, NetMoveDelta, VehicleUpdateMode, SpectatorUpdateRate,
+        MaxResponseTime, bMoveErrorAccumFix, MoveErrorAccumFixValue, SlopeClearance, bLimitTaunts, TauntCount,
         bAllowTeamRadar, bAllowTeamRadarMap, TeamRadarCullDistance,
-		bDisableCameraShake, bAllowTerrainDodge;
+		bDisableCameraShake, bAllowTerrainDodge, bSpectatorVoiceChat;
+}
+
+// These properties don't fit in one bunch, so the engine sends the rest in later updates and the
+// client's BS_xPlayer.InitializeClient() can run before they arrive. Re-apply whenever they do.
+simulated event PostNetReceive()
+{
+    local BS_xPlayer PC;
+
+    PC = BS_xPlayer(Level.GetLocalPlayerController());
+    if (PC != None && PC.bClientInitialized)
+        PC.ApplyServerSettings();
 }
 
 defaultproperties
 {
+     bNetNotify=True
      bEnableVoting=False
      EnableBrightSkinsMode=3
      bEnableClanSkins=True
@@ -129,7 +146,7 @@ defaultproperties
      ServerMaxPlayers=10
      bEnableTimedOvertimeVoting=True
      bEnableTimedOvertime=False
-     NewNetUpdateFrequency=200
+     NewNetUpdateFrequency=1
      PingTweenTime=3.0
 
      NodeIsolateBonusPct=20
@@ -156,7 +173,10 @@ defaultproperties
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
+     SlopeClearance=0.1
      bVehicleFullPrecisionAim=true
+     VehicleUpdateMode=0
+     SpectatorUpdateRate=0
 
      bLimitTaunts=false
      TauntCount=10

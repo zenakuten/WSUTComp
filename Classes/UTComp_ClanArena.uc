@@ -480,6 +480,9 @@ function Tick(float deltatime)
    if(uWarmup==None)
       foreach dynamicactors(class'UTComp_warmup', uWarmup)
           break;
+   // Only needed until the warmup is found, which is never destroyed
+   if(uWarmup!=None)
+      Disable('Tick');
 }
 
 function CheckEndRound(controller Killer,controller Other)

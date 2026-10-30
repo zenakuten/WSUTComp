@@ -264,9 +264,19 @@ function string MakeSafeName(string S)
     return S;
 }
 
+// Sends the next map once the client has acknowledged the last one. Sending from
+// ReplyToMapSend instead would recurse for a listen server's own player, whose
+// MapListSend and ReplyToMapSend calls run immediately. Only ticks while a map list
+// is being sent (GetMapList enables it).
 event Tick(float DeltaTime)
 {
-    if(bWantsMapList && bReplied)
+    if(!bWantsMapList)
+    {
+        Disable('Tick');
+        return;
+    }
+
+    if(bReplied)
     {
         bReplied=False;
         ServerSendMapList();
@@ -285,6 +295,7 @@ function GetMapList()
     if(bMapListCompleted)
        return;
     bWantsMapList=True;
+    Enable('Tick');
     ServerSendMapList();
     SendTotalMapNumber(UTCompMapList.Length);
 }

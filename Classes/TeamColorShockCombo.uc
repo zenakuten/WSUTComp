@@ -60,6 +60,12 @@ simulated function SpawnEffects()
 
 simulated function Tick(float DT)
 {
+    // The effects are client-side, so a dedicated server stops ticking this
+    if(Level.NetMode == NM_DedicatedServer)
+    {
+        Disable('Tick');
+        return;
+    }
     super.Tick(DT);
     SpawnEffects();
 }
@@ -69,6 +75,11 @@ auto simulated state Combo
 {
     simulated function Tick(float DT)
     {
+        if(Level.NetMode == NM_DedicatedServer)
+        {
+            Disable('Tick');
+            return;
+        }
         super.Tick(DT);
         SpawnEffects();
     }

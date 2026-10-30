@@ -132,6 +132,12 @@ simulated function SetColors()
 
 simulated function Tick(float DT)
 {
+    // Colouring is client-side, so a dedicated server stops ticking this
+    if(Level.NetMode == NM_DedicatedServer)
+    {
+        Disable('Tick');
+        return;
+    }
     super.Tick(DT);
     SetColors();
 }
@@ -146,7 +152,7 @@ simulated function Explode(vector HitLocation, vector HitNormal)
 	start = Location + 10 * HitNormal;
 	if ( Role == ROLE_Authority )
 	{
-		HurtRadiusEx(damage, 220, MyDamageType, MomentumTransfer, HitLocation);	
+		HurtRadiusEx(damage, DamageRadius, MyDamageType, MomentumTransfer, HitLocation);	
 		for (i=0; i<6; i++)
 		{
 			rot = Rotation;

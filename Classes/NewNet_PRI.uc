@@ -76,9 +76,13 @@ simulated function Pong()
 
 simulated function Tick(float deltatime)
 {
-    super.Tick(deltatime);
+    // Only clients ping, so anything else stops ticking this
     if(Level.NetMode!=NM_Client)
+    {
+        Disable('Tick');
         return;
+    }
+    super.Tick(deltatime);
     if(bPingReceived && Level.TimeSeconds > PingSendTime + PingTweenTime)
     {
         PingSendTime = Level.TimeSeconds;
@@ -90,7 +94,7 @@ simulated function Tick(float deltatime)
 defaultproperties
 {
      bPingReceived=True
-     NetUpdateFrequency=200.000000
+     NetUpdateFrequency=1.000000
      NetPriority=5.000000
      PingTweenTime=3.0
 }

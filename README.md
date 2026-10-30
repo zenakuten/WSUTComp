@@ -12,11 +12,16 @@ V31
 - Cache emoticons to reduce per-frame cost in chat and scoreboard
 - Fix wrong scoreboard showing after map switch
 - Show colored names in the standard team scoreboard, show PPH >10 players, and hide silent admin(s)
-- Add fractional rotation support to vehicle passenger seats which was missing; you can now much more smoothly move your mouse when (heavily) zoomed in
+- Add fractional rotation support to vehicle passenger seats which was missing; you can now much more smoothly move your camera when zoomed in
 - Replace "Def 3p shieldgun" setting with "Stock 3P" checkbox to entirely disable the enhanced 3P mode
 - Server-side optimizations
+  - Add some "UTComp NewNet" settings
 - Add workaround for camera rotation rounding in native logic, which resulted in shots firing down and to the left from screen center
   - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/565
+- Make `counter` int instead of float, which stops counting after enough time on an empty server, breaking netcode
+- Add spectator voice chat support (default off)
+- Fix replication for MaxResponseTime, MaxSavedMoves, taunt limit
+- Add a workaround for players sticking to slopes, or clipping through in the case of terrain
 
 V30
 - Add end game sound like TAM/Freon end ceremony
