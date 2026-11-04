@@ -8,6 +8,9 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V32
+- [3374-rc3](https://github.com/OldUnreal/UT2004Patches/releases/tag/3374-rc3) fixes camera code so now the aim-related workarounds are enabled for 3369 and below only
+
 V31
 - Cache emoticons to reduce per-frame cost in chat and scoreboard
 - Fix wrong scoreboard showing after map switch

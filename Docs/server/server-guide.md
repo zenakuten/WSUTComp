@@ -138,7 +138,7 @@ for the technical background.
 | Limit Link Beam Lag-Comp Traces | `bLimitLinkBeamTraces` | Check | Off | Between hits, the link beam reuses its last lag-compensated trace instead of re-tracing every server tick. Hits always get a fresh trace, so damage and healing are unchanged. |
 | Link Beam Lag-Comp Trace Interval | `LinkBeamTraceInterval` | Text (0-1) | 0.020 | Seconds a link beam trace is reused between hits. Higher saves more CPU; lower keeps link-ups and other players' view of the beam closer to every tick. |
 | Maximum NetSpeed for Clients | `MaxNetSpeed` | Text (0-100000000) | 100000000 | Highest netspeed (bytes/sec) clients may use. The server's `MaxClientRate` / `MaxInternetClientRate` still caps it. Admin level 255. |
-| Minimum NetSpeed for Clients | `MinNetSpeed` | Text (0-100000000) | 10000 | Lowest netspeed (bytes/sec) clients may use. Too low makes other players look choppy on busy servers. Admin level 255. |
+| Minimum NetSpeed for Clients | `MinNetSpeed` | Text (0-100000000) | 10000 | Lowest netspeed (bytes/sec) clients may use. Too low results in packet loss-like symptoms. Admin level 255. |
 | NewNet Pawn Collision History Length | `PawnCollisionHistoryLength` | Text (0-1000) | 0.35 | Seconds of position history kept per player for rewinding hits. Shooters with more ping than this (0.35 = 350 ms) are only compensated up to it. |
 | NewNet Ping Tween Time | `PingTweenTime` | Text (0-1000) | 3.0 | Seconds between each client's ping measurements. Lower values follow ping changes faster. Only used to time the client's own predicted projectiles, not server hit detection. |
 | NewNet Update Frequency | `NewNetUpdateFrequency` | Text (0-1000) | 1 | How often the server re-checks each player's NewNet ping helper for changes. It has nothing that changes and its ping messages go out immediately, so this doesn't affect hit detection or ping; higher values only cost server CPU. 0 uses the default. |
@@ -164,7 +164,6 @@ Client movement and anti-warp tuning. These affect all game types.
 | delay for client move update | `MaxResponseTime` | Text (0.001-0.250) | 0.125 | Client move-update response delay. |
 | use move accum fix | `bMoveErrorAccumFix` | Check | Off | Enables the move-error accumulation fix. |
 | move accum fix value | `MoveErrorAccumFixValue` | Text (0.001-0.018) | 0.009 | Tolerance used by the accum fix. |
-| full precision vehicle aim | `bVehicleFullPrecisionAim` | Check | On | Server uses the full aim sent by vehicle drivers and gunners. Off = stock precision (every other rotation unit). No bandwidth difference either way. |
 
 ---
 
