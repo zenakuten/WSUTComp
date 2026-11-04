@@ -143,12 +143,15 @@ var UTComp_PRI currentStatDraw;
 
 var bool bUseNewEyeHeightAlgorithm;
 
-// Fractional Parts of Pitch/Yaw Input
+// Fractional Parts of Pitch/Yaw Input (3369 only, see bLegacyTrig)
 var transient float PitchFraction, YawFraction;
 
-// Server: full precision view of the vehicle seat move currently being processed
-var transient bool bExactView;
-var transient rotator ExactView;
+// True on 3369 and older, whose sin/cos table steps every 4 rotation units (see
+// AlignAngle) and which carries no rotation fractions natively; 3374 does both
+// exactly. Set in PostBeginPlay from this machine's own engine version. Only ever
+// used as class'BS_xPlayer'.default, since UTV_BS_xPlayer extends this class.
+// Delete it, and everything that reads it, once 3369 network compatibility is dropped.
+var bool bLegacyTrig;
 
 // Client: what the last ServerDrive or turret move carried, for VehicleUpdateMode
 // (see PlayerDriving.PlayerMove and PlayerTurreting.TurretMoveWaits)
@@ -387,6 +390,10 @@ exec function SetStats(int i)
 simulated function PostBeginPlay()
 {
     Super.PostBeginPlay();
+
+    // EngineVersion is set locally at map load and never replicated
+    class'BS_xPlayer'.default.bLegacyTrig = int(Level.EngineVersion) < 3374;
+
     AssignStatNames();
     ChangeDeathMessageOrder();
 
@@ -4015,78 +4022,95 @@ function int FractionCorrection(float in, out float fraction) {
     return result;
 }
 
-// The renderer and Vector()/GetAxes() share a sine table with one entry per 4
-// rotation units, looked up with Angle >> 2. The camera matrix looks up the
-// negated angles, so the view is drawn at the angle rounded UP to a multiple of
-// 4, while Vector() rounds DOWN. Shots therefore land down-left of the crosshair
-// by up to 4 units per axis, which is plain to see when zoomed in.
-// An angle already on a multiple of 4 is drawn and fired identically, so aim is
-// aligned to the angle the camera draws before it is used to shoot.
+// 3369 looks sin/cos up in a table with one entry per 4 rotation units, using
+// Angle >> 2. The camera matrix looks up the negated angles, so the view is drawn
+// at the angle rounded UP to a multiple of 4, while Vector() rounds DOWN. Shots
+// would land down-left of the crosshair by up to 4 units per axis, which is plain
+// to see when zoomed in. An angle already on a multiple of 4 is drawn and fired
+// identically, so on 3369 aim is aligned to the angle the camera draws before it
+// is sent or used to shoot. 3374 computes both exactly, so these leave it alone.
 static final function int AlignAngle(int Angle)
 {
-    return (Angle + 3) & ~3;
+    if (class'BS_xPlayer'.default.bLegacyTrig)
+        return (Angle + 3) & ~3;
+    return Angle;
 }
 
 static final function rotator AlignToView(rotator R)
 {
-    R.Pitch = AlignAngle(R.Pitch);
-    R.Yaw = AlignAngle(R.Yaw);
+    if (class'BS_xPlayer'.default.bLegacyTrig)
+    {
+        R.Pitch = (R.Pitch + 3) & ~3;
+        R.Yaw = (R.Yaw + 3) & ~3;
+    }
     return R;
 }
 
-// Vector(R), but with R rounded to the nearest multiple of 4 instead of down.
-// Aim that went through rotator(vector(Aim)) comes back a unit short of the
+// Vector(R), but on 3369 with R rounded to the nearest multiple of 4 instead of
+// down. Aim that went through rotator(vector(Aim)) comes back a unit short of the
 // aligned angle, and this recovers it exactly.
 static final function vector AimVector(rotator R)
 {
-    R.Pitch = (R.Pitch + 2) & ~3;
-    R.Yaw = (R.Yaw + 2) & ~3;
+    if (class'BS_xPlayer'.default.bLegacyTrig)
+    {
+        R.Pitch = (R.Pitch + 2) & ~3;
+        R.Yaw = (R.Yaw + 2) & ~3;
+    }
     return Vector(R);
 }
 
-// rotator(Dir), but rounded to the nearest multiple of 4. rotator() truncates
-// and scales by 65535 instead of 65536, then Vector() rounds down again.
+// rotator(Dir), but rounded to the nearest step Vector() can point along: a
+// multiple of 4 on 3369, a single unit on 3374. rotator() truncates and scales by
+// 65535 instead of 65536.
 static final function rotator AimRotator(vector Dir)
 {
     local rotator R;
+    local float PitchUnits, YawUnits;
 
-    R.Pitch = 4 * int(Ceil(Atan(Dir.Z, Sqrt(Dir.X * Dir.X + Dir.Y * Dir.Y)) * 8192.0 / PI - 0.5));
-    R.Yaw = 4 * int(Ceil(Atan(Dir.Y, Dir.X) * 8192.0 / PI - 0.5));
+    PitchUnits = Atan(Dir.Z, Sqrt(Dir.X * Dir.X + Dir.Y * Dir.Y)) * 32768.0 / PI;
+    YawUnits = Atan(Dir.Y, Dir.X) * 32768.0 / PI;
+
+    if (class'BS_xPlayer'.default.bLegacyTrig)
+    {
+        R.Pitch = 4 * int(Ceil(0.25 * PitchUnits - 0.5));
+        R.Yaw = 4 * int(Ceil(0.25 * YawUnits - 0.5));
+    }
+    else
+    {
+        R.Pitch = int(Ceil(PitchUnits - 0.5));
+        R.Yaw = int(Ceil(YawUnits - 0.5));
+    }
     return R;
 }
 
 // Stock code packs the view as 15 bit Pitch/2 and Yaw/2, so the server only
 // sees every other rotation unit. This keeps that 30 bit layout and carries
 // the two dropped low bits in the unused bits 30 (yaw) and 31 (pitch).
-// Values packed the stock way decode identically.
-// The view is sent aligned (see AlignToView), so the server aims where the
-// client's camera is drawn.
+// Values packed the stock way decode identically (see ServerMove and ServerDrive).
+// On 3369 the view is aligned first (see AlignAngle), so the server aims where
+// the client's camera is drawn, and the extra bits are always 0.
 function int PackExactView(rotator R)
 {
-    R = AlignToView(R);
+    if (class'BS_xPlayer'.default.bLegacyTrig)
+    {
+        R.Pitch = (R.Pitch + 3) & ~3;
+        R.Yaw = (R.Yaw + 3) & ~3;
+    }
     return ((R.Pitch & 1) << 31) | ((R.Yaw & 1) << 30)
         | (((R.Pitch >> 1) & 32767) << 15) | ((R.Yaw >> 1) & 32767);
-}
-
-function rotator UnpackExactView(int View)
-{
-    local rotator R;
-
-    R.Pitch = (((View >>> 15) & 32767) << 1) | ((View >>> 31) & 1);
-    R.Yaw = ((View & 32767) << 1) | ((View >>> 30) & 1);
-    return R;
-}
-
-// Strips the extra bits, leaving a view any stock ServerMove can decode
-function int StockView(int View)
-{
-    return View & 1073741823;
 }
 
 //from 3SPHorst
 function UpdateRotation(float DeltaTime, float maxPitch)
 {
     local rotator newRotation, ViewRotation;
+
+    // 3374's own version is this one, with the fractions carried natively
+    if (!class'BS_xPlayer'.default.bLegacyTrig)
+    {
+        Super.UpdateRotation(DeltaTime, maxPitch);
+        return;
+    }
 
     if ( bInterpolating || ((Pawn != None) && Pawn.bInterpolating) )
     {
@@ -4161,9 +4185,10 @@ function UpdateRotation(float DeltaTime, float maxPitch)
     }
 }
 
-// Converts a fraction-corrected integer rotation delta back into an input
-// value that ONSWeaponPawn.UpdateRocketAcceleration will truncate to exactly
-// that integer. The half-unit nudge absorbs float error in (32 * dt) / (32 * dt).
+// 3369 only (see PlayerTurreting.PlayerMove). Converts a fraction-corrected
+// integer rotation delta back into an input value that
+// ONSWeaponPawn.UpdateRocketAcceleration will truncate to exactly that integer.
+// The half-unit nudge absorbs float error in (32 * dt) / (32 * dt).
 function float TurretInputFor(int Delta, float Scale) {
     if (Delta > 0)
         return (Delta + 0.5) / Scale;
@@ -4176,25 +4201,29 @@ state PlayerTurreting
 {
 ignores SeePlayer, HearNoise, Bump;
 
-    // Aligns the camera (see AlignToView). It is drawn identically, since the
-    // renderer rounds up to a multiple of 4 anyway, but native ONS gun aim traces
-    // along it and then hits exactly what is on screen. Only vehicle states need
-    // this, and the server calls it for every client every tick to work out
+    // On 3369, aligns the camera (see AlignAngle). It is drawn identically, since
+    // the renderer rounds up to a multiple of 4 anyway, but native ONS gun aim
+    // traces along it and then hits exactly what is on screen. Only vehicle states
+    // need this, and the server calls it for every client every tick to work out
     // relevancy, so it is kept out of the global state and inlined.
     event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation)
     {
         Global.PlayerCalcView(ViewActor, CameraLocation, CameraRotation);
-        CameraRotation.Pitch = (CameraRotation.Pitch + 3) & ~3;
-        CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
+        if (class'BS_xPlayer'.default.bLegacyTrig)
+        {
+            CameraRotation.Pitch = (CameraRotation.Pitch + 3) & ~3;
+            CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
+        }
     }
 
     function PlayerMove(float DeltaTime)
     {
         local float OldTurn, OldLookUp, Scale;
 
-        // Only ONSWeaponPawn uses the plain 32 * dt * input formula;
-        // other turrets (e.g. ASTurret) have their own rotation logic
-        if (ONSWeaponPawn(Pawn) == None || DeltaTime <= 0)
+        // 3374's ONSWeaponPawn carries the fractions itself. Only ONSWeaponPawn
+        // uses the plain 32 * dt * input formula; other turrets (e.g. ASTurret)
+        // have their own rotation logic.
+        if (!class'BS_xPlayer'.default.bLegacyTrig || ONSWeaponPawn(Pawn) == None || DeltaTime <= 0)
         {
             Super.PlayerMove(DeltaTime);
             return;
@@ -4213,8 +4242,9 @@ ignores SeePlayer, HearNoise, Bump;
         aLookUp = OldLookUp;
     }
 
-    // Same as stock, but the views are sent with full precision.
-    // View is ReplicateMove's stock packing of Rotation, so it is repacked here.
+    // Same as stock, but the views are sent with full precision. View is already
+    // ReplicateMove's PackExactView of Rotation; stock repacks the pending move
+    // at stock precision, so it is packed here instead.
     // With VehicleUpdateMode on, the pending move was held back by
     // TurretMoveWaits and this one supersedes it, so it only goes along at the
     // stock rate.
@@ -4252,7 +4282,7 @@ ignores SeePlayer, HearNoise, Bump;
                 ClientLoc,
                 NewbDuck,
                 ClientRoll,
-                PackExactView(Rotation)
+                View
             );
         }
         else
@@ -4262,7 +4292,7 @@ ignores SeePlayer, HearNoise, Bump;
                 ClientLoc,
                 NewbDuck,
                 ClientRoll,
-                PackExactView(Rotation)
+                View
             );
     }
 
@@ -4287,40 +4317,6 @@ ignores SeePlayer, HearNoise, Bump;
 
         return (Level.TimeSeconds - ClientUpdateTime) * Level.TimeDilation * 0.91 < MoveDelta;
     }
-
-    function TurretServerMove
-    (
-        float   TimeStamp,
-        vector  ClientLoc,
-        bool    NewbDuck,
-        byte    ClientRoll,
-        int     View
-    )
-    {
-        SetExactView(View);
-        Global.ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
-        bExactView = false;
-    }
-
-    function DualTurretServerMove
-    (
-        float   TimeStamp0,
-        bool    NewbDuck0,
-        byte    ClientRoll0,
-        int     View0,
-        float   TimeStamp,
-        vector  ClientLoc,
-        bool    NewbDuck,
-        byte    ClientRoll,
-        int     View
-    )
-    {
-        SetExactView(View0);
-        Global.ServerMove(TimeStamp0,Vect(0,0,0),vect(0,0,0),false,NewbDuck0,false,false, DCLICK_NONE,ClientRoll0,StockView(View0));
-        SetExactView(View);
-        Global.ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
-        bExactView = false;
-    }
 }
 
 state PlayerDriving
@@ -4331,8 +4327,11 @@ ignores SeePlayer, HearNoise, Bump;
     event PlayerCalcView(out actor ViewActor, out vector CameraLocation, out rotator CameraRotation)
     {
         Global.PlayerCalcView(ViewActor, CameraLocation, CameraRotation);
-        CameraRotation.Pitch = (CameraRotation.Pitch + 3) & ~3;
-        CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
+        if (class'BS_xPlayer'.default.bLegacyTrig)
+        {
+            CameraRotation.Pitch = (CameraRotation.Pitch + 3) & ~3;
+            CameraRotation.Yaw = (CameraRotation.Yaw + 3) & ~3;
+        }
     }
 
     // Same as stock, but the view is sent to ServerDrive with full precision.
@@ -4958,7 +4957,6 @@ function ReplicateMove
 {
     local SavedMove NewMove, OldMove, AlmostLastMove, LastMove;
     local byte ClientRoll;
-    local rotator SentView;
     local float OldTimeDelta, NetMoveDelta;
     local int OldAccel;
     local vector BuildAccel, AccelNorm, MoveLoc, CompareAccel;
@@ -5145,10 +5143,7 @@ function ReplicateMove
     else
         MoveLoc = Pawn.Location;
 
-    // Aligned to a multiple of 4 (see AlignToView), which also survives the /2
-    // packing exactly, so the server aims where our camera is drawn.
-    SentView = AlignToView(Rotation);
-
+    // The view goes out with full precision (see PackExactView)
     CallServerMove
     (
         NewMove.TimeStamp,
@@ -5161,7 +5156,7 @@ function ReplicateMove
         NewMove.bDoubleJump,
         NewMove.DoubleClickMove,
         ClientRoll,
-        (32767 & (SentView.Pitch/2)) * 32768 + (32767 & (SentView.Yaw/2)),
+        PackExactView(Rotation),
         OldTimeDelta,
         OldAccel
     );
@@ -5461,67 +5456,17 @@ function LongClientAdjustPosition
 	bUpdatePosition = true;
 }
 
-// Vehicle seats send views packed with PackExactView. The exact view is
-// stashed for ServerMove, while the move itself gets the stock packing so
-// state versions of ServerMove that decode it themselves still work.
-function SetExactView(int View)
-{
-    ExactView = DecodeSeatView(View);
-    bExactView = true;
-}
-
-// With bVehicleFullPrecisionAim off the extra bits are ignored,
-// which decodes exactly like stock
-function rotator DecodeSeatView(int View)
-{
-    if (RepInfo==None)
-        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
-            break;
-
-    if (RepInfo != None && !RepInfo.bVehicleFullPrecisionAim)
-        View = StockView(View);
-
-    return UnpackExactView(View);
-}
-
+// Same as stock, but decodes PackExactView's format, so the view keeps full
+// precision. Stock-packed views decode identically. Turret moves need nothing
+// extra: stock (Dual)TurretServerMove hands View to ServerMove, which decodes it.
 function ServerDrive(float InForward, float InStrafe, float aUp, bool InJump, int View)
 {
-    SetRotation(DecodeSeatView(View));
+    local rotator ViewRot;
+
+    ViewRot.Pitch = (((View >>> 15) & 32767) << 1) | ((View >>> 31) & 1);
+    ViewRot.Yaw = ((View & 32767) << 1) | ((View >>> 30) & 1);
+    SetRotation(ViewRot);
     ProcessDrive(InForward, InStrafe, aUp, InJump);
-}
-
-function TurretServerMove
-(
-    float   TimeStamp,
-    vector  ClientLoc,
-    bool    NewbDuck,
-    byte    ClientRoll,
-    int     View
-)
-{
-    SetExactView(View);
-    ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
-    bExactView = false;
-}
-
-function DualTurretServerMove
-(
-    float   TimeStamp0,
-    bool    NewbDuck0,
-    byte    ClientRoll0,
-    int     View0,
-    float   TimeStamp,
-    vector  ClientLoc,
-    bool    NewbDuck,
-    byte    ClientRoll,
-    int     View
-)
-{
-    SetExactView(View0);
-    ServerMove(TimeStamp0,Vect(0,0,0),vect(0,0,0),false,NewbDuck0,false,false, DCLICK_NONE,ClientRoll0,StockView(View0));
-    SetExactView(View);
-    ServerMove(TimeStamp,Vect(0,0,0),ClientLoc,false,NewbDuck,false,false, DCLICK_NONE,ClientRoll,StockView(View));
-    bExactView = false;
 }
 
 /* ServerMove()
@@ -5609,18 +5554,9 @@ function ServerMove
         }
     }
 
-    // View components
-    if ( bExactView )
-    {
-        ViewPitch = ExactView.Pitch;
-        ViewYaw = ExactView.Yaw;
-    }
-    else
-    {
-        ViewPitch = View/32768;
-        ViewYaw = 2 * (View - 32768 * ViewPitch);
-        ViewPitch *= 2;
-    }
+    // View components, in PackExactView's format. Stock-packed views decode identically.
+    ViewPitch = (((View >>> 15) & 32767) << 1) | ((View >>> 31) & 1);
+    ViewYaw = ((View & 32767) << 1) | ((View >>> 30) & 1);
     // Make acceleration.
     Accel = InAccel * 0.1;
 

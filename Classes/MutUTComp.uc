@@ -96,7 +96,6 @@ var config float NetMoveDelta;
 var config float MaxResponseTime;
 var config bool bMoveErrorAccumFix;
 var config float MoveErrorAccumFixValue;
-var config bool bVehicleFullPrecisionAim;
 var config float SlopeClearance;
 
 var config bool bLimitTaunts;
@@ -1051,7 +1050,6 @@ function SpawnReplicationClass()
     class'BS_xPlayer'.default.MaxResponseTime = MaxResponseTime;
     RepInfo.bMoveErrorAccumFix = bMoveErrorAccumFix;
     RepInfo.MoveErrorAccumFixValue = MoveErrorAccumFixValue;
-    RepInfo.bVehicleFullPrecisionAim = bVehicleFullPrecisionAim;
     RepInfo.VehicleUpdateMode = Min(VehicleUpdateMode, 2);
     RepInfo.SpectatorUpdateRate = SpectatorUpdateRate;
     RepInfo.SlopeClearance = FClamp(SlopeClearance, 0.0, 1.0);
@@ -1963,7 +1961,6 @@ static function FillPlayInfo (PlayInfo PlayInfo)
     PlayInfo.AddSetting("UTComp Movement", "MaxResponseTime", "delay for client move update (default 0.125)", security, weight, "Text","0.125;0.001:0.250",,False,False);
     PlayInfo.AddSetting("UTComp Movement", "bMoveErrorAccumFix", "use move accum fix (default false)", security, weight, "Check");
     PlayInfo.AddSetting("UTComp Movement", "MoveErrorAccumFixValue", "move accum fix value (default 0.009)", security, weight, "Text", "0.009:0.001:0.018",,false, false);
-    PlayInfo.AddSetting("UTComp Movement", "bVehicleFullPrecisionAim", "full precision vehicle aim (default true)", security, weight, "Check");
     PlayInfo.AddSetting("UTComp Movement", "SlopeClearance", "Steep slope clearance (default 0.1, 0 = off)", security, weight, "Text","0.1;0.0:1.0",,False,False);
 
     weight++;
@@ -2050,7 +2047,6 @@ static event string GetDescriptionText(string PropName)
         case "MaxResponseTime": return "server delay for client move update before setting position (default 0.125)";
         case "bMoveErrorAccumFix": return "use server define movement accumulation (default false)";
         case "MoveErrorAccumFixValue": return "server defined movement accumulation value (default 0.009)";
-        case "bVehicleFullPrecisionAim": return "server uses full precision aim for vehicle drivers and gunners instead of every other rotation unit (default true)";
         case "SlopeClearance": return "Keeps players this far (uu) off steep ramps and terrain they slide on, so high fps can't sink them in (stuck on BSP/meshes, falling through terrain). Larger gaps let air control work next to slopes at very high fps. 0 disables. (default 0.1)";
         case "StartingHealth": return "Starting health of players (100)";
         case "StartingArmor": return "Starting armor of players (0)";
@@ -2489,7 +2485,6 @@ defaultproperties
      MaxResponseTime=0.125000
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
-     bVehicleFullPrecisionAim=true
      SlopeClearance=0.1
 
      bLimitTaunts=false

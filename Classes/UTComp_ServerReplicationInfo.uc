@@ -75,7 +75,6 @@ var float MaxResponseTime;
 var bool bMoveErrorAccumFix;
 var float MoveErrorAccumFixValue;
 var float SlopeClearance; // see UTComp_xPawn.ApplySlopeClearance, 0 = off
-var bool bVehicleFullPrecisionAim; // server only, not replicated
 var byte VehicleUpdateMode; // vehicle seat move rate: 0 stock, 1 NetMoveDelta rate but stock while firing, 2 NetMoveDelta rate
 var byte SpectatorUpdateRate; // sends per second for a still spectator camera, 0 = stock
 
@@ -174,7 +173,6 @@ defaultproperties
      bMoveErrorAccumFix=false
      MoveErrorAccumFixValue=0.009
      SlopeClearance=0.1
-     bVehicleFullPrecisionAim=true
      VehicleUpdateMode=0
      SpectatorUpdateRate=0
 
