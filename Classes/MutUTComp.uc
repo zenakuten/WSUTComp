@@ -2235,7 +2235,7 @@ defaultproperties
      FriendlyName="Wicked Sick UTComp"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V31"
+     FriendlyVersionNumber="V32"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
