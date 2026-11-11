@@ -137,20 +137,22 @@ var float LastHUDSizeX;
 var float LastHUDSizeY;
 var UTComp_OVerlay Overlay;
 var UTComp_SpecVoice SpecVoice; // client: spectator voice HUD and menu, only with bSpectatorVoiceChat
+var bool bVoiceChatRegistered; // client, 3374: RegisterVoiceChat() has run (see RegisterVoiceChat)
 
 
 var UTComp_PRI currentStatDraw;
 
 var bool bUseNewEyeHeightAlgorithm;
 
-// Fractional Parts of Pitch/Yaw Input (3369 only, see bLegacyTrig)
+// Fractional Parts of Pitch/Yaw Input (pre-3374 only, see bLegacyTrig)
 var transient float PitchFraction, YawFraction;
 
-// True on 3369 and older, whose sin/cos table steps every 4 rotation units (see
-// AlignAngle) and which carries no rotation fractions natively; 3374 does both
-// exactly. Set in PostBeginPlay from this machine's own engine version. Only ever
+// True on any engine before 3374 (3369, older, and in-between dev builds), whose
+// sin/cos table steps every 4 rotation units (see AlignAngle) and which carries no
+// rotation fractions natively; 3374 does both exactly. Set in PostBeginPlay from
+// this machine's own engine version. Only ever
 // used as class'BS_xPlayer'.default, since UTV_BS_xPlayer extends this class.
-// Delete it, and everything that reads it, once 3369 network compatibility is dropped.
+// Delete it, and everything that reads it, once pre-3374 network compatibility is dropped.
 var bool bLegacyTrig;
 
 // Client: what the last ServerDrive or turret move carried, for VehicleUpdateMode
@@ -2444,6 +2446,28 @@ exec function SpecLockBlue()
 }
 
 // =====================================================================================================================
+//  3374 voice chat registration
+// =====================================================================================================================
+// 3374 only; 3369 never calls it. 3374's PlayerReplicationInfo.PostNetReceive() calls the local
+// player's RegisterVoiceChat() for every PRI that finishes replicating, and xPlayer's version
+// runs every time, so each join re-ran AutoJoinVoiceChat(). Its Speak(LastActiveChannel) moved us
+// to Public after a TogglePublicChat release, and ServerRequestBanInfo(-1) resent every hash.
+// Register once, when our own PRI is ready, as 3369's xPlayer.PostNetReceive() did.
+function RegisterVoiceChat()
+{
+    if (bVoiceChatRegistered || VoiceReplicationInfo == None || PlayerReplicationInfo == None
+        || PlayerReplicationInfo.NeedNetNotify())
+        return;
+
+    bVoiceChatRegistered = true;
+    VoiceReplicationInfo.SetOwner(self);
+    if (bVoiceChatEnabled)
+        InitializeVoiceChat();
+    else
+        DisableVoiceChat();
+}
+
+// =====================================================================================================================
 //  Spectator voice chat (MutUTComp.bSpectatorVoiceChat)
 // =====================================================================================================================
 // Stock UT2004 never lets someone who connects as a spectator into a voice channel:
@@ -4022,12 +4046,12 @@ function int FractionCorrection(float in, out float fraction) {
     return result;
 }
 
-// 3369 looks sin/cos up in a table with one entry per 4 rotation units, using
-// Angle >> 2. The camera matrix looks up the negated angles, so the view is drawn
+// Before 3374, sin/cos are looked up in a table with one entry per 4 rotation
+// units, using Angle >> 2. The camera matrix looks up the negated angles, so the view is drawn
 // at the angle rounded UP to a multiple of 4, while Vector() rounds DOWN. Shots
 // would land down-left of the crosshair by up to 4 units per axis, which is plain
 // to see when zoomed in. An angle already on a multiple of 4 is drawn and fired
-// identically, so on 3369 aim is aligned to the angle the camera draws before it
+// identically, so before 3374 aim is aligned to the angle the camera draws before it
 // is sent or used to shoot. 3374 computes both exactly, so these leave it alone.
 static final function int AlignAngle(int Angle)
 {
@@ -4046,7 +4070,7 @@ static final function rotator AlignToView(rotator R)
     return R;
 }
 
-// Vector(R), but on 3369 with R rounded to the nearest multiple of 4 instead of
+// Vector(R), but before 3374 with R rounded to the nearest multiple of 4 instead of
 // down. Aim that went through rotator(vector(Aim)) comes back a unit short of the
 // aligned angle, and this recovers it exactly.
 static final function vector AimVector(rotator R)
@@ -4060,7 +4084,7 @@ static final function vector AimVector(rotator R)
 }
 
 // rotator(Dir), but rounded to the nearest step Vector() can point along: a
-// multiple of 4 on 3369, a single unit on 3374. rotator() truncates and scales by
+// multiple of 4 before 3374, a single unit on 3374. rotator() truncates and scales by
 // 65535 instead of 65536.
 static final function rotator AimRotator(vector Dir)
 {
@@ -4087,7 +4111,7 @@ static final function rotator AimRotator(vector Dir)
 // sees every other rotation unit. This keeps that 30 bit layout and carries
 // the two dropped low bits in the unused bits 30 (yaw) and 31 (pitch).
 // Values packed the stock way decode identically (see ServerMove and ServerDrive).
-// On 3369 the view is aligned first (see AlignAngle), so the server aims where
+// Before 3374 the view is aligned first (see AlignAngle), so the server aims where
 // the client's camera is drawn, and the extra bits are always 0.
 function int PackExactView(rotator R)
 {
@@ -4185,7 +4209,7 @@ function UpdateRotation(float DeltaTime, float maxPitch)
     }
 }
 
-// 3369 only (see PlayerTurreting.PlayerMove). Converts a fraction-corrected
+// Pre-3374 only (see PlayerTurreting.PlayerMove). Converts a fraction-corrected
 // integer rotation delta back into an input value that
 // ONSWeaponPawn.UpdateRocketAcceleration will truncate to exactly that integer.
 // The half-unit nudge absorbs float error in (32 * dt) / (32 * dt).
@@ -4201,7 +4225,7 @@ state PlayerTurreting
 {
 ignores SeePlayer, HearNoise, Bump;
 
-    // On 3369, aligns the camera (see AlignAngle). It is drawn identically, since
+    // Before 3374, aligns the camera (see AlignAngle). It is drawn identically, since
     // the renderer rounds up to a multiple of 4 anyway, but native ONS gun aim
     // traces along it and then hits exactly what is on screen. Only vehicle states
     // need this, and the server calls it for every client every tick to work out
