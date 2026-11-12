@@ -15,6 +15,7 @@ V33
 - Add greentext support (">" at beginning of a message)
 - Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
 - Add workaround for 3374 voice channel switching issue
+  - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/499
 
 V32
 - bump utcomp and 3spn version labels to v32
