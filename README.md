@@ -9,9 +9,12 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 Release Notes
 
 V32
+- bump utcomp and 3spn version labels to v32
 - [3374-rc3](https://github.com/OldUnreal/UT2004Patches/releases/tag/3374-rc3) fixes camera code so now the aim-related workarounds are enabled for 3369 and below only
 
 V31
+- use cached emoticon parsing in tam and freon extended scoreboards
+- remove obsolete weapon config player hook to fix release compilation
 - Cache emoticons to reduce per-frame cost in chat and scoreboard
 - Fix wrong scoreboard showing after map switch
 - Show colored names in the standard team scoreboard, show PPH >10 players, and hide silent admin(s)
