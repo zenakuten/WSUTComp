@@ -14,6 +14,7 @@ V33
   - Use stock UT2004 cleanup for corpses (remove off-screen ragdolls on first 1s timer)
 - Add greentext support (">" at beginning of a message)
 - Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
+- Add workaround for 3374 voice channel switching issue
 
 V32
 - bump utcomp and 3spn version labels to v32
