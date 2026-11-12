@@ -12,15 +12,18 @@ simulated function bool IsVehicleEmpty(ONSVehicle V)
 // Crosshair draw wrapper: in 3p, grey the crosshair when the weapon's shot can't reach
 // the point under the crosshair (behind cover the camera sees past). The per-class
 // DrawCrosshair dispatchers call this so the logic lives in one place. bGrey3pCrosshair
-// is read by the DrawSpriteWidget override below, and is scoped to just this draw --
+// is read by DrawCrosshairSprite below, and is scoped to just this draw --
 // DrawEnemyName (called inside the crosshair funcs) early-returns in behind view, so it
 // isn't affected.
 simulated function DrawCrosshairChecked(Canvas C)
 {
     local BS_xPlayer PC;
 
+    // Is3pShotBlocked traces, so only ask when a normal crosshair is actually drawn
+    // (the crosshair funcs return early otherwise) and enhanced 3p is in use.
     PC = BS_xPlayer(PlayerOwner);
-    bGrey3pCrosshair = PC != None && PC.Is3pShotBlocked();
+    bGrey3pCrosshair = bCrosshairShow && PC != None && PC.bBehindView && !PC.bDisableEnhanced3P
+        && PawnOwner != None && !PawnOwner.bSpecialCrosshair && PC.Is3pShotBlocked();
 
     if(HUDSettings.bEnableUTCompCrosshairs && HUDSettings.UTCompCrosshairs.Length>0)
         DrawUTCompCrosshair(C);
@@ -30,12 +33,14 @@ simulated function DrawCrosshairChecked(Canvas C)
     bGrey3pCrosshair = false;
 }
 
+// Crosshair-only DrawSpriteWidget. This used to be an override of the native
+// HudBase.DrawSpriteWidget, which put a script call in front of every HUD widget draw.
 // While bGrey3pCrosshair is set (only around the crosshair draw), recolor the sprite grey
 // by wrapping its texture in a ColorModifier -- the player's custom crosshair texture is
 // preserved as the modifier's Material, so we tint rather than replace it. Tint RGB is
 // neutralised to white so the grey shows through whatever crosshair colour they picked;
 // alpha (opacity) is left untouched.
-simulated function DrawSpriteWidget(Canvas C, out SpriteWidget W)
+simulated function DrawCrosshairSprite(Canvas C, out SpriteWidget W)
 {
     if (bGrey3pCrosshair && W.WidgetTexture != None && W.WidgetTexture != Crosshair3pGreyMod)
     {
@@ -54,7 +59,7 @@ simulated function DrawSpriteWidget(Canvas C, out SpriteWidget W)
         W.Tints[0].R = 255; W.Tints[0].G = 255; W.Tints[0].B = 255;
         W.Tints[1].R = 255; W.Tints[1].G = 255; W.Tints[1].B = 255;
     }
-    Super.DrawSpriteWidget(C, W);
+    DrawSpriteWidget(C, W);
 }
 
 // showdebug extras: while the base engine HUD prints the debug text (and we add

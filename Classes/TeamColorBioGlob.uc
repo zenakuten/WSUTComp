@@ -137,6 +137,18 @@ simulated function Tick(float DT)
     }
     super.Tick(DT);
     SetColors();
+
+    // Nothing left to do on a client once colouring is settled (subclasses add their own
+    // work). A state change re-enables Tick once; this disables it again.
+    if(Level.NetMode == NM_Client && ClientTickDone())
+        Disable('Tick');
+}
+
+// True once this glob's client Tick can no longer change anything.
+simulated function bool ClientTickDone()
+{
+    return bColorSet
+        || !class'TeamColorManager'.static.ColorsStillPossible(Level, Settings != None && Settings.bTeamColorBio);
 }
 
 function BlowUp(Vector HitLocation)

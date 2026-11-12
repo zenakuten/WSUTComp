@@ -73,6 +73,16 @@ var Texture MouseCursorTexture;
 var float MousePosX, MousePosY;
 
 var UTComp_ServerReplicationInfo EmoteSRI;
+// Resolved once per PostRender (GetEmoteReplicationIfEnabled) and used for every row.
+var EmoticonsReplicationInfo FrameEmoteRep;
+
+// Welcome banner: everything it draws is constant for its few seconds on screen, so
+// it is built on its first frame (font, size, strings, key-bind lookup) and reused.
+var bool bBannerBuilt;
+var int BannerScreenX;
+var Font BannerFont;
+var float BannerBoxX, BannerBoxY, BannerLineY;
+var string BannerVersionText, BannerKeyText, BannerNetText;
 
 // Emoticon rendering, shared with the HUD and scoreboard, so player names on the
 // team overlay render emoticons the same way chat and the scoreboard do.
@@ -107,15 +117,14 @@ function EmoticonsReplicationInfo GetEmoteReplicationIfEnabled()
 // callers fall back to their normal text draw.
 function bool TryDrawEmoteName(Canvas C, coerce string Name)
 {
-    local EmoticonsReplicationInfo rep;
     local EmoticonsParsedText P;
 
-    rep = GetEmoteReplicationIfEnabled();
-    if (rep == None)
+    // FrameEmoteRep is resolved once at the top of PostRender.
+    if (FrameEmoteRep == None)
         return false;
 
     // Cached per string, so a name without emoticons costs one lookup per frame.
-    P = rep.GetParsedText(Name);
+    P = FrameEmoteRep.GetParsedText(Name);
     if (P.IconTex.Length == 0)
         return false;
 
@@ -278,38 +287,71 @@ function DrawBackground(Canvas canvas, int numPlayers, int team)
   }
 }
 
+// Builds everything DrawWelcomeBanner draws. Called on the banner's first frame.
+function BuildWelcomeBanner(Canvas canvas)
+{
+    local bool bOldBiggerFont;
+    local string Gold, Info;
+
+    // AutoPickFont also sets BiggerFont, which the overlay layout reads; keep it as it was.
+    bOldBiggerFont = BiggerFont;
+    BannerFont = GetFont(AutoPickFont(Canvas.SizeX, -3), 1);
+    BiggerFont = bOldBiggerFont;
+
+    Canvas.Font = BannerFont;
+    Canvas.StrLen("This server is running       ", BannerBoxX, BannerBoxY);
+    Canvas.StrLen("W", StrLenX3, BannerLineY);
+
+    Gold = MakeColorCode(class'Hud'.Default.GoldColor);
+    Info = MakeColorCode(InfoTextColor);
+    BannerVersionText = "UTComp  "$Gold$class'MutUTComp'.default.FriendlyVersionName$Info
+        $" "$Gold$class'MutUTComp'.default.FriendlyVersionNumber$Info;
+    BannerKeyText = "Press "$Gold$class'GameInfo'.Static.GetKeyBindName("mymenu", PC)$Info$" to change";
+
+    UpdateBannerNetText();
+    BannerScreenX = Canvas.SizeX;
+    bBannerBuilt = true;
+}
+
+function UpdateBannerNetText()
+{
+    if(GetNewNetEnabled())
+        BannerNetText = "Enh. Net:"@MakeColorCode(class'Hud'.Default.GoldColor)$"Enabled"$MakeColorCode(InfoTextColor)$".";
+    else
+        BannerNetText = "";
+}
+
 function DrawWelcomeBanner(Canvas canvas)
 {
-    local string mutName;
+    if(!bBannerBuilt || Canvas.SizeX != BannerScreenX)
+        BuildWelcomeBanner(Canvas);
+    else if(EmoteSRI == None)
+        UpdateBannerNetText(); // server info not replicated yet; keep looking
+
     Canvas.SetPos(currentX, currentY);
     Canvas.Style=5;
     Canvas.DrawColor=BGColor;
-    Canvas.Font=GetFont(AutoPickFont(Canvas.SizeX, -3), 1);
-    Canvas.StrLen( "This server is running       ", StrLenX3, StrLenY3);
+    Canvas.Font=BannerFont;
 
-    if(GetNewNetEnabled())
-        Canvas.DrawTileStretched(material'Engine.WhiteTexture',StrLenX3, 8*(StrLenY3));
+    if(BannerNetText != "")
+        Canvas.DrawTileStretched(material'Engine.WhiteTexture',BannerBoxX, 8*BannerBoxY);
     else
-        Canvas.DrawTileStretched(material'Engine.WhiteTexture',StrLenX3, 6*(StrLenY3));
+        Canvas.DrawTileStretched(material'Engine.WhiteTexture',BannerBoxX, 6*BannerBoxY);
 
     Canvas.SetPos(currentX, currentY);
     Canvas.DrawColor=InfoTextColor;
     Canvas.DrawText("This server is running");
-    Canvas.StrLen("W", StrLenX3, StrLenY3);
-    Canvas.SetPos(currentX, currentY+1*(StrLenY3+2.0));
-    mutName = "UTComp ";
-    mutName = mutName$" "$MakeColorCode(class'Hud'.Default.GoldColor)$class'MutUTComp'.default.FriendlyVersionName$MakeColorCode(InfoTextColor);
-    mutName = mutName$" "$MakeColorCode(class'Hud'.Default.GoldColor)$class'MutUTComp'.default.FriendlyVersionNumber$MakeColorCode(InfoTextColor);
-    Canvas.DrawText(mutName);
-    Canvas.SetPos(currentX, currentY+3*(StrLenY3+2.0));
-    Canvas.DrawText("Press "$MakeColorCode(class'Hud'.Default.GoldColor)$class'GameInfo'.Static.GetKeyBindName("mymenu", PC)$MakeColorCode(InfoTextColor)$" to change");
-    Canvas.SetPos(currentX, currentY+4*(StrLenY3+2.0));
+    Canvas.SetPos(currentX, currentY+1*(BannerLineY+2.0));
+    Canvas.DrawText(BannerVersionText);
+    Canvas.SetPos(currentX, currentY+3*(BannerLineY+2.0));
+    Canvas.DrawText(BannerKeyText);
+    Canvas.SetPos(currentX, currentY+4*(BannerLineY+2.0));
     Canvas.DrawText("your settings");
 
-    if(GetNewNetEnabled())
+    if(BannerNetText != "")
     {
-        Canvas.SetPos(currentX, currentY+5*(StrLenY3+2.0));
-        Canvas.DrawText("Enh. Net:"@MakeColorCode(class'Hud'.Default.GoldColor)$"Enabled"$MakeColorCode(InfoTextColor)$".");
+        Canvas.SetPos(currentX, currentY+5*(BannerLineY+2.0));
+        Canvas.DrawText(BannerNetText);
     }
 }
 
@@ -331,21 +373,6 @@ function float GetBlueBoxPositionX()
 function float GetBlueBoxPositionY()
 {
   return OldScreenHeight*default.VertPosition;//0.07;
-}
-
-// Engine bug (3369 and 3374): BeamIterator::Draw sizes its vertex buffer in 32 bits. A beam whose
-// ends are ~1e10 units apart (3374 RC3 sometimes puts vehicle gun bones there, where link beams
-// start) wraps that negative and the draw loop writes past the buffer until the game crashes.
-// No real beam is longer than the world, so collapse longer ones to zero length right before the
-// level renders; Draw returns early when start == end, and link beams reset mSpawnVecA every tick.
-function PreRender( canvas Canvas )
-{
-    local xEmitter E;
-
-    foreach ViewportOwner.Actor.DynamicActors(class'xEmitter', E)
-        if (E.mParticleType == 6 && !E.mPosRelative                 // 6 = PT_Beam
-            && VSize(E.mSpawnVecA - E.Location) > 524288.0)         // WORLD_MAX
-            E.mSpawnVecA = E.Location;
 }
 
 function PostRender( canvas Canvas )
@@ -405,6 +432,9 @@ function PostRender( canvas Canvas )
       DrawWelcomeBanner(Canvas);
       return;
    }
+
+   // Once per frame instead of once per drawn name.
+   FrameEmoteRep = GetEmoteReplicationIfEnabled();
 
    if ((PRI.Team != None && PRI.Team.TeamIndex == 0) || (PRI.bOnlySpectator && (uPRI.CoachTeam == 255 || uPRI.CoachTeam == 0)))
        {
@@ -604,14 +634,11 @@ function DrawPowerups(Canvas canvas, PlayerReplicationInfo PRI)
 
 function bool GetNewNetEnabled()
 {
-    local UTComp_ServerReplicationInfo SRI;
-
-    foreach ViewportOwner.Actor.DynamicActors(class'UTComp_ServerReplicationInfo', SRI)
-        break;
-    if(SRI==None)
-        return false;
-    return SRI.bEnableEnhancedNetCode;
-
+    // Shares the cached server info with the emoticon lookup.
+    if (EmoteSRI == None)
+        foreach ViewportOwner.Actor.DynamicActors(class'UTComp_ServerReplicationInfo', EmoteSRI)
+            break;
+    return EmoteSRI != None && EmoteSRI.bEnableEnhancedNetCode;
 }
 
 function string MakeColorCode(color aColor)

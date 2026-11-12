@@ -48,6 +48,16 @@ replication
 		ClientAddEmoticon;
 }
 
+// Tick only sends from the server. On a client it is a non-simulated event that the engine
+// still sets up every frame just to drop, and after tear-off it would run (and hit None on
+// EmoteActor), so stop ticking there.
+simulated event PostNetBeginPlay()
+{
+    Super.PostNetBeginPlay();
+    if(Role < ROLE_Authority)
+        Disable('Tick');
+}
+
 // Send Smileys to client.
 event Tick(float deltaTime)
 {

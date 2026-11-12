@@ -100,6 +100,18 @@ simulated function Tick(float DT)
     }
     super.Tick(DT);
     SetColors();
+
+    // Nothing left to do on a client once colouring is settled (subclasses add their own
+    // work). The bot combo state Tick only runs on a server, never on a network client.
+    if(Level.NetMode == NM_Client && ClientTickDone())
+        Disable('Tick');
+}
+
+// True once this projectile's client Tick can no longer change anything.
+simulated function bool ClientTickDone()
+{
+    return bColorSet
+        || !class'TeamColorManager'.static.ColorsStillPossible(Level, Settings != None && Settings.bTeamColorShock);
 }
 
 defaultproperties

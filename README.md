@@ -8,9 +8,16 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V33
+- Numerous client-side optimizations, notably:
+  - Reduce the hitch when opening the enhanced scoreboard and reduce the per frame cost of having it open
+  - Use stock UT2004 cleanup for corpses (remove off-screen ragdolls on first 1s timer)
+- Add greentext support (">" at beginning of a message)
+- Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
+
 V32
 - bump utcomp and 3spn version labels to v32
-- [3374-rc3](https://github.com/OldUnreal/UT2004Patches/releases/tag/3374-rc3) fixes camera code so now the aim-related workarounds are enabled for 3369 and below only
+- [3374-rc3](https://github.com/OldUnreal/UT2004Patches/releases/tag/3374-rc3) fixes camera code so now the aim-related workarounds are enabled for <v3374
 
 V31
 - use cached emoticon parsing in tam and freon extended scoreboards

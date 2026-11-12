@@ -140,6 +140,18 @@ simulated function Tick(float DT)
     }
     super.Tick(DT);
     SetColors();
+
+    // Nothing left to do on a client once colouring is settled (subclasses add their own work)
+    if(Level.NetMode == NM_Client && ClientTickDone())
+        Disable('Tick');
+}
+
+// True once this shell's client Tick can no longer change anything. SetColors needs
+// Alpha, which PostNetBeginPlay only creates when colouring was possible then.
+simulated function bool ClientTickDone()
+{
+    return bColorSet || Alpha == None
+        || !class'TeamColorManager'.static.ColorsStillPossible(Level, Settings != None && Settings.bTeamColorFlak);
 }
 
 simulated function Explode(vector HitLocation, vector HitNormal)

@@ -10,6 +10,7 @@ var bool bInterpFake;
 var bool bOwned;
 
 var FakeProjectileManager FPM;
+var float FakeSearchEndTime; // owned: give up looking for a matching fake after this
 
 const INTERP_TIME = 0.50;
 var int index;
@@ -41,7 +42,16 @@ simulated function PostNetBeginPlay()
 
     PC = Level.GetLocalPlayerController();
     if (CheckOwned())
+    {
+        FakeSearchEndTime = Level.TimeSeconds + FMax(1.0, 2.0*class'NewNet_PRI'.default.PredictedPing);
         CheckForFakeProj();
+    }
+}
+
+// The client Tick is done once colouring is settled and there is no fake to find or follow.
+simulated function bool ClientTickDone()
+{
+    return !bInterpFake && !bOwned && super.ClientTickDone();
 }
 
 simulated function bool CheckOwned()
@@ -94,8 +104,8 @@ simulated function Tick(float deltatime)
         return;
     if(bInterpFake)
         FakeInterp(deltatime);
-    else if(bOwned)
-        CheckForFakeProj();
+    else if(bOwned && !CheckForFakeProj() && Level.TimeSeconds > FakeSearchEndTime)
+        bOwned = false; // a matching fake would have spawned by now; stop searching
 }
 
 simulated function FakeInterp(float dt)

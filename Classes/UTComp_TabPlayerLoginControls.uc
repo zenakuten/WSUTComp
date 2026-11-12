@@ -207,8 +207,8 @@ function ContextClick(GUIContextMenu Menu, int ClickIndex)
 
 // The stock tab keeps the Join Game / Spectate button disabled until the match
 // has begun and again once it has ended.  Every other guard it applies is kept;
-// only those two are dropped.
-// BS_xPlayer lifts the matching server side rule so the click is honoured.
+// only those two are dropped.  Between rounds the button is held enabled too.
+// BS_xPlayer lifts the matching server side rules so the click is honoured.
 function bool UTCompShouldEnableSpecButton()
 {
     local GameReplicationInfo GRI;
@@ -230,8 +230,10 @@ function bool UTCompShouldEnableSpecButton()
     if (PC.IsInState('GameEnded'))
         return true;
 
-    if (GRI.bMatchHasBegun)
-        return false;          // stock already enables it, leave it alone
+    // Mid-round stock already enables it, so leave it alone.  Between rounds
+    // (RoundEnded) BS_xPlayer's RoundEnded state takes the click.
+    if (GRI.bMatchHasBegun && !PC.IsInState('RoundEnded'))
+        return false;
 
     if (GRI.MaxLives > 0 && PC.PlayerReplicationInfo.bOnlySpectator)
         return false;

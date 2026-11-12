@@ -76,8 +76,11 @@ simulated function Pong()
 
 simulated function Tick(float deltatime)
 {
-    // Only clients ping, so anything else stops ticking this
-    if(Level.NetMode!=NM_Client)
+    // Only clients ping, and only for their own NewNet_PRI (bNetOwner is replicated per
+    // connection). The server accepts Ping from any client once one valid call has come
+    // in, and answers the PRI's real owner, so pinging other players' copies fed them
+    // bogus PredictedPing samples. Everything else stops ticking this.
+    if(Level.NetMode!=NM_Client || !bNetOwner)
     {
         Disable('Tick');
         return;

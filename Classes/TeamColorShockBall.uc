@@ -31,7 +31,8 @@ function SetColors()
             if(TeamColorShockProjectile(Owner) != None)
                 TeamNum = TeamColorShockProjectile(Owner).TeamNum;
 
-            if(TeamNum == 0 || TeamNum == 1 && !bColorSet)
+            // (was "TeamNum == 0 || TeamNum == 1 && !bColorSet", which redid this every frame for red)
+            if((TeamNum == 0 || TeamNum == 1) && !bColorSet)
             {
                 LightBrightness=210;
                 color = class'TeamColorManager'.static.GetColor(TeamNum, Level.GetLocalPlayerController());
@@ -94,6 +95,11 @@ simulated function Tick(float DT)
 {
     super.Tick(DT);
     SetColors();
+
+    // With team-coloured shock off or disallowed, SetColors never does anything again.
+    // (Once coloured it keeps ticking: SetColors refreshes the emitters every frame.)
+    if(!bColorSet && !class'TeamColorManager'.static.ColorsStillPossible(Level, Settings != None && Settings.bTeamColorShock))
+        Disable('Tick');
 }
 
 defaultproperties

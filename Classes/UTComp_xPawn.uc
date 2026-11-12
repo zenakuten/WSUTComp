@@ -511,7 +511,8 @@ simulated function Tick(float DeltaTime)
         ColorSkins();
     }
 
-    if(LocalPC!=None && LocalPC.PlayerReplicationInfo!=None && LocalPC.PlayerReplicationInfo.bOnlySpectator)
+    // bNoTeamBeacon is never cleared once set, so skip the lookup after that.
+    if(!bNoTeamBeacon && LocalPC!=None && LocalPC.PlayerReplicationInfo!=None && LocalPC.PlayerReplicationInfo.bOnlySpectator)
     {
         uPRI=class'UTComp_Util'.static.GetUTCompPRI(LocalPC.PlayerReplicationInfo);
         if(uPRI!=None && uPRI.CoachTeam != 255)
@@ -536,10 +537,11 @@ simulated function bool ShouldUpdateSkin()
     local bool GameEnded;
     local bool spawnProtectionChanged;
 
-    if(IsInState('Dying') || Controller != None && Controller.IsInState('Dead'))
+    // Throttle first: same result, and it skips the two IsInState calls on most frames.
+    if((Level.TimeSeconds - lastSkinUpdateTime) < 0.166)
         return false;
 
-    if((Level.TimeSeconds - lastSkinUpdateTime) < 0.166) 
+    if(IsInState('Dying') || Controller != None && Controller.IsInState('Dead'))
         return false;
 
     lastSkinUpdateTime = Level.TimeSeconds;

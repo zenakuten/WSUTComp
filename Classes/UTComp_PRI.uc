@@ -264,6 +264,15 @@ function string MakeSafeName(string S)
     return S;
 }
 
+// Tick is server-only. On a client it is a non-simulated event, so the engine would still
+// set up a call every frame just to drop it; stop ticking there instead.
+simulated event PostNetBeginPlay()
+{
+    Super.PostNetBeginPlay();
+    if(Role < ROLE_Authority)
+        Disable('Tick');
+}
+
 // Sends the next map once the client has acknowledged the last one. Sending from
 // ReplyToMapSend instead would recurse for a listen server's own player, whose
 // MapListSend and ReplyToMapSend calls run immediately. Only ticks while a map list

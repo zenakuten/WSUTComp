@@ -957,16 +957,22 @@ simulated function Tick(float DeltaTime)
     if( FPM==None && Level.NetMode == NM_Client)
         FPM = Spawn(Class'FakeProjectileManager');
 
-    if(bHasInteraction)
-        return;
-    PC=Level.GetLocalPlayerController();
-
-    if(PC!=None && BS_xPlayer(PC) != None)
+    if(!bHasInteraction)
     {
-        BS_xPlayer(PC).Overlay = UTComp_Overlay(PC.Player.InteractionMaster.AddInteraction(string(class'UTComp_Overlay'), PC.Player));
-        bHasInteraction=True;
-        class'DamTypeLinkShaft'.default.bSkeletize=false;
+        PC=Level.GetLocalPlayerController();
+
+        if(PC!=None && BS_xPlayer(PC) != None)
+        {
+            BS_xPlayer(PC).Overlay = UTComp_Overlay(PC.Player.InteractionMaster.AddInteraction(string(class'UTComp_Overlay'), PC.Player));
+            bHasInteraction=True;
+            class'DamTypeLinkShaft'.default.bSkeletize=false;
+        }
     }
+
+    // A network client has nothing left to do here once both are set up (standalone
+    // keeps ticking for the end-of-game sound above).
+    if(bHasInteraction && FPM != None && Level.NetMode == NM_Client)
+        Disable('Tick');
 }
 
 simulated function float GetStamp(int stamp)
@@ -2232,10 +2238,10 @@ function InitStatsOverride()
 
 defaultproperties
 {
-     FriendlyName="Wicked Sick UTComp"
+     FriendlyName="Wicked Sick UTComp V33"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V32"
+     FriendlyVersionNumber="V33"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True

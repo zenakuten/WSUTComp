@@ -32,6 +32,30 @@ static function byte GetTeamNum(Controller InstigatorController, LevelInfo Level
     return 255;
 }
 
+// For the team-colour actors' Ticks: false once colouring can never start on this client
+// (the player's setting is off, or the server disallows colour weapons), so the actor can
+// stop ticking. Stays true while the server info hasn't replicated yet.
+static function bool ColorsStillPossible(LevelInfo Level, bool bSettingOn)
+{
+    local UTComp_ServerReplicationInfo RepInfo;
+
+    if(!bSettingOn)
+        return false;
+    RepInfo = class'UTComp_Util'.static.GetServerReplicationInfo(Level.GetLocalPlayerController());
+    return RepInfo == None || RepInfo.bAllowColorWeapons;
+}
+
+// The local player's UTComp settings, or None (same source the colour code reads).
+static function UTComp_Settings LocalSettings(LevelInfo Level)
+{
+    local BS_xPlayer PC;
+
+    PC = BS_xPlayer(Level.GetLocalPlayerController());
+    if(PC == None)
+        return None;
+    return PC.Settings;
+}
+
 static function Color GetColor(int TeamNum, PlayerController PC)
 {
     local Color retval;

@@ -50,8 +50,20 @@ function SetColors()
 
 simulated function Tick(float DT)
 {
+    local UTComp_Settings Settings;
+
     super.Tick(DT);
     SetColors();
+
+    // Stop once coloured, or once colouring can never start (setting off or disallowed).
+    if(bColorSet)
+        Disable('Tick');
+    else
+    {
+        Settings = class'TeamColorManager'.static.LocalSettings(Level);
+        if(!class'TeamColorManager'.static.ColorsStillPossible(Level, Settings != None && Settings.bTeamColorFlak))
+            Disable('Tick');
+    }
 }
 
 defaultproperties

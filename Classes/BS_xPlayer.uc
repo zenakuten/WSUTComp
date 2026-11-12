@@ -119,6 +119,12 @@ struct DamTypeGrouping
 
 var array<DamTypeGrouping> CustomWepTypes;
 
+// CustomWepTypes flattened by BuildCustomWepIndex for RegisterEnemyHit.
+var array<string> CustomWepGroupName;   // per group: WepName
+var array<string> CustomDamTypeCaps;    // per non-empty DamType: upper-cased
+var array<int> CustomDamTypeGroup;      // per non-empty DamType: its group index
+var bool bCustomWepIndexBuilt;
+
 const HITSOUNDTWEENTIME = 0.05;
 
 
@@ -1164,6 +1170,72 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 		StopForceFeedback();
 
     }
+
+    // Between rounds (Onslaught, Assault) stock refuses both switches:
+    // GameInfo.BecomeSpectator and AllowBecomeActivePlayer test IsInState('RoundEnded').
+    // Ask the gametype from RoundEndedSwitch instead, so every other rule it has
+    // (capacity, lives, bots, stats) still applies, then come back here.  The player
+    // waits out the round end like everyone else and the round reset puts them in:
+    // PlayerController.Reset sends spectators to Spectating, and the gametype restarts
+    // everyone else.
+    function BecomeSpectator()
+    {
+        local Pawn OldPawn;
+        local Actor OldView;
+
+        if (Role < ROLE_Authority || Level.Game == None || PlayerReplicationInfo == None
+            || PlayerReplicationInfo.bOnlySpectator)
+            return;
+
+        OldPawn = Pawn;
+        OldView = ViewTarget;
+        GotoState('RoundEndedSwitch');
+        Global.BecomeSpectator();
+
+        // ServerSpectate moved the camera to another player.  Keep the round end view
+        // (the destroyed core) that everyone else still has.
+        if (PlayerReplicationInfo.bOnlySpectator && OldView != None && OldView != OldPawn
+            && !OldView.bDeleteMe)
+        {
+            SetViewTarget(OldView);
+            ClientSetViewTarget(OldView);
+        }
+        GotoState('RoundEnded');
+    }
+
+    // Same steps as PlayerController.BecomeActivePlayer, except the player isn't
+    // spawned now: the round reset spawns them with everyone else.
+    function BecomeActivePlayer()
+    {
+        if (Role < ROLE_Authority || Level.Game == None || PlayerReplicationInfo == None
+            || !PlayerReplicationInfo.bOnlySpectator)
+            return;
+
+        GotoState('RoundEndedSwitch');
+        if (Level.Game.AllowBecomeActivePlayer(self))
+        {
+            FixFOV();
+            PlayerReplicationInfo.bOnlySpectator = false;
+            Level.Game.NumSpectators--;
+            Level.Game.NumPlayers++;
+            if (Level.Game.GameStats != None)
+                Level.Game.GameStats.ConnectEvent(PlayerReplicationInfo);
+            PlayerReplicationInfo.Reset();
+            Adrenaline = 0;
+            BroadcastLocalizedMessage(Level.Game.GameMessageClass, 1, PlayerReplicationInfo);
+            if (Level.Game.bTeamGame)
+                Level.Game.ChangeTeam(self, Level.Game.PickTeam(int(GetURLOption("Team")), None), false);
+            ClientBecameActivePlayer();
+        }
+        GotoState('RoundEnded');
+    }
+}
+
+// Holds the controller for the length of one RoundEnded.BecomeSpectator or
+// BecomeActivePlayer call on the server, so GameInfo doesn't see the RoundEnded state.
+// Nothing else runs while it's in here.
+state RoundEndedSwitch
+{
 }
 
 //====================================
@@ -1172,14 +1244,8 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 
 simulated function DamageIndicatorHit(int Damage, actor injured, pawn instigatedBy)
 {
-    local vector EyeHeight;
-
+    // bHitContact used to be set here from a FastTrace per hit, but nothing reads it.
     HitDamage += Damage;
-    if(instigatedBy != None)
-    {
-        EyeHeight.z = instigatedBy.EyeHeight;
-        bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
-    }
     HitDamageActor = injured;
 }
 
@@ -1204,31 +1270,55 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     {
         RegisterEnemyHit(DamageType, Damage);
         DamageIndicatorHit(Damage, injured, instigatedBy);
-        if(!IsIgnoredDamageSound(DamageType))
-        {
-            if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
-            {
-                GroupDamageSound(Damage, true);
-            }
-            else if(RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured) || IsHitScan(DamageType))
-            {
-                PlayEnemyHitSound(Damage);
-            }
-        }
+        PlayHitSoundFor(DamageType, Damage, Injured, true);
     }
     else
     {
         RegisterTeammateHit(DamageType, Damage);
         DamageIndicatorHit(-Damage, injured, instigatedBy);
-        if(!IsIgnoredDamageSound(DamageType))
+        PlayHitSoundFor(DamageType, Damage, Injured, false);
+    }
+}
+
+// Hit sound for ReceiveHit. Plays exactly what the old inline checks did, but tests the
+// cheap conditions first: LineOfSightTo (native, up to 4 traces) runs at most once, and
+// not at all when hit sounds are off or the result can't change what is played.
+simulated function PlayHitSoundFor(class<DamageType> DamageType, int Damage, Pawn Injured, bool bEnemy)
+{
+    local bool bSkipLOS;
+
+    // Every path below ends in PlayEnemyHitSound/PlayTeammateHitSound (grouped sounds via
+    // PlayerTick's DelayedHitSound), which do nothing while hit sounds are off.
+    if(!Settings.bEnableHitSounds || IsIgnoredDamageSound(DamageType))
+        return;
+
+    bSkipLOS = RepInfo==None || RepInfo.EnableHitSoundsMode==2;
+
+    if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType))
+    {
+        if(bSkipLOS || LineOfSightTo(Injured))
+            GroupDamageSound(Damage, bEnemy);
+        // Out of sight: the old fallback re-tested LOS (still false), so only hitscan plays.
+        else if(IsHitScan(DamageType))
         {
-            if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
-            {
-                GroupDamageSound(Damage, false);
-            }
-            else if(RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured) || IsHitScan(DamageType))
+            if(bEnemy)
+                PlayEnemyHitSound(Damage);
+            else
                 PlayTeammateHitSound(Damage);
         }
+        return;
+    }
+
+    // The sound functions return at once while the tween runs, so skip the trace too.
+    if(LastHitSoundTime > Level.TimeSeconds)
+        return;
+
+    if(bSkipLOS || IsHitScan(DamageType) || LineOfSightTo(Injured))
+    {
+        if(bEnemy)
+            PlayEnemyHitSound(Damage);
+        else
+            PlayTeammateHitSound(Damage);
     }
 }
 
@@ -1261,16 +1351,21 @@ simulated function bool IsHitScan(class<DamageType> DamageType)
 
 simulated function bool IsIgnoredDamageSound(class<DamageType> DamageType)
 {
-    local int i;
-    local array<string> IgnoredHitSounds;
+    local int i, n;
+    local string DamName;
+
     if(DamageType == none)
         return false;
 
-    IgnoredHitSounds=class'MutUTComp'.Default.IgnoredHitSounds;
+    // Read the default array in place instead of copying it on every hit.
+    n = class'MutUTComp'.default.IgnoredHitSounds.Length;
+    if(n == 0)
+        return false;
 
-    for(i=0;i<IgnoredHitSounds.Length;i++)
+    DamName = string(DamageType.Name);
+    for(i=0; i<n; i++)
     {
-        if(string(DamageType.Name) == IgnoredHitSounds[i])
+        if(DamName == class'MutUTComp'.default.IgnoredHitSounds[i])
             return true;
     }
 
@@ -1339,9 +1434,36 @@ simulated function ServerRegisterSelfHit(class<DamageType> DamageType, int Damag
 }
 
 
+// Flattens CustomWepTypes once. Reading CustomWepTypes[j].DamType[k] copies the whole
+// 7-string struct on every access, so per-hit matching uses these arrays instead.
+simulated function BuildCustomWepIndex()
+{
+    local int j, k, n;
+    local DamTypeGrouping G;
+
+    for(j=0; j<CustomWepTypes.Length; j++)
+    {
+        G = CustomWepTypes[j];
+        CustomWepGroupName[j] = G.WepName;
+        for(k=0; k<ArrayCount(G.DamType); k++)
+        {
+            if(G.DamType[k] != "")
+            {
+                n = CustomDamTypeCaps.Length;
+                CustomDamTypeCaps[n] = Caps(G.DamType[k]);
+                CustomDamTypeGroup[n] = j;
+            }
+        }
+    }
+    bCustomWepIndexBuilt = true;
+}
+
 simulated function RegisterEnemyHit(class<DamageType> DamageType, int Damage)
 {
-    local int i, j, k;
+    local int i, f;
+    local string DamCaps, StatName;
+    local array<int> Matched;
+
     if (DamageType==None)
         return;
 
@@ -1374,20 +1496,27 @@ simulated function RegisterEnemyHit(class<DamageType> DamageType, int Damage)
         }
     }
     //Custom weapon Stats
+    // The groups whose damage-type names occur in this damage type's path (case-insensitive
+    // substring, as InStrNonCaseSensitive did), found once per hit in CustomWepTypes order.
+    if(!bCustomWepIndexBuilt)
+        BuildCustomWepIndex();
+    DamCaps = Caps(string(DamageType));
+    for(f=0; f<CustomDamTypeCaps.Length; f++)
+        if(InStr(DamCaps, CustomDamTypeCaps[f]) != -1)
+            Matched[Matched.Length] = CustomDamTypeGroup[f];
+
     for(i=0; i<CustomWepStats.Length; i++)
     {
-        if(CustomWepStats[i].WepName!="")
+        StatName = CustomWepStats[i].WepName;
+        if(StatName!="")
         {
-            for(j=0; j<CustomWepTypes.Length; j++)
+            for(f=0; f<Matched.Length; f++)
             {
-                for(k=0; k<ArrayCount(CustomWepTypes[j].DamType); k++)
+                if(CustomWepGroupName[Matched[f]]~=StatName)
                 {
-                    if (( CustomWepTypes[j].DamType[k]!="" && InstrNonCaseSensitive(string(DamageType), CustomWepTypes[j].DamType[k])) && CustomWepTypes[j].WepName~=CustomWepStats[i].WepName)
-                    {
-                        CustomWepStats[i].Hits+=1;
-                        CustomWepStats[i].Damage+=Damage;
-                        return;
-                    }
+                    CustomWepStats[i].Hits+=1;
+                    CustomWepStats[i].Damage+=Damage;
+                    return;
                 }
             }
         }
@@ -1402,12 +1531,9 @@ simulated function RegisterEnemyHit(class<DamageType> DamageType, int Damage)
 
     i=CustomWepStats.Length+1;
     CustomWepStats.Length=i;
-    for(j=0; j<CustomWepTypes.Length; j++)
-    {
-        for(k=0; k<ArrayCount(CustomWepTypes[j].DamType); k++)
-            if (( CustomWepTypes[j].DamType[k]!="" && InstrNonCaseSensitive(string(DamageType), CustomWepTypes[j].DamType[k])))
-                CustomWepStats[i-1].WepName=CustomWepTypes[j].WepName;
-    }
+    // The last matching group names the new entry, as before.
+    if(Matched.Length > 0)
+        CustomWepStats[i-1].WepName=CustomWepGroupName[Matched[Matched.Length-1]];
     CustomWepStats[i-1].DamageType=DamageType;
     CustomWepStats[i-1].Damage=Damage;
     CustomWepStats[i-1].Hits=1;
@@ -3402,21 +3528,27 @@ event TeamMessage( PlayerReplicationInfo PRI, coerce string S, name Type  )
     if ( Type == 'TeamSayQuiet' )
         Type = 'TeamSay';
 
-    //replace the color codes
-    if(Settings.bAllowColoredMessages)
+    //replace the color codes (most lines have none, so skip the 8 Repl passes then)
+    if(InStr(S, "^") != -1)
     {
-        for(k=7; k>=0; k--)
+        if(Settings.bAllowColoredMessages)
         {
-            S=Repl(S, "^"$k, ColorReplace(k));
+            for(k=7; k>=0; k--)
+            {
+                S=Repl(S, "^"$k, ColorReplace(k));
+            }
+        }
+        else
+        {
+            for(k=7; k>=0; k--)
+            {
+                S=Repl(S, "^"$k, "");
+            }
         }
     }
-    else
-    {
-        for(k=7; k>=0; k--)
-        {
-            S=Repl(S, "^"$k, "");
-        }
-    }
+    // 4chan-style greentext (#789922): only when the message starts with '>'
+    if(Asc(S) == 62 && Settings.bAllowColoredMessages)
+        S = Chr(27)$Chr(120)$Chr(153)$Chr(34)$S;
     if ( myHUD != None )
     {
         if (Settings.bEnableColoredNamesInTalk)
