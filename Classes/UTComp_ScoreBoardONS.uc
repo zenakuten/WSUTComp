@@ -46,26 +46,13 @@ function String GetDefaultScoreInfoString()
 function DrawTitle2(Canvas Canvas)
 {
     local string titlestring,scoreinfostring,RestartString;
-    local float xl,yl,Full, Height, Top, MedH, SmallH;
+    local float yl;
     local float TitleXL,ScoreInfoXL;
 
-    Canvas.Font = HUDClass.static.GetMediumFontFor(Canvas);
-    Canvas.StrLen("W",xl,MedH);
-    Height = MedH;
-    Canvas.Font = HUDClass.static.GetConsoleFont(Canvas);
-    Canvas.StrLen("W",xl,SmallH);
-    Height += SmallH;
-
-    Full = Height;
-    //Top  = Canvas.ClipY-8-Full;
-		Top  = Canvas.ClipY-4-Full;
-
+    // The base version's medium/console font measurements only feed the bottom
+    // placement, which this layout doesn't use, so they are skipped here.
     TitleString     = GetTitleString();
     ScoreInfoString = GetDefaultScoreInfoString();
-    
-
-    Canvas.StrLen(TitleString, TitleXL, YL);
-    Canvas.DrawColor = HUDClass.default.GoldColor;
 
     if ( UnrealPlayer(Owner).bDisplayLoser )
         ScoreInfoString = class'HUDBase'.default.YouveLostTheMatch;
@@ -109,7 +96,7 @@ function DrawTitle2(Canvas Canvas)
 simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, float XOffset, float YOffset, float Scale)
 {
     local float tmpEff;
-    local int i, otherteam;
+    local int otherteam;
     local PlayerReplicationInfo OwnerPRI;
     local UTComp_PRI uPRI;
     local string AdminString;
@@ -157,13 +144,11 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     }
     C.ClipX=OldClipX;
 
-    for(i=0;i<MAXPLAYERS;i++)
-    {
-        if( PRI == OwnerPRI )
-            C.SetDrawColor(255,255,0,255);
-        else
-            C.SetDrawColor(255,255,255,255);
-    }
+    // Was a MAXPLAYERS loop repeating this same SetDrawColor 32 times per row.
+    if( PRI == OwnerPRI )
+        C.SetDrawColor(255,255,0,255);
+    else
+        C.SetDrawColor(255,255,255,255);
 
     // DrawScore
     if(PRI.Score>99)
@@ -241,15 +226,13 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
         C.DrawText("P/L :"$PRI.PacketLoss);
     }
 
-    // snarf fix for PPH issue, maybe?
-	if ( ((FPHTime == 0) || (!UnrealPlayer(Owner).bDisplayLoser && !UnrealPlayer(Owner).bDisplayWinner))
-		&& (GRI.ElapsedTime > 0) )
-		FPHTime = GRI.ElapsedTime;
+    // FPHTime is updated once per frame in UTComp_ScoreBoard.UpdateScoreBoard,
+    // before any row is drawn, so the per-row copy of that update was dropped.
 
     // add ons specific stats
-    if (ONSPRI != None) 
+    if (ONSPRI != None)
     {
-        C.Font = GetSmallerFontFor(C, 6);
+        C.Font = TinyFont; // GetSmallerFontFor(C, 6), cached by PrepareFrame
 
         C.SetPos(C.ClipX*(0.40-pointScale)+XOffset, (C.ClipY*(StartY-0.003*RowScale))+YOffset);
         C.DrawText("Node Dmg Pts:"@int(ONSPRI.NodeDamagePoints));
@@ -271,9 +254,7 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
 
     C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.030*RowScale))+YOffset);
 
-    if(uWarmup==None)
-       foreach DynamicActors(class'UTComp_Warmup', uWarmup)
-           break;
+    // uWarmup is cached by PrepareFrame (None when warmup is disabled).
     if(uWarmup!=None && uWarmup.bInWarmup)
     {
         if(uPRI != None)

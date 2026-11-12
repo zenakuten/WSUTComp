@@ -20,16 +20,16 @@ var int FONT_TEAM_PL;
 var int FONT_TEAM_POWERUP_PER;
 var int FONT_TEAM_SCORE;
 
-//Stats stuff fore scoreboard layout
-struct Stats
-{
-  var string name;
-  var float nameW;
-  var float nameH;
-  var string value;
-  var float valueW;
-  var float valueH;
-};
+// FontArrayFonts entries this board draws with, resolved once (see PrepareFrame).
+// They don't depend on the resolution.
+var transient Font CTFFonts[9];
+var transient bool bCTFFontsCached;
+
+// Per-player stat labels. They are constant, so their sizes are measured once per
+// frame in UpdateScoreBoard instead of once per row.
+var string StatNames[6];
+var transient float StatNameW[6], StatNameH[6];
+var transient float LongestOStatName, LongestDStatName;
 
 //Materials for backgrounds
 var material TeamBoxMaterial;
@@ -100,29 +100,25 @@ simulated event UpdateScoreBoard(Canvas C)
   local float screenScale;
   local bool bOwnerDrawn;
 
-  // Fonts
-  mainFont         = HUDClass.static.GetMediumFontFor(C);
-  notReducedFont   = GetSmallerFontFor(C,1);
-  sortaReducedFont = GetSmallerFontFor(C,2);
-  reducedFont      = GetSmallerFontFor(C,3);
-  smallerFont      = GetSmallerFontFor(C,4);
-  soTiny           = GetSmallerFontFor(C,5);
+  // Fonts, warmup and emoticon lookups, once per frame. The FONT_* indices are
+  // constants in defaultproperties.
+  PrepareFrame(C);
   maxTiles=8; //max players per team?
 
+  // Stat label sizes are the same for every row (constant text, constant font).
+  C.Font = CTFFonts[FONT_PLAYER_STAT];
+  LongestOStatName = 0;
+  LongestDStatName = 0;
+  for (i = 0; i < 6; i++)
+  {
+    C.StrLen(StatNames[i], StatNameW[i], StatNameH[i]);
 
-  FONT_PLAYER_PING      = 1;
-  FONT_PLAYER_PL        = 1;
-  FONT_PLAYER_LOCATION  = 4;
-  FONT_PLAYER_STAT_NUM  = 1;
-  FONT_PLAYER_STAT      = 1;
-  FONT_PLAYER_SCORE     = 6;
-  FONT_PLAYER_NAME      = 6;
-  FONT_TEAM_POWERUP_NUM = 3;
-  FONT_TEAM_PING        = 3;
-  FONT_TEAM_PL          = 3;
-  FONT_TEAM_POWERUP_PER = 5;
-  FONT_TEAM_SCORE       = 7;
-
+    //Find the longest name for both left and right.
+    if (i < 3 && StatNameW[i] > LongestOStatName)
+      LongestOStatName = StatNameW[i];
+    else if (i > 3 && StatNameW[i] > LongestDStatName)
+      LongestDStatName = StatNameW[i];
+  }
 
 
   if(Owner!=None)
@@ -255,6 +251,28 @@ simulated event UpdateScoreBoard(Canvas C)
 }
 
 
+// Resolves the fonts this board uses once; GetFontWithSize was called ~25 times
+// per row. A font that fails to load stays None instead of retrying (and logging)
+// on every call.
+simulated function PrepareFrame(Canvas C)
+{
+  if (!bCTFFontsCached)
+  {
+    bCTFFontsCached = true;
+    CTFFonts[FONT_PLAYER_PING]      = GetFontWithSize(FONT_PLAYER_PING);
+    CTFFonts[FONT_PLAYER_STAT]      = GetFontWithSize(FONT_PLAYER_STAT);
+    CTFFonts[FONT_PLAYER_STAT_NUM]  = GetFontWithSize(FONT_PLAYER_STAT_NUM);
+    CTFFonts[FONT_PLAYER_SCORE]     = GetFontWithSize(FONT_PLAYER_SCORE);
+    CTFFonts[FONT_PLAYER_NAME]      = GetFontWithSize(FONT_PLAYER_NAME);
+    CTFFonts[FONT_PLAYER_NAME - 1]  = GetFontWithSize(FONT_PLAYER_NAME - 1);
+    CTFFonts[FONT_TEAM_SCORE]       = GetFontWithSize(FONT_TEAM_SCORE);
+    CTFFonts[FONT_TEAM_PING]        = GetFontWithSize(FONT_TEAM_PING);
+    CTFFonts[FONT_TEAM_POWERUP_PER] = GetFontWithSize(FONT_TEAM_POWERUP_PER);
+    CTFFonts[FONT_TEAM_POWERUP_NUM] = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
+  }
+  Super.PrepareFrame(C);
+}
+
 /*
  * Draw the UTComp logo
  */
@@ -318,7 +336,7 @@ simulated function DrawTeamHeader(Canvas C, byte team)
   //Score
   C.SetDrawColor(255, 255, 255, 255);
   C.Style = ERenderStyle.STY_Normal;
-  C.Font = GetFontWithSize(FONT_TEAM_SCORE);
+  C.Font = CTFFonts[FONT_TEAM_SCORE];
 
   C.StrLen(int(GRI.Teams[team].Score), scoreWidth, scoreHeight);
 
@@ -338,7 +356,7 @@ simulated function DrawTeamHeader(Canvas C, byte team)
   C.DrawText(int(GRI.Teams[team].Score));
 
   //Average ping/PL
-  C.Font = GetFontWithSize(FONT_TEAM_PING);
+  C.Font = CTFFonts[FONT_TEAM_PING];
   //STRLEN IS FUCKING STUPID
   C.StrLen("Ping", pingWidth, pingHeight);
   C.StrLen("PL", plWidth, plHeight);
@@ -363,9 +381,9 @@ simulated function DrawTeamHeader(Canvas C, byte team)
   C.DrawText("PL"@GetAverageTeamPL(team)$"%");
 
   //Powerups/flag timing
-  C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
+  C.Font = CTFFonts[FONT_TEAM_POWERUP_PER];
   C.StrLen("100%", powerupPercentWidth, powerupPercentHeight);
-  C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
+  C.Font = CTFFonts[FONT_TEAM_POWERUP_NUM];
   C.StrLen("99", powerupNumWidth, powerupNumHeight);
 
   for (x = 0; x < 3; x++) {
@@ -393,11 +411,11 @@ simulated function DrawTeamHeader(Canvas C, byte team)
     }
 
     SetPosScaled(C, baseX + pingMaxWidth + 100 + 200*x, baseY + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
-    C.Font = GetFontWithSize(FONT_TEAM_POWERUP_PER);
+    C.Font = CTFFonts[FONT_TEAM_POWERUP_PER];
     C.DrawText("0%");
 
     SetPosScaled(C, baseX + pingMaxWidth + 100 + 200*x, baseY + powerupPercentHeight + (baseHeight - powerupNumHeight - powerupPercentHeight)/2);
-    C.Font = GetFontWithSize(FONT_TEAM_POWERUP_NUM);
+    C.Font = CTFFonts[FONT_TEAM_POWERUP_NUM];
     C.DrawText("0");
   }
 }
@@ -460,14 +478,9 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   local int boxWidth, boxHeight;
   local string pingplString;
   local int count;
-  local array<Stats> statsArray;
-  local float longestOStatName, longestDStatName;
-  local float statX;
-  local Stats stat1, stat2, stat3, stat4, stat5, stat6;
-
-  if (uWarmup == none)
-    foreach dynamicActors(class'UTComp_Warmup', uWarmup)
-      break;
+  local string statValue[6];
+  local float statX, statY;
+  local bool bWarmup;
 
   //TODO: Global this or something
   boxWidth  = 840;
@@ -476,8 +489,13 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   uPRI = class'UTComp_Util'.static.GetUTCompPRI(PRI);
   tPRI = TeamPlayerReplicationInfo(PRI);
 
+  // uWarmup is cached by PrepareFrame and is None when warmup is disabled. It
+  // used to be read unchecked here, logging Accessed None twice per row per frame
+  // (and evaluating to false, which bWarmup keeps).
+  bWarmup = uWarmup != None && uWarmup.bInWarmup;
+
   //Ready/Not Ready
-  if (uWarmup.bInWarmup) {
+  if (bWarmup) {
     if (!uPRI.bIsReady) {
       C.SetDrawColor(255, 0, 0, 255);
     } else {
@@ -493,20 +511,20 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   //Score and Ping/PL
   pingplString = string(PRI.Ping*4)$"ms\ "@string(PRI.PacketLoss)$"%";
 
-  C.Font = GetFontWithSize(FONT_PLAYER_SCORE);
+  C.Font = CTFFonts[FONT_PLAYER_SCORE];
   C.StrLen(PRI.Score, scoreWidth, scoreHeight);
   C.StrLen("999", maxScoreWidth, scoreHeight);
 
-  C.Font = GetFontWithSize(FONT_PLAYER_PING);
+  C.Font = CTFFonts[FONT_PLAYER_PING];
   C.StrLen(pingplString, pingplWidth, pingplHeight);
 
-  if (!uWarmup.bInWarmup) {
-  C.Font = GetFontWithSize(FONT_PLAYER_SCORE);
+  if (!bWarmup) {
+  C.Font = CTFFonts[FONT_PLAYER_SCORE];
   SetPosScaled(C, baseX + 15, baseY + (boxHeight - scoreHeight - pingplHeight)/2);
   C.DrawText(int(PRI.Score));
   }
 
-  C.Font = GetFontWithSize(FONT_PLAYER_PING);
+  C.Font = CTFFonts[FONT_PLAYER_PING];
   SetPosScaled(C, baseX + 15 + 3, baseY + scoreHeight + (boxHeight - scoreHeight - pingplHeight)/2);
   C.DrawText(pingplString);
 
@@ -523,71 +541,42 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
   }
 
   //Stats
-
-  //TODO: LESS SHITTY PLZ
-  statsArray[statsArray.Length] = stat1;
-  statsArray[0].name = "Grabs";
-  statsArray[0].value = uPRI.FlagGrabs@"("$uPRI.FlagPickups$")";
-
-  statsArray[statsArray.Length] = stat2;
-  statsArray[1].name = "Caps";
-  statsArray[1].value = uPRI.FlagCaps@"("$uPRI.Assists$")";
-
-  statsArray[statsArray.Length] = stat3;
-  statsArray[2].name = "Covers";
-  statsArray[2].value = string(uPRI.Covers);
-
-  statsArray[statsArray.Length] = stat4;
-  statsArray[3].name = "Flag Kills";
-  statsArray[3].value = string(uPRI.FlagKills);
-
-  statsArray[statsArray.Length] = stat5;
-  statsArray[4].name = "Returns";
-  statsArray[4].value = string(tPRI.FlagReturns);
-
-  statsArray[statsArray.Length] = stat6;
-  statsArray[5].name = "Seals";
-  statsArray[5].value = string(uPRI.Seals);
-
-  //Get StrLen shit for spacing
-  for (count = 0; count < 6; count++) {
-    C.Font = GetFontWithSize(FONT_PLAYER_STAT);
-    C.StrLen(statsArray[count].name, statsArray[count].nameW, statsArray[count].nameH);
-
-    //Find the longest name for both left and right.
-    if (count<3 && statsArray[count].nameW > longestOStatName) {
-      longestOStatName = statsArray[count].nameW;
-    } else if (count>3 && statsArray[count].nameW > longestDStatName) {
-      longestDStatName = statsArray[count].nameW;
-    }
-
-    C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
-    C.StrLen(statsArray[count].value, statsArray[count].valueW, statsArray[count].valueH);
-  }
-
+  // Labels (StatNames) and their sizes (StatNameW/H, Longest*StatName) are
+  // measured once per frame in UpdateScoreBoard; only the values are per row.
+  // (The value widths used to be measured too, but nothing read them.)
+  statValue[0] = uPRI.FlagGrabs@"("$uPRI.FlagPickups$")";
+  statValue[1] = uPRI.FlagCaps@"("$uPRI.Assists$")";
+  statValue[2] = string(uPRI.Covers);
+  statValue[3] = string(uPRI.FlagKills);
+  statValue[4] = string(tPRI.FlagReturns);
+  statValue[5] = string(uPRI.Seals);
 
   statX = baseX + boxWidth - 300;
 
   //Left column
   for (count = 0; count < 3; count++) {
-    C.Font = GetFontWithSize(FONT_PLAYER_STAT);
-    SetPosScaled(C, statX + longestOStatName - statsArray[count].nameW, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*count);
-    C.DrawText(statsArray[count].name);
+    statY = baseY + (boxHeight - StatNameH[count]*3)/2 + StatNameH[count]*count;
 
-    C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
-    SetPosScaled(C, statX + longestOStatName + 5, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*count);
-    C.DrawText(statsArray[count].value);
+    C.Font = CTFFonts[FONT_PLAYER_STAT];
+    SetPosScaled(C, statX + LongestOStatName - StatNameW[count], statY);
+    C.DrawText(StatNames[count]);
+
+    C.Font = CTFFonts[FONT_PLAYER_STAT_NUM];
+    SetPosScaled(C, statX + LongestOStatName + 5, statY);
+    C.DrawText(statValue[count]);
   }
 
   //Right column
   for (count = 3; count < 6; count++) {
-    C.Font = GetFontWithSize(FONT_PLAYER_STAT);
-    SetPosScaled(C, statX + 100 + longestOStatName + longestDStatName - statsArray[count].nameW, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*(count - 3));
-    C.DrawText(statsArray[count].name);
+    statY = baseY + (boxHeight - StatNameH[count]*3)/2 + StatNameH[count]*(count - 3);
 
-    C.Font = GetFontWithSize(FONT_PLAYER_STAT_NUM);
-    SetPosScaled(C, statX + 100 + longestOStatName + longestDStatName + 5, baseY + (boxHeight - statsArray[count].nameH*3)/2 + statsArray[count].nameH*(count - 3));
-    C.DrawText(statsArray[count].value);
+    C.Font = CTFFonts[FONT_PLAYER_STAT];
+    SetPosScaled(C, statX + 100 + LongestOStatName + LongestDStatName - StatNameW[count], statY);
+    C.DrawText(StatNames[count]);
+
+    C.Font = CTFFonts[FONT_PLAYER_STAT_NUM];
+    SetPosScaled(C, statX + 100 + LongestOStatName + LongestDStatName + 5, statY);
+    C.DrawText(statValue[count]);
   }
 }
 
@@ -617,14 +606,15 @@ function float ScaleY(Canvas C, float value)
   return C.ClipY * (value/1080);
 }
 
+// ScaleX/ScaleY inlined: these run ~20 times per row.
 function SetPosScaled(Canvas C, float x, float y)
 {
-  C.SetPos(ScaleX(C, x), ScaleY(C, y));
+  C.SetPos(C.ClipX * (x/1920), C.ClipY * (y/1080));
 }
 
 function DrawTileStretchedScaled(Canvas C, material mat, float XL, float YL)
 {
-  C.DrawTileStretched(mat, ScaleX(C, XL), ScaleY(C, YL));
+  C.DrawTileStretched(mat, C.ClipX * (XL/1920), C.ClipY * (YL/1080));
 }
 
 function DrawBoxScaled(Canvas C, float w, float h)
@@ -773,9 +763,9 @@ simulated function Font GetFontForPlayerName(String playerName)
   length = Len(playerName);
 
   if (length >= 14) {
-    return GetFontWithSize(FONT_PLAYER_NAME - 1);
+    return CTFFonts[FONT_PLAYER_NAME - 1];
   } else {
-    return GetFontWithSize(FONT_PLAYER_NAME);
+    return CTFFonts[FONT_PLAYER_NAME];
   }
 }
 
@@ -786,6 +776,28 @@ defaultproperties
   bDrawStats=True
   bDrawPickups=True
   bOverrideDisplayStats=false
+
+  // FontArrayNames indices (used to be assigned every frame).
+  FONT_PLAYER_PING      = 1
+  FONT_PLAYER_PL        = 1
+  FONT_PLAYER_LOCATION  = 4
+  FONT_PLAYER_STAT_NUM  = 1
+  FONT_PLAYER_STAT      = 1
+  FONT_PLAYER_SCORE     = 6
+  FONT_PLAYER_NAME      = 6
+  FONT_TEAM_POWERUP_NUM = 3
+  FONT_TEAM_PING        = 3
+  FONT_TEAM_PL          = 3
+  FONT_TEAM_POWERUP_PER = 5
+  FONT_TEAM_SCORE       = 7
+
+  StatNames(0) = "Grabs"
+  StatNames(1) = "Caps"
+  StatNames(2) = "Covers"
+  StatNames(3) = "Flag Kills"
+  StatNames(4) = "Returns"
+  StatNames(5) = "Seals"
+
   FontArrayNames(0)  = "Engine.DefaultFont"
   FontArrayNames(1)  = "2K4Fonts.Verdana12"
   FontArrayNames(2)  = "2K4Fonts.Verdana14"

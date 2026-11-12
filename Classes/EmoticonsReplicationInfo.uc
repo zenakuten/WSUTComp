@@ -9,6 +9,17 @@ var array<Emoticons.sSmileyMessageType> Smileys;
 // whole struct (including its string) on every access.
 var array<string> Events;
 
+// Search index over Events, built in IndexEvent and used by FindEarliest. An event
+// can only occur in a string that contains its first character (head) and its
+// first two characters (key), so the search skips every event whose head or key is
+// absent: a typical name needs ~20 InStr calls instead of one per emoticon.
+// Flat int arrays used as linked lists, -1 = end of list.
+var array<string> HeadStr;              // distinct Left(Event, 1)
+var array<int> HeadFirstKey, HeadLastKey;
+var array<string> KeyStr;               // distinct Left(Event, 2)
+var array<int> KeyNextInHead, KeyFirstEvent, KeyLastEvent;
+var array<int> EventNext;               // next event with the same key, ascending
+
 var Emoticons EmoteActor;
 var transient int nextIndex;
 var transient float SendTimer;
@@ -18,13 +29,14 @@ var int TotalSmileys; // Number of smileys in Emoticons.ini
 // GetParsedText). Searching every Smileys entry is expensive with hundreds of
 // emoticons, and the HUD, scoreboards and overlay redraw the same chat lines and
 // player names every frame, so each distinct string is only searched once.
-// Entries are reused objects (no garbage), hashed into buckets and LRU-evicted.
+// Entries are reused objects (no garbage), hashed into buckets and evicted with
+// CLOCK (second chance), an O(1) approximation of LRU (see AllocParsedText).
 // The size must comfortably exceed the strings drawn per frame (scoreboard names
-// + overlay names + chat lines + typing prompt) or LRU will thrash.
+// + overlay names + chat lines + typing prompt) or eviction will thrash.
 const PARSE_CACHE_SIZE = 128;
 var transient array<EmoticonsParsedText> ParseCache;
 var transient EmoticonsParsedText ParseCacheHead[64]; // hash buckets; keep GetParsedText's mask in sync
-var transient int ParseCacheClock;
+var transient int EvictHand;                          // CLOCK hand into ParseCache
 
 replication
 {
@@ -93,6 +105,7 @@ simulated function ClientAddEmoticon(string event, string icon, string matIcon)
 	Smileys.Length = i + 1;
 	Smileys[i].Event = event;
 	Events[i] = event;
+	IndexEvent(i, event);
 	Smileys[i].Icon = Texture(DynamicLoadObject(icon, Class'Texture', true));
 
 	// Not an icon then try if its an material icon.
@@ -102,6 +115,51 @@ simulated function ClientAddEmoticon(string event, string icon, string matIcon)
 
 	// Cached parses were made without this emoticon.
 	FlushParseCache();
+}
+
+// Adds Events[i] = E to the search index. Events arrive in ascending index order,
+// so appending keeps each key's event list ascending.
+simulated function IndexEvent(int i, string E)
+{
+	local int h, g;
+	local string Head, Key;
+
+	Head = Left(E, 1);
+	Key = Left(E, 2);
+
+	for (h = 0; h < HeadStr.Length; h++)
+		if (HeadStr[h] == Head)
+			break;
+	if (h == HeadStr.Length)
+	{
+		HeadStr[h] = Head;
+		HeadFirstKey[h] = -1;
+		HeadLastKey[h] = -1;
+	}
+
+	for (g = HeadFirstKey[h]; g != -1; g = KeyNextInHead[g])
+		if (KeyStr[g] == Key)
+			break;
+	if (g == -1)
+	{
+		g = KeyStr.Length;
+		KeyStr[g] = Key;
+		KeyNextInHead[g] = -1;
+		KeyFirstEvent[g] = -1;
+		KeyLastEvent[g] = -1;
+		if (HeadLastKey[h] == -1)
+			HeadFirstKey[h] = g;
+		else
+			KeyNextInHead[HeadLastKey[h]] = g;
+		HeadLastKey[h] = g;
+	}
+
+	EventNext[i] = -1;
+	if (KeyLastEvent[g] == -1)
+		KeyFirstEvent[g] = i;
+	else
+		EventNext[KeyLastEvent[g]] = i;
+	KeyLastEvent[g] = i;
 }
 
 // Returns S split into text runs and emoticon icons, parsing it only on the
@@ -117,7 +175,7 @@ simulated function EmoticonsParsedText GetParsedText(string S)
 	{
 		if (P.SourceLen == L && P.Source == S)
 		{
-			P.LastUsed = ++ParseCacheClock;
+			P.bRef = true;
 			return P;
 		}
 	}
@@ -128,16 +186,19 @@ simulated function EmoticonsParsedText GetParsedText(string S)
 	P.Bucket = b;
 	P.NextInBucket = ParseCacheHead[b];
 	ParseCacheHead[b] = P;
-	P.LastUsed = ++ParseCacheClock;
+	P.bRef = true;
 	ParseText(P, S);
 	return P;
 }
 
 // Returns an unlinked cache entry: a new one while the cache is filling,
-// otherwise the least recently used one.
+// otherwise one picked by CLOCK. The hand skips entries used since it last
+// passed (clearing their flag) and takes the first unused one. Strings drawn every
+// frame set their flag again before the hand comes back, so they stay. This
+// replaces a full scan of the cache for the oldest entry on every miss, which cost
+// 128 iterations per string when the scoreboard reopened with evicted names.
 simulated function EmoticonsParsedText AllocParsedText()
 {
-	local int i, oldest;
 	local EmoticonsParsedText P, Q;
 
 	if (ParseCache.Length < PARSE_CACHE_SIZE)
@@ -147,13 +208,18 @@ simulated function EmoticonsParsedText AllocParsedText()
 		return P;
 	}
 
-	oldest = 0;
-	for (i = 1; i < ParseCache.Length; i++)
+	// Ends within one full turn: every flag it passes is cleared.
+	while (ParseCache[EvictHand].bRef)
 	{
-		if (ParseCache[i].LastUsed < ParseCache[oldest].LastUsed)
-			oldest = i;
+		ParseCache[EvictHand].bRef = false;
+		EvictHand++;
+		if (EvictHand >= ParseCache.Length)
+			EvictHand = 0;
 	}
-	P = ParseCache[oldest];
+	P = ParseCache[EvictHand];
+	EvictHand++;
+	if (EvictHand >= ParseCache.Length)
+		EvictHand = 0;
 
 	// Unlink from its bucket (flushed entries are no longer in any bucket).
 	if (ParseCacheHead[P.Bucket] == P)
@@ -184,7 +250,7 @@ simulated function FlushParseCache()
 	for (i = 0; i < ParseCache.Length; i++)
 	{
 		ParseCache[i].SourceLen = -1;
-		ParseCache[i].LastUsed = 0; // evict these first
+		ParseCache[i].bRef = false; // evictable on the hand's first pass
 		ParseCache[i].NextInBucket = None;
 	}
 }
@@ -238,29 +304,17 @@ simulated function string StripColorForTTS( string s )
 // code's RGB bytes, and the raw mapping still spans any color codes interspersed
 // within the event (multicolor names like "=dart" that get a code between every
 // letter). MatchLen is the raw length consumed in S so the caller advances past
-// the whole matched region. This scans every entry in Events, so it is only called
-// when parsing a string into the cache, never per frame.
+// the whole matched region. It is only called when parsing a string into the
+// cache, never per frame.
 simulated function int FindNextSmile( string S, optional out int SmileNr, optional out int MatchLen )
 {
 	local string vis;
-	local int i,j,p,bp,rawStart;
+	local int bp,rawStart;
 
-	j = Events.Length;
-
-	// Fast path: no color codes present. Match on the raw string with the native
-	// InStr and no string allocations.
+	// Fast path: no color codes present. Match on the raw string.
 	if( InStr(S, Chr(27)) == -1 )
 	{
-		bp = -1;
-		for( i = 0; i < j; i++ )
-		{
-			p = InStr( S, Events[i] );
-			if( p != -1 && (bp == -1 || p < bp) )
-			{
-				bp = p;
-				SmileNr = i;
-			}
-		}
+		bp = FindEarliest( S, SmileNr );
 		if( bp != -1 )
 			MatchLen = Len(Events[SmileNr]);
 		return bp;
@@ -270,22 +324,46 @@ simulated function int FindNextSmile( string S, optional out int SmileNr, option
 	// can't false-match inside a code, match, then map the hit back to a raw
 	// offset (spanning any codes interspersed within the event).
 	vis = StripColorForTTS(S);
-	bp = -1;
-	for( i = 0; i < j; i++ )
-	{
-		p = InStr( vis, Events[i] );
-		if( p != -1 && (bp == -1 || p < bp) )
-		{
-			bp = p;
-			SmileNr = i;
-		}
-	}
+	bp = FindEarliest( vis, SmileNr );
 	if( bp == -1 )
 		return -1;
 
 	rawStart = VisibleToRaw( S, bp );
 	MatchLen = VisibleToRaw( S, bp + Len(Events[SmileNr]) ) - rawStart;
 	return rawStart;
+}
+
+// Returns the earliest position in T where any event occurs (-1 = none) and, in
+// SmileNr, the lowest-numbered event at that position. That is the same result as
+// calling InStr for every entry of Events in order, but events whose head or key
+// does not occur in T are never tried (see the index above).
+simulated function int FindEarliest( string T, out int SmileNr )
+{
+	local int h,g,i,p,bp;
+
+	bp = -1;
+	for( h = 0; h < HeadStr.Length; h++ )
+	{
+		if( InStr( T, HeadStr[h] ) == -1 )
+			continue;
+		for( g = HeadFirstKey[h]; g != -1; g = KeyNextInHead[g] )
+		{
+			if( InStr( T, KeyStr[g] ) == -1 )
+				continue;
+			for( i = KeyFirstEvent[g]; i != -1; i = EventNext[i] )
+			{
+				p = InStr( T, Events[i] );
+				// Keys are visited out of event order, so break position ties by
+				// the lower event index explicitly.
+				if( p != -1 && (bp == -1 || p < bp || (p == bp && i < SmileNr)) )
+				{
+					bp = p;
+					SmileNr = i;
+				}
+			}
+		}
+	}
+	return bp;
 }
 
 // Maps an index in the color-code-stripped (visible) string back to the raw

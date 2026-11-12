@@ -42,6 +42,25 @@ var array<UTComp_PSVisDummy> PSVisDummies;
 
 const iCOUNTDOWNSECONDS = 10;
 
+// Hands this actor to the local player when it arrives, so BS_xPlayer only has
+// to search for it once instead of every tick (see BS_xPlayer.PlayerTick).
+// Covers the case where the warmup replicates after that search ran. Runs on
+// clients once the initial properties are received, and on the server at spawn
+// (no local player exists yet then; a listen host's search finds it later).
+simulated event PostNetBeginPlay()
+{
+    local BS_xPlayer P;
+
+    Super.PostNetBeginPlay();
+
+    if (Level.NetMode == NM_DedicatedServer)
+        return;
+
+    P = BS_xPlayer(Level.GetLocalPlayerController());
+    if (P != None && P.uWarmup == None)
+        P.uWarmup = self;
+}
+
 
 function InitializeWarmup()
 {

@@ -333,6 +333,21 @@ function float GetBlueBoxPositionY()
   return OldScreenHeight*default.VertPosition;//0.07;
 }
 
+// Engine bug (3369 and 3374): BeamIterator::Draw sizes its vertex buffer in 32 bits. A beam whose
+// ends are ~1e10 units apart (3374 RC3 sometimes puts vehicle gun bones there, where link beams
+// start) wraps that negative and the draw loop writes past the buffer until the game crashes.
+// No real beam is longer than the world, so collapse longer ones to zero length right before the
+// level renders; Draw returns early when start == end, and link beams reset mSpawnVecA every tick.
+function PreRender( canvas Canvas )
+{
+    local xEmitter E;
+
+    foreach ViewportOwner.Actor.DynamicActors(class'xEmitter', E)
+        if (E.mParticleType == 6 && !E.mPosRelative                 // 6 = PT_Beam
+            && VSize(E.mSpawnVecA - E.Location) > 524288.0)         // WORLD_MAX
+            E.mSpawnVecA = E.Location;
+}
+
 function PostRender( canvas Canvas )
 {
    local int i, numplayers;

@@ -9,7 +9,7 @@ class EmoticonsParsedText extends Object;
 // Cache bookkeeping (owned by EmoticonsReplicationInfo).
 var string Source;
 var int SourceLen;                      // -1 = flushed, never matches a lookup
-var int LastUsed;                       // LRU stamp
+var bool bRef;                          // CLOCK flag: set on use, cleared by the eviction hand
 var int Bucket;
 var EmoticonsParsedText NextInBucket;
 

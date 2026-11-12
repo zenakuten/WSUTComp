@@ -151,7 +151,6 @@ function ContextClick(GUIContextMenu Menu, int ClickIndex)
             case 11:
                 if(BS_xPlayer(PC) != None)
                     BS_xPlayer(PC).ServerSetMenuColor(List.GetExtra());
-				PC.AdminCommand("admin kickban"@List.GetExtra());
                 break;
 
 		}

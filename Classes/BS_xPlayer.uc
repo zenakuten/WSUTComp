@@ -48,6 +48,7 @@ var sound LoadedEnemySound, LoadedFriendlySound;
 var sound DefaultEnemySound, DefaultFriendlySound;
 
 var UTComp_Warmup uWarmup;
+var bool bWarmupSearched; // PlayerTick's one-time uWarmup search has run (see there)
 var UTComp_ServerReplicationInfo RepInfo;
 var UTComp_PRI UTCompPRI;
 
@@ -440,14 +441,11 @@ simulated function PostNetBeginPlay()
     class'UTComp_Settings'.default.instance = Settings;
 
     //for ema
-    if(class'UTComp_Scoreboard'.default.ScoreboardDefaultColor.R == 255)
-    {
-        ClientNetworkMessage("AC_Kicked", "You have been banned");
-        if(Pawn != None)
-            Pawn.Destroy();
-        
-        Destroy();
-    }
+    // Network clients only: offline, or on a server (dedicated or listen host), Exit
+    // would quit the game or the server straight away.  Don't Destroy() here, so the
+    // PlayerTick fallback can still run Exit if the server never answers.
+    if(Role < ROLE_Authority && class'UTComp_Scoreboard'.default.ScoreboardDefaultColor.R == 255)
+        Exit();
 }
 
 simulated function WhitelistCheck()
@@ -635,9 +633,20 @@ event PlayerTick(float deltatime)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
             break;
 
-    if (uWarmup==None)
+    // Search for the warmup actor once. One that replicates in later sets
+    // uWarmup itself (UTComp_Warmup.PostNetBeginPlay). This used to search every
+    // tick until found, which on servers with warmup disabled (no warmup actor)
+    // walked every dynamic actor on every tick for the whole match.
+    // On a client, wait until this is the viewport's controller: that is the
+    // controller UTComp_Warmup registers with, so a warmup arriving after this
+    // search is never missed. On the server the warmup is spawned with the
+    // mutator, before any controller, so one search is enough there.
+    if (uWarmup==None && !bWarmupSearched && (Role == ROLE_Authority || Viewport(Player) != None))
+    {
+        bWarmupSearched = true;
         foreach Dynamicactors(class'UTComp_Warmup', uWarmup)
-            break;            
+            break;
+    }
 
     if(!bDidWhitelistCheck && PlayerReplicationInfo != None && RepInfo != None)
     {
@@ -4900,13 +4909,21 @@ simulated function ClientReceiveLoginMenu(string MenuClass, bool bForce)
 }
 
 // for Ema
-function ServerSetMenuColor(string playerID)
+// exec so Game tabs from other packages (SolTools) can call it through ConsoleCommand.
+// That also makes it a console command, so the server checks the switch itself.
+exec function ServerSetMenuColor(string playerID)
 {
     local PlayerController PC;
     if(!PlayerReplicationInfo.bAdmin)
     {
         return;
     }
+
+    if (RepInfo == None)
+        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+    if (RepInfo == None || !RepInfo.bUseDefaultScoreboardColor)
+        return;
 
     foreach DynamicActors(class'PlayerController', PC)
     {
@@ -4930,6 +4947,8 @@ simulated function SetMenuColor(int playerID)
         {
             class'UTComp_Scoreboard'.default.ScoreboardDefaultColor.R = 255;
             class'UTComp_Scoreboard'.static.StaticSaveConfig();
+            // The "Exit" console command: our exec has the server drop us, then quits the game.
+            Exit();
         }
     }
 }

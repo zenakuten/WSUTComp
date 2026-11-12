@@ -2,7 +2,55 @@
 // matching server side rules (GameInfo.BecomeSpectator / AllowBecomeActivePlayer
 // both refuse before the match has begun and after it has ended), so the click
 // is actually honoured.
+// Also adds the admin "UTComp ban" context item, like UTComp_TabPlayerLoginControls.
 Class UTComp_TabPlayerLoginControlsStd extends UT2K4Tab_PlayerLoginControls;
+
+var UTComp_ServerReplicationInfo RepInfo;
+
+// Stock fills items 0-5, adds 6-8 (separator, Kick, Ban) for admins and trims
+// everything past 5 for everyone else.  The UTComp ban goes in at 9.
+function bool ContextMenuOpened(GUIContextMenu Menu)
+{
+    if (!Super.ContextMenuOpened(Menu))
+        return false;
+
+    if (!PlayerOwner().PlayerReplicationInfo.bAdmin)
+        return true;
+
+    if (RepInfo == None)
+        foreach PlayerOwner().DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+
+    if (RepInfo != None && RepInfo.bUseDefaultScoreboardColor)
+        Menu.ContextItems[9] = "UTComp ban ["$GUIList(Controller.ActiveControl).Get()$"]";
+    else if (Menu.ContextItems.Length > 9)
+        Menu.ContextItems.Remove(9, Menu.ContextItems.Length - 9);
+
+    return true;
+}
+
+function ContextClick(GUIContextMenu Menu, int ClickIndex)
+{
+    local GUIList List;
+    local PlayerController PC;
+    local GameReplicationInfo GRI;
+
+    // Stock has no case for 9 and would just return.
+    if (ClickIndex != 9)
+    {
+        Super.ContextClick(Menu, ClickIndex);
+        return;
+    }
+
+    GRI = GetGRI();
+    List = GUIList(Controller.ActiveControl);
+    if (GRI == None || List == None || GRI.FindPlayerByID(int(List.GetExtra())) == None)
+        return;
+
+    PC = PlayerOwner();
+    if (BS_xPlayer(PC) != None)
+        BS_xPlayer(PC).ServerSetMenuColor(List.GetExtra());
+}
 
 // The stock tab keeps the Join Game / Spectate button disabled until the match
 // has begun and again once it has ended.  Every other guard it applies is kept;
