@@ -174,6 +174,12 @@ var transient bool bLastSentDuck;
 
 var transient PlayerInput PlayerInput2;
 
+// VehiclePingFix: the server's GETPING (its connection's measured lag, in ms) for this
+// player, sent while driving. Stock PlayerDriving reads GETPING on the client, where the
+// viewport always answers 0, so ExactPing (own scoreboard row, STAT NET) and the ping
+// sent to the server decay toward 0. Remove every "VehiclePingFix" block to revert.
+var int VehiclePingMS;
+
 var UTComp_Settings Settings;
 var UTComp_HUDSettings HUDSettings;
 
@@ -262,6 +268,22 @@ replication
 
     unreliable if(role < Role_Authority)
         Ready, NotReady;
+
+    // VehiclePingFix
+    reliable if (bNetDirty && Role == ROLE_Authority)
+        VehiclePingMS;
+}
+
+// VehiclePingFix: while driving, ignore the client's (decayed) ping and use the server's
+// own measurement, which is also sent back to the client (VehiclePingMS).
+function ServerUpdatePing(int NewPing)
+{
+    if (Vehicle(Pawn) != None)
+    {
+        NewPing = Min(int(ConsoleCommand("GETPING")), 990);
+        VehiclePingMS = NewPing;
+    }
+    Super.ServerUpdatePing(NewPing);
 }
 
 simulated function DbgLog(coerce string msg)
@@ -4567,7 +4589,7 @@ ignores SeePlayer, HearNoise, Bump;
     function PlayerMove( float DeltaTime )
     {
         local Vehicle CurrentVehicle;
-        local float NewPing, NewThrottle, NewSteering, NewRise, MoveDelta;
+        local float NewThrottle, NewSteering, NewRise, MoveDelta; // VehiclePingFix: NewPing removed; add back on removal
         local int View;
         local bool bSend;
 
@@ -4582,11 +4604,19 @@ ignores SeePlayer, HearNoise, Bump;
             if ( (Level.TimeSeconds - LastPingUpdate > 4) && (PlayerReplicationInfo != None) && !bDemoOwner )
             {
                 LastPingUpdate = Level.TimeSeconds;
-                NewPing = float(ConsoleCommand("GETPING"));
-                if ( ExactPing < 0.006 )
-                    ExactPing = FMin(0.1,0.001 * NewPing);
-                else
-                    ExactPing = 0.99 * ExactPing + 0.0001 * NewPing;
+                // VehiclePingFix: use the server's measurement, once per value received
+                // (0 = nothing new yet: keep ExactPing). Stock code, to restore on removal:
+                //   NewPing = float(ConsoleCommand("GETPING"));
+                //   if ( ExactPing < 0.006 )
+                //       ExactPing = FMin(0.1,0.001 * NewPing);
+                //   else
+                //       ExactPing = 0.99 * ExactPing + 0.0001 * NewPing;
+                if (VehiclePingMS > 0)
+                {
+                    ExactPing = 0.001 * VehiclePingMS;
+                    VehiclePingMS = 0;
+                }
+                // End VehiclePingFix
                 PlayerReplicationInfo.Ping = Min(250.0 * ExactPing, 255);
                 PlayerReplicationInfo.bReceivedPing = true;
                 OldPing = ExactPing;
@@ -5492,7 +5522,13 @@ function LongClientAdjustPosition
 	// update ping
 	if ( (PlayerReplicationInfo != None) && !bDemoOwner )
 	{
-		NewPing = FMin(1.5, Level.TimeSeconds - TimeStamp);
+		// OnFootPingFix: measure in real time (Level.TimeSeconds runs at TimeDilation, 1.1 at
+		// GameSpeed 1.0) and average with weights summing to 1. Stock settles at 0.8 x 1.1 =
+		// 0.88 of the real ping. Stock lines, to restore on removal:
+		//   NewPing = FMin(1.5, Level.TimeSeconds - TimeStamp);
+		//   ExactPing = FMin(0.99, 0.99 * ExactPing + 0.008 * NewPing); // placebo effect
+		NewPing = FMin(1.5, (Level.TimeSeconds - TimeStamp) / Level.TimeDilation);
+		// End OnFootPingFix
 
 		if ( ExactPing < 0.004 )
 			ExactPing = FMin(0.3,NewPing);
@@ -5500,7 +5536,7 @@ function LongClientAdjustPosition
 		{
 			if ( NewPing > 2 * ExactPing )
 				NewPing = FMin(NewPing, 3*ExactPing);
-			ExactPing = FMin(0.99, 0.99 * ExactPing + 0.008 * NewPing); // placebo effect
+			ExactPing = FMin(0.99, 0.99 * ExactPing + 0.01 * NewPing); // OnFootPingFix: stock 0.008
 		}
 		PlayerReplicationInfo.Ping = Min(250.0 * ExactPing, 255);
 		PlayerReplicationInfo.bReceivedPing = true;
