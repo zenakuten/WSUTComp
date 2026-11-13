@@ -774,9 +774,6 @@ simulated function material ChangeColorOfSkin(material SkinToChange, byte SkinNu
     if(RepInfo!=None && RepInfo.EnableBrightSkinsMode==0)
         return SkinToChange;
 
-    if(ONSStationaryWeaponPawn(DrivenVehicle) != None)
-        return SkinToChange;
-
     if(IsSpawnProtectionEnabled())
         return ChangeToUTCompSkin(SkinToChange, SkinNum);
 

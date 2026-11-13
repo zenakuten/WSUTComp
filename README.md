@@ -9,18 +9,17 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 Release Notes
 
 V33
+- Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
+- Add greentext support (">" at beginning of a message)
+- Add workaround for 3374 voice channel switching issue
+  - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/499
 - Client-side optimizations
   - Reduce the hitch when opening the enhanced scoreboard and reduce the per frame cost of having it open
   - UTComp's menu is preloaded upon join to prevent the massive hitch upon opening it the first time
   - Higher FPS: the HUD and crosshair now cost less to draw every frame
   - Smoother big fights: team-coloured projectiles and effects stop running per-frame work once their colour is set
   - Fewer stutters on hits: hit sounds, damage numbers and weapon stats do far less work per hit
-  - Bodies are cleaned up like in stock UT2004, so fewer ragdolls keep simulating out of view
   - Fixed a memory leak from damage numbers over long sessions
-- Add greentext support (">" at beginning of a message)
-- Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
-- Add workaround for 3374 voice channel switching issue
-  - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/499
 - Warmup mode fixes
   - No longer shows warmup message after the match has started
   - Countdown now voices "ten" and "nine"
