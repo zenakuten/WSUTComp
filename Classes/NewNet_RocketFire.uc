@@ -4,7 +4,8 @@ class NewNet_RocketFire extends UTComp_RocketFire;
 var float PingDT;
 var bool bUseEnhancedNetCode;
 
-var bool bUseReplicatedInfo;
+var bool bUseReplicatedInfo; // fire from the eye position the client sent (savedVec)
+var bool bUseReplicatedRot;  // fire along the aim the client sent (savedRot)
 var rotator savedRot;
 var vector savedVec;
 
@@ -246,15 +247,16 @@ function DoFireEffect()
         StartProj = HitLocation;
     }
 
-    if(bUseReplicatedInfo)
+    if(bUseReplicatedRot)
     {
         Aim = SavedRot;
         if(Instigator.PointOfView())
         {
             Aim = AdjustAim(StartProj, AimError);
             R = rotator(vector(Aim) + VRand()*FRand()*Spread);
-        }        
+        }
         bUseReplicatedInfo=false;
+        bUseReplicatedRot=false;
     }
     else
         Aim = AdjustAim(StartProj, AimError);

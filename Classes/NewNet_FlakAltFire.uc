@@ -8,7 +8,8 @@ var float PingDT;
 var bool bUseEnhancedNetCode;
 var bool bSkipNextEffect;
 
-var bool bUseReplicatedInfo;
+var bool bUseReplicatedInfo; // fire from the eye position the client sent (savedVec)
+var bool bUseReplicatedRot;  // fire along the aim the client sent (savedRot)
 var rotator savedRot;
 var vector savedVec;
 
@@ -35,7 +36,9 @@ function PlayFiring()
    else
    {
       bSkipNextEffect=false;
-      Weapon.ClientStopFire(0);
+      // Stops this mode, so the next shell starts over and sends its own aim and stamp.
+      // Stopping mode 0 from alt-fire left alt running, and only its first shell did.
+      Weapon.ClientStopFire(ThisModeNum);
    }
 }
 
@@ -320,15 +323,16 @@ function DoFireEffect()
         StartProj = HitLocation;
     }
 
-    if(bUseReplicatedInfo)
+    if(bUseReplicatedRot)
     {
         Aim = SavedRot;
         if(Instigator.PointOfView())
         {
             Aim = AdjustAim(StartProj, AimError);
             R = rotator(vector(Aim) + VRand()*FRand()*Spread);
-        }        
+        }
         bUseReplicatedInfo=false;
+        bUseReplicatedRot=false;
     }
     else
         Aim = AdjustAim(StartProj, AimError);

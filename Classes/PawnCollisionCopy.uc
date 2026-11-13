@@ -79,6 +79,14 @@ function SetPawn(Pawn Other)
         return;
     }
  //   if(CopiedPawn==None)
+    // A copy that switches between a driver and their vehicle starts its history
+    // over: the old pawn's positions are not where the new one was. Until there is
+    // new history, TimeTravelPawn puts the copy on the pawn itself.
+    if(CopiedPawn != Other)
+    {
+        PawnHistory.Length = 0;
+        HistoryStart = 0;
+    }
     CopiedPawn=Other;
 
     if(M==None)
@@ -126,7 +134,11 @@ function GoToPawn()
         return;
 
     PendingLocation = CopiedPawn.Location;
-    bPendingRotation = false;
+    // A cylinder is the same at any rotation; a mesh copy (vehicles) has to face
+    // the way the pawn does
+    bPendingRotation = !bUseCylinderCollision;
+    if(bPendingRotation)
+        PendingRotation = CopiedPawn.Rotation;
     SetCollisionSize(CopiedPawn.CollisionRadius,CopiedPawn.CollisionHeight);
 
     if(bUseCylinderCollision)

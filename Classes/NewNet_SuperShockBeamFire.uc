@@ -1,6 +1,7 @@
 class NewNet_SuperShockBeamFire extends UTComp_SuperShockBeamFire;
 
-var bool bUseReplicatedInfo;
+var bool bUseReplicatedInfo; // fire from the eye position the client sent (savedVec)
+var bool bUseReplicatedRot;  // fire along the aim the client sent (savedRot)
 var rotator savedRot;
 var vector savedVec;
 
@@ -24,7 +25,9 @@ function PlayFiring()
    else
    {
       bSkipNextEffect=false;
-      Weapon.ClientStopFire(0);
+      // Stops this mode, so the next shot starts over and sends its own aim and stamp.
+      // Stopping mode 0 from alt-fire left alt running, and only its first shot did.
+      Weapon.ClientStopFire(ThisModeNum);
    }
 }
 
@@ -233,9 +236,12 @@ function DoFireEffect()
 
     Instigator.MakeNoise(1.0);
 
-    if(bUseReplicatedInfo)
+    if(bUseReplicatedRot)
     {
-        StartTrace=savedVec;
+        if(bUseReplicatedInfo)
+            StartTrace=savedVec;
+        else
+            StartTrace = Instigator.Location + Instigator.EyePosition();
         R=SavedRot;
         if(Instigator.PointOfView())
         {
@@ -243,6 +249,7 @@ function DoFireEffect()
             R = rotator(vector(Aim) + VRand()*FRand()*Spread);
         }
         bUseReplicatedInfo=false;
+        bUseReplicatedRot=false;
 	}
     else
     {

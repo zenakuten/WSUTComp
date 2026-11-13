@@ -20,6 +20,11 @@ var TimeStamp_Pawn T;
 var MutUTComp M;
 var float lastDT;
 
+// A NewNet shot the server's refire timer is holding back, see ServerStartFire
+var bool bNewNetDelayed;
+var byte DelayedMode;
+var float DelayStamp;
+
 replication
 {
     reliable if(Role < Role_Authority)
@@ -32,6 +37,38 @@ function DisableNet()
 {
     NewNet_SniperFire(FireMode[0]).bUseEnhancedNetCode = false;
     NewNet_SniperFire(FireMode[0]).PingDT = 0.00;
+    ClearClientAim();
+}
+
+// Forgets the aim and position a client sent for a shot that hasn't fired
+function ClearClientAim()
+{
+    bNewNetDelayed = false;
+    NewNet_SniperFire(FireMode[0]).bUseReplicatedInfo = false;
+    NewNet_SniperFire(FireMode[0]).bUseReplicatedRot = false;
+}
+
+// A weapon that changes hands must not fire its new owner's first shot from what
+// the last owner's client sent
+simulated function BringUp(optional Weapon PrevWeapon)
+{
+    if(Role == ROLE_Authority)
+        ClearClientAim();
+    Super.BringUp(PrevWeapon);
+}
+
+// The engine starts a held-back shot through here (AWeapon::TickAuthoritative) once
+// the refire timer allows. A NewNet shot keeps what its client sent, and its rewind
+// grows by the time it waited, so it still goes back to when the client fired.
+function ServerStartFire(byte Mode)
+{
+    Super.ServerStartFire(Mode);
+
+    if(bNewNetDelayed && Mode == DelayedMode && !FireMode[Mode].bServerDelayStartFire)
+    {
+        bNewNetDelayed = false;
+        NewNet_SniperFire(FireMode[Mode]).PingDT += M.ClientTimeStamp - DelayStamp;
+    }
 }
 
 simulated function SpawnLGEffect(class<Actor> tmpHitEmitClass, vector ArcEnd, vector HitNormal, vector HitLocation)
@@ -181,17 +218,23 @@ function NewNet_ServerStartFire(byte Mode, byte ClientTimeStamp, float DT, Repli
     }
     NewNet_SniperFire(FireMode[Mode]).bUseEnhancedNetCode = true;
     NewNet_SniperFire(FireMode[Mode]).bFirstGo = true;
+
+    // Saved before the refire test, so a shot the server holds back keeps them too.
+    // The aim is always the client's; its eye position only when it is believable.
+    bNewNetDelayed = false;
+    NewNet_SniperFire(FireMode[Mode]).SavedVec.X = V.X;
+    NewNet_SniperFire(FireMode[Mode]).SavedVec.Y = V.Y;
+    NewNet_SniperFire(FireMode[Mode]).SavedVec.Z = V.Z;
+    NewNet_SniperFire(FireMode[Mode]).SavedRot.Yaw = R.Yaw;
+    NewNet_SniperFire(FireMode[Mode]).SavedRot.Pitch = R.Pitch;
+    NewNet_SniperFire(FireMode[Mode]).bUseReplicatedInfo=M.IsReasonableFireStart(Pawn(Owner), NewNet_SniperFire(FireMode[Mode]).SavedVec);
+    NewNet_SniperFire(FireMode[Mode]).bUseReplicatedRot=true;
+
     if ( (FireMode[Mode].NextFireTime <= Level.TimeSeconds + FireMode[Mode].PreFireTime)
 		&& StartFire(Mode) )
     {
         FireMode[Mode].ServerStartFireTime = Level.TimeSeconds;
         FireMode[Mode].bServerDelayStartFire = false;
-        NewNet_SniperFire(FireMode[Mode]).SavedVec.X = V.X;
-        NewNet_SniperFire(FireMode[Mode]).SavedVec.Y = V.Y;
-        NewNet_SniperFire(FireMode[Mode]).SavedVec.Z = V.Z;
-        NewNet_SniperFire(FireMode[Mode]).SavedRot.Yaw = R.Yaw;
-        NewNet_SniperFire(FireMode[Mode]).SavedRot.Pitch = R.Pitch;
-        NewNet_SniperFire(FireMode[Mode]).bUseReplicatedInfo=IsReasonable(NewNet_SniperFire(FireMode[Mode]).SavedVec);
    //     NewNet_SniperFire(FireMode[Mode]).bBelievesHit=bBelievesHit;
    //     NewNet_SniperFire(FireMode[Mode]).bCount=true;
    /*     NewNet_SniperFire(FireMode[Mode]).BelievedHLDelta.X = BelievedHLDelta.X;
@@ -204,28 +247,15 @@ function NewNet_ServerStartFire(byte Mode, byte ClientTimeStamp, float DT, Repli
     else if ( FireMode[Mode].AllowFire() )
     {
         FireMode[Mode].bServerDelayStartFire = true;
+        bNewNetDelayed = true;
+        DelayedMode = Mode;
+        DelayStamp = M.ClientTimeStamp;
 	}
 	else
+	{
+		ClearClientAim();
 		ClientForceAmmoUpdate(Mode, AmmoAmount(Mode));
-}
-
-function bool IsReasonable(Vector V)
-{
-    local vector LocDiff;
-    local float clErr;
-
-    if(Owner == none || Pawn(Owner) == none)
-        return true;
-
-    LocDiff = V - (Pawn(Owner).Location + Pawn(Owner).EyePosition());
-    clErr = (LocDiff dot LocDiff);
-
-//    if(clErr > 500.0*M.AverDT)
-//    PlayerController(Pawn(Owner).Controller).ClientMessage("Exceeded error"@clErr);
-//    Log(ClErr@(Pawn(Owner).Velocity dot Pawn(Owner).Velocity));
-   // if(clErr>=750)
-    //   Log("ERROR TOO GREAT");
-    return clErr < 1250.0;
+	}
 }
 
 simulated function Weapontick(float deltatime)

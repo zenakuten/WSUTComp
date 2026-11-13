@@ -74,6 +74,9 @@ var ONSPowerCore oldFoundCore;
 var xweaponbase oldFoundWep;
 var Controller LastViewedController;
 var string UTCompMenuClass;
+// Held so a client OBJ GARBAGE (UTOptimizer's bCollectGarbage, LevelInfo.Reset on a listen
+// server) can't free the preloaded menu classes before the first MyMenu press. See PreloadMenus().
+var transient class<GUIPage> PreloadedMenuClass, PreloadedVoteMenuClass;
 var string UTCompVotingMenuClass;
 
 //For Colored Names
@@ -823,6 +826,20 @@ simulated function InitializeClient()
 
     MatchHudColor();
     GetMapList();
+    PreloadMenus();
+}
+
+// Load the UTComp menu classes now, while joining, instead of on the first MyMenu press.
+// The client loads WSUTComp objects on first use, and the main menu's class literals pull
+// in every tab menu and the textures they reference: about 110 ms, which hitched the first
+// open mid-game. Once loaded, the open itself takes well under 1 ms. The classes are kept
+// referenced because clients can run OBJ GARBAGE after joining (UTOptimizer does on its first
+// client tick, LevelInfo.Reset does on a listen server), which would otherwise free them again
+// before the menu is first opened.
+simulated function PreloadMenus()
+{
+    PreloadedMenuClass = class<GUIPage>(DynamicLoadObject(UTCompMenuClass, class'Class'));
+    PreloadedVoteMenuClass = class<GUIPage>(DynamicLoadObject(UTCompVotingMenuClass, class'Class'));
 }
 
 simulated function InitializeScoreboard()
@@ -2883,8 +2900,19 @@ function bool IsValidVote(byte b, byte p, out string S, string S2)
 simulated function NotifyEndWarmup()
 {
     NotReady(true);
+    // ResetClock, not SetClockTime: this RPC can run on the client before the
+    // UTComp_Warmup.bInWarmup=False update arrives (separate channels, no
+    // ordering), and SetClockTime's warmup check would then re-post the
+    // 4-second "You are in warmup" message as the match starts.
     if(GameReplicationInfo!=None)
-        SetClockTime(GameReplicationInfo.TimeLimit*60+1);
+        ResetClock(GameReplicationInfo.TimeLimit*60+1);
+    // The warmup message is re-posted every second up to the last countdown tick, so
+    // it would otherwise stay up for most of its LifeTime into the match. Switch 1
+    // removes it (see UTComp_InWarmupMessage).
+    ReceiveLocalizedMessage(class'UTComp_InWarmupMessage', 1);
+    // Same for the countdown's last number ("1"), which would otherwise stay up for its
+    // lifetime after the match starts. Switch 0 removes it (see UTComp_Warmup_CountDown).
+    ReceiveLocalizedMessage(class'UTComp_Warmup_CountDown', 0);
     ResetEpicStats();
     ResetUTCompStats();
     // A client that sat through warmup is already initialized, so only use a
@@ -3000,9 +3028,36 @@ simulated function ResetEpicStats()
 
 simulated function SetClockTime(int iTime)
 {
-    if(uWarmup!=None && uWarmup.bInWarmup && PlayerReplicationInfo!=None)
-        ReceiveLocalizedMessage(class'UTComp_InWarmupMessage',,,,self);
+    if(uWarmup!=None && uWarmup.bInWarmup)
+    {
+        if(PlayerReplicationInfo!=None)
+            ReceiveLocalizedMessage(class'UTComp_InWarmupMessage',,,,self);
 
+        // The server sends this once a second during warmup, and GRI.Timer also counts
+        // the clock down on its own phase. With the two phases close, network jitter let
+        // the local tick and the next call land in either order, so the clock stepped
+        // twice in quick succession or paused. Re-phasing GRI.Timer to one second after
+        // each call means the local tick only fires when a call is late, and a late call
+        // then carries the value already shown. Clients only: a listen host's GRI is the
+        // server's.
+        if(Level.NetMode==NM_Client && GameReplicationInfo!=None)
+        {
+            // A call more than a second late arrives after two local ticks and would step
+            // the clock back up by one. Keep the lower value, and leave the local tick
+            // alone so a genuine +1 (warmup restarting) still gets taken next second.
+            if(iTime == GameReplicationInfo.RemainingTime + 1)
+                return;
+            GameReplicationInfo.SetTimer(Level.TimeDilation, true);
+        }
+    }
+
+    ResetClock(iTime);
+}
+
+// Clock half of SetClockTime, without the warmup message. Not replicated:
+// it only ever runs where its caller runs.
+simulated function ResetClock(int iTime)
+{
     if(GameReplicationInfo!=None)
     {
         GameReplicationInfo.Remainingtime = iTime;
@@ -4005,6 +4060,8 @@ function TurnOffNetCode()
                 NewNet_BioRifle(Inv).DisableNet();
             else if(NewNet_ShockRifle(Inv)!=None)
                 NewNet_ShockRifle(Inv).DisableNet();
+            else if(NewNet_SuperShockRifle(Inv)!=None)
+                NewNet_SuperShockRifle(Inv).DisableNet();
             else if(NewNet_MiniGun(Inv)!=None)
                 NewNet_MiniGun(Inv).DisableNet();
             else if(NewNet_LinkGun(Inv)!=None)

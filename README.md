@@ -9,13 +9,30 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 Release Notes
 
 V33
-- Numerous client-side optimizations, notably:
+- Client-side optimizations
   - Reduce the hitch when opening the enhanced scoreboard and reduce the per frame cost of having it open
-  - Use stock UT2004 cleanup for corpses (remove off-screen ragdolls on first 1s timer)
+  - UTComp's menu is preloaded upon join to prevent the massive hitch upon opening it the first time
+  - Higher FPS: the HUD and crosshair now cost less to draw every frame
+  - Smoother big fights: team-coloured projectiles and effects stop running per-frame work once their colour is set
+  - Fewer stutters on hits: hit sounds, damage numbers and weapon stats do far less work per hit
+  - Bodies are cleaned up like in stock UT2004, so fewer ragdolls keep simulating out of view
+  - Fixed a memory leak from damage numbers over long sessions
 - Add greentext support (">" at beginning of a message)
 - Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
 - Add workaround for 3374 voice channel switching issue
   - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/499
+- Warmup mode fixes
+  - No longer shows warmup message after the match has started
+  - Countdown now voices "ten" and "nine"
+  - Warmup clock should no longer jump or jitter on clients
+  - End-of-match "ten...one" announcer works again on clients
+  - Warmup message moved up so it doesn't overlap the spectator HUD
+- Netcode fixes
+  - Fixed shots fired at full fire rate sometimes missing even when they looked like hits (and the reverse)
+  - Fixed shots fired on stairs, lifts, or while being knocked back going slightly off target
+  - Held alt-fire on the SSR and Flak Cannon now registers as accurately as single clicks
+  - Classic sniper now hits where your crosshair was when you fired, and headshots on moving targets register correctly
+  - Fixed a bug where another player joining could throw off your ping prediction, which affected NewNet shot timing
 
 V32
 - bump utcomp and 3spn version labels to v32

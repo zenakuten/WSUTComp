@@ -779,6 +779,21 @@ static function bool IsPredicted(actor A)
    return false;
 }
 
+// Whether a NewNet shot may start from the eye position V its client sent. The
+// client's eye is smoothed (steps, crouching, view bob) and the server's isn't, so
+// the height is judged against the range a smoothed eye can be in.
+final function bool IsReasonableFireStart(Pawn P, vector V)
+{
+    local vector D;
+
+    if(P == None)
+        return true;
+
+    D = V - P.Location;
+    D.Z -= P.BaseEyeHeight;
+    return D.X*D.X + D.Y*D.Y < 1250.0 && Abs(D.Z) < 50.0;
+}
+
 
 function SetupTeamOverlay()
 {
