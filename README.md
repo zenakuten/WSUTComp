@@ -32,7 +32,6 @@ V33
   - Fixed shots fired on stairs, lifts, or while being knocked back going slightly off target
   - Held alt-fire on the SSR and Flak Cannon now registers as accurately as single clicks
   - Classic sniper now hits where your crosshair was when you fired, and headshots on moving targets register correctly
-  - Fixed a bug where another player joining could throw off your ping prediction, which affected NewNet shot timing
  - Ping counter fixes (not netcode)
    - No longer underreports to ~88% while on foot
    - Fixed in-vehicle ping reporting 0 which skewed the average down with each consecutive measurement
