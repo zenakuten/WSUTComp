@@ -35,6 +35,7 @@ V33
  - Ping counter fixes (not netcode)
    - No longer underreports to ~88% while on foot
    - Fixed in-vehicle ping reporting 0 which skewed the average down with each consecutive measurement
+   - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/505
 
 V32
 - bump utcomp and 3spn version labels to v32
