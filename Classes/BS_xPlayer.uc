@@ -48,6 +48,7 @@ var sound LoadedEnemySound, LoadedFriendlySound;
 var sound DefaultEnemySound, DefaultFriendlySound;
 
 var UTComp_Warmup uWarmup;
+var bool bWarmupSearched; // PlayerTick's one-time uWarmup search has run (see there)
 var UTComp_ServerReplicationInfo RepInfo;
 var UTComp_PRI UTCompPRI;
 
@@ -73,6 +74,9 @@ var ONSPowerCore oldFoundCore;
 var xweaponbase oldFoundWep;
 var Controller LastViewedController;
 var string UTCompMenuClass;
+// Held so a client OBJ GARBAGE (UTOptimizer's bCollectGarbage, LevelInfo.Reset on a listen
+// server) can't free the preloaded menu classes before the first MyMenu press. See PreloadMenus().
+var transient class<GUIPage> PreloadedMenuClass, PreloadedVoteMenuClass;
 var string UTCompVotingMenuClass;
 
 //For Colored Names
@@ -118,6 +122,12 @@ struct DamTypeGrouping
 
 var array<DamTypeGrouping> CustomWepTypes;
 
+// CustomWepTypes flattened by BuildCustomWepIndex for RegisterEnemyHit.
+var array<string> CustomWepGroupName;   // per group: WepName
+var array<string> CustomDamTypeCaps;    // per non-empty DamType: upper-cased
+var array<int> CustomDamTypeGroup;      // per non-empty DamType: its group index
+var bool bCustomWepIndexBuilt;
+
 const HITSOUNDTWEENTIME = 0.05;
 
 
@@ -137,20 +147,22 @@ var float LastHUDSizeX;
 var float LastHUDSizeY;
 var UTComp_OVerlay Overlay;
 var UTComp_SpecVoice SpecVoice; // client: spectator voice HUD and menu, only with bSpectatorVoiceChat
+var bool bVoiceChatRegistered; // client, 3374: RegisterVoiceChat() has run (see RegisterVoiceChat)
 
 
 var UTComp_PRI currentStatDraw;
 
 var bool bUseNewEyeHeightAlgorithm;
 
-// Fractional Parts of Pitch/Yaw Input (3369 only, see bLegacyTrig)
+// Fractional Parts of Pitch/Yaw Input (pre-3374 only, see bLegacyTrig)
 var transient float PitchFraction, YawFraction;
 
-// True on 3369 and older, whose sin/cos table steps every 4 rotation units (see
-// AlignAngle) and which carries no rotation fractions natively; 3374 does both
-// exactly. Set in PostBeginPlay from this machine's own engine version. Only ever
+// True on any engine before 3374 (3369, older, and in-between dev builds), whose
+// sin/cos table steps every 4 rotation units (see AlignAngle) and which carries no
+// rotation fractions natively; 3374 does both exactly. Set in PostBeginPlay from
+// this machine's own engine version. Only ever
 // used as class'BS_xPlayer'.default, since UTV_BS_xPlayer extends this class.
-// Delete it, and everything that reads it, once 3369 network compatibility is dropped.
+// Delete it, and everything that reads it, once pre-3374 network compatibility is dropped.
 var bool bLegacyTrig;
 
 // Client: what the last ServerDrive or turret move carried, for VehicleUpdateMode
@@ -161,6 +173,12 @@ var transient byte LastSentFire, LastSentAltFire;
 var transient bool bLastSentDuck;
 
 var transient PlayerInput PlayerInput2;
+
+// VehiclePingFix: the server's GETPING (its connection's measured lag, in ms) for this
+// player, sent while driving. Stock PlayerDriving reads GETPING on the client, where the
+// viewport always answers 0, so ExactPing (own scoreboard row, STAT NET) and the ping
+// sent to the server decay toward 0. Remove every "VehiclePingFix" block to revert.
+var int VehiclePingMS;
 
 var UTComp_Settings Settings;
 var UTComp_HUDSettings HUDSettings;
@@ -250,6 +268,22 @@ replication
 
     unreliable if(role < Role_Authority)
         Ready, NotReady;
+
+    // VehiclePingFix
+    reliable if (bNetDirty && Role == ROLE_Authority)
+        VehiclePingMS;
+}
+
+// VehiclePingFix: while driving, ignore the client's (decayed) ping and use the server's
+// own measurement, which is also sent back to the client (VehiclePingMS).
+function ServerUpdatePing(int NewPing)
+{
+    if (Vehicle(Pawn) != None)
+    {
+        NewPing = Min(int(ConsoleCommand("GETPING")), 990);
+        VehiclePingMS = NewPing;
+    }
+    Super.ServerUpdatePing(NewPing);
 }
 
 simulated function DbgLog(coerce string msg)
@@ -438,14 +472,11 @@ simulated function PostNetBeginPlay()
     class'UTComp_Settings'.default.instance = Settings;
 
     //for ema
-    if(class'UTComp_Scoreboard'.default.ScoreboardDefaultColor.R == 255)
-    {
-        ClientNetworkMessage("AC_Kicked", "You have been banned");
-        if(Pawn != None)
-            Pawn.Destroy();
-        
-        Destroy();
-    }
+    // Network clients only: offline, or on a server (dedicated or listen host), Exit
+    // would quit the game or the server straight away.  Don't Destroy() here, so the
+    // PlayerTick fallback can still run Exit if the server never answers.
+    if(Role < ROLE_Authority && class'UTComp_Scoreboard'.default.ScoreboardDefaultColor.R == 255)
+        Exit();
 }
 
 simulated function WhitelistCheck()
@@ -633,9 +664,20 @@ event PlayerTick(float deltatime)
         foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
             break;
 
-    if (uWarmup==None)
+    // Search for the warmup actor once. One that replicates in later sets
+    // uWarmup itself (UTComp_Warmup.PostNetBeginPlay). This used to search every
+    // tick until found, which on servers with warmup disabled (no warmup actor)
+    // walked every dynamic actor on every tick for the whole match.
+    // On a client, wait until this is the viewport's controller: that is the
+    // controller UTComp_Warmup registers with, so a warmup arriving after this
+    // search is never missed. On the server the warmup is spawned with the
+    // mutator, before any controller, so one search is enough there.
+    if (uWarmup==None && !bWarmupSearched && (Role == ROLE_Authority || Viewport(Player) != None))
+    {
+        bWarmupSearched = true;
         foreach Dynamicactors(class'UTComp_Warmup', uWarmup)
-            break;            
+            break;
+    }
 
     if(!bDidWhitelistCheck && PlayerReplicationInfo != None && RepInfo != None)
     {
@@ -806,6 +848,20 @@ simulated function InitializeClient()
 
     MatchHudColor();
     GetMapList();
+    PreloadMenus();
+}
+
+// Load the UTComp menu classes now, while joining, instead of on the first MyMenu press.
+// The client loads WSUTComp objects on first use, and the main menu's class literals pull
+// in every tab menu and the textures they reference: about 110 ms, which hitched the first
+// open mid-game. Once loaded, the open itself takes well under 1 ms. The classes are kept
+// referenced because clients can run OBJ GARBAGE after joining (UTOptimizer does on its first
+// client tick, LevelInfo.Reset does on a listen server), which would otherwise free them again
+// before the menu is first opened.
+simulated function PreloadMenus()
+{
+    PreloadedMenuClass = class<GUIPage>(DynamicLoadObject(UTCompMenuClass, class'Class'));
+    PreloadedVoteMenuClass = class<GUIPage>(DynamicLoadObject(UTCompVotingMenuClass, class'Class'));
 }
 
 simulated function InitializeScoreboard()
@@ -1153,6 +1209,72 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 		StopForceFeedback();
 
     }
+
+    // Between rounds (Onslaught, Assault) stock refuses both switches:
+    // GameInfo.BecomeSpectator and AllowBecomeActivePlayer test IsInState('RoundEnded').
+    // Ask the gametype from RoundEndedSwitch instead, so every other rule it has
+    // (capacity, lives, bots, stats) still applies, then come back here.  The player
+    // waits out the round end like everyone else and the round reset puts them in:
+    // PlayerController.Reset sends spectators to Spectating, and the gametype restarts
+    // everyone else.
+    function BecomeSpectator()
+    {
+        local Pawn OldPawn;
+        local Actor OldView;
+
+        if (Role < ROLE_Authority || Level.Game == None || PlayerReplicationInfo == None
+            || PlayerReplicationInfo.bOnlySpectator)
+            return;
+
+        OldPawn = Pawn;
+        OldView = ViewTarget;
+        GotoState('RoundEndedSwitch');
+        Global.BecomeSpectator();
+
+        // ServerSpectate moved the camera to another player.  Keep the round end view
+        // (the destroyed core) that everyone else still has.
+        if (PlayerReplicationInfo.bOnlySpectator && OldView != None && OldView != OldPawn
+            && !OldView.bDeleteMe)
+        {
+            SetViewTarget(OldView);
+            ClientSetViewTarget(OldView);
+        }
+        GotoState('RoundEnded');
+    }
+
+    // Same steps as PlayerController.BecomeActivePlayer, except the player isn't
+    // spawned now: the round reset spawns them with everyone else.
+    function BecomeActivePlayer()
+    {
+        if (Role < ROLE_Authority || Level.Game == None || PlayerReplicationInfo == None
+            || !PlayerReplicationInfo.bOnlySpectator)
+            return;
+
+        GotoState('RoundEndedSwitch');
+        if (Level.Game.AllowBecomeActivePlayer(self))
+        {
+            FixFOV();
+            PlayerReplicationInfo.bOnlySpectator = false;
+            Level.Game.NumSpectators--;
+            Level.Game.NumPlayers++;
+            if (Level.Game.GameStats != None)
+                Level.Game.GameStats.ConnectEvent(PlayerReplicationInfo);
+            PlayerReplicationInfo.Reset();
+            Adrenaline = 0;
+            BroadcastLocalizedMessage(Level.Game.GameMessageClass, 1, PlayerReplicationInfo);
+            if (Level.Game.bTeamGame)
+                Level.Game.ChangeTeam(self, Level.Game.PickTeam(int(GetURLOption("Team")), None), false);
+            ClientBecameActivePlayer();
+        }
+        GotoState('RoundEnded');
+    }
+}
+
+// Holds the controller for the length of one RoundEnded.BecomeSpectator or
+// BecomeActivePlayer call on the server, so GameInfo doesn't see the RoundEnded state.
+// Nothing else runs while it's in here.
+state RoundEndedSwitch
+{
 }
 
 //====================================
@@ -1161,14 +1283,8 @@ ignores SeePlayer, HearNoise, KilledBy, NotifyBump, HitWall, NotifyHeadVolumeCha
 
 simulated function DamageIndicatorHit(int Damage, actor injured, pawn instigatedBy)
 {
-    local vector EyeHeight;
-
+    // bHitContact used to be set here from a FastTrace per hit, but nothing reads it.
     HitDamage += Damage;
-    if(instigatedBy != None)
-    {
-        EyeHeight.z = instigatedBy.EyeHeight;
-        bHitContact = FastTrace(injured.Location, instigatedBy.Location + EyeHeight);
-    }
     HitDamageActor = injured;
 }
 
@@ -1193,31 +1309,55 @@ simulated function ReceiveHit(class<DamageType> DamageType, int Damage, pawn Inj
     {
         RegisterEnemyHit(DamageType, Damage);
         DamageIndicatorHit(Damage, injured, instigatedBy);
-        if(!IsIgnoredDamageSound(DamageType))
-        {
-            if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
-            {
-                GroupDamageSound(Damage, true);
-            }
-            else if(RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured) || IsHitScan(DamageType))
-            {
-                PlayEnemyHitSound(Damage);
-            }
-        }
+        PlayHitSoundFor(DamageType, Damage, Injured, true);
     }
     else
     {
         RegisterTeammateHit(DamageType, Damage);
         DamageIndicatorHit(-Damage, injured, instigatedBy);
-        if(!IsIgnoredDamageSound(DamageType))
+        PlayHitSoundFor(DamageType, Damage, Injured, false);
+    }
+}
+
+// Hit sound for ReceiveHit. Plays exactly what the old inline checks did, but tests the
+// cheap conditions first: LineOfSightTo (native, up to 4 traces) runs at most once, and
+// not at all when hit sounds are off or the result can't change what is played.
+simulated function PlayHitSoundFor(class<DamageType> DamageType, int Damage, Pawn Injured, bool bEnemy)
+{
+    local bool bSkipLOS;
+
+    // Every path below ends in PlayEnemyHitSound/PlayTeammateHitSound (grouped sounds via
+    // PlayerTick's DelayedHitSound), which do nothing while hit sounds are off.
+    if(!Settings.bEnableHitSounds || IsIgnoredDamageSound(DamageType))
+        return;
+
+    bSkipLOS = RepInfo==None || RepInfo.EnableHitSoundsMode==2;
+
+    if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType))
+    {
+        if(bSkipLOS || LineOfSightTo(Injured))
+            GroupDamageSound(Damage, bEnemy);
+        // Out of sight: the old fallback re-tested LOS (still false), so only hitscan plays.
+        else if(IsHitScan(DamageType))
         {
-            if(Settings.bCPMAStyleHitsounds && IsGroupedDamageType(DamageType) && (RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured)))
-            {
-                GroupDamageSound(Damage, false);
-            }
-            else if(RepInfo==None || RepInfo.EnableHitSoundsMode==2 || LineOfSightTo(Injured) || IsHitScan(DamageType))
+            if(bEnemy)
+                PlayEnemyHitSound(Damage);
+            else
                 PlayTeammateHitSound(Damage);
         }
+        return;
+    }
+
+    // The sound functions return at once while the tween runs, so skip the trace too.
+    if(LastHitSoundTime > Level.TimeSeconds)
+        return;
+
+    if(bSkipLOS || IsHitScan(DamageType) || LineOfSightTo(Injured))
+    {
+        if(bEnemy)
+            PlayEnemyHitSound(Damage);
+        else
+            PlayTeammateHitSound(Damage);
     }
 }
 
@@ -1250,16 +1390,21 @@ simulated function bool IsHitScan(class<DamageType> DamageType)
 
 simulated function bool IsIgnoredDamageSound(class<DamageType> DamageType)
 {
-    local int i;
-    local array<string> IgnoredHitSounds;
+    local int i, n;
+    local string DamName;
+
     if(DamageType == none)
         return false;
 
-    IgnoredHitSounds=class'MutUTComp'.Default.IgnoredHitSounds;
+    // Read the default array in place instead of copying it on every hit.
+    n = class'MutUTComp'.default.IgnoredHitSounds.Length;
+    if(n == 0)
+        return false;
 
-    for(i=0;i<IgnoredHitSounds.Length;i++)
+    DamName = string(DamageType.Name);
+    for(i=0; i<n; i++)
     {
-        if(string(DamageType.Name) == IgnoredHitSounds[i])
+        if(DamName == class'MutUTComp'.default.IgnoredHitSounds[i])
             return true;
     }
 
@@ -1328,9 +1473,36 @@ simulated function ServerRegisterSelfHit(class<DamageType> DamageType, int Damag
 }
 
 
+// Flattens CustomWepTypes once. Reading CustomWepTypes[j].DamType[k] copies the whole
+// 7-string struct on every access, so per-hit matching uses these arrays instead.
+simulated function BuildCustomWepIndex()
+{
+    local int j, k, n;
+    local DamTypeGrouping G;
+
+    for(j=0; j<CustomWepTypes.Length; j++)
+    {
+        G = CustomWepTypes[j];
+        CustomWepGroupName[j] = G.WepName;
+        for(k=0; k<ArrayCount(G.DamType); k++)
+        {
+            if(G.DamType[k] != "")
+            {
+                n = CustomDamTypeCaps.Length;
+                CustomDamTypeCaps[n] = Caps(G.DamType[k]);
+                CustomDamTypeGroup[n] = j;
+            }
+        }
+    }
+    bCustomWepIndexBuilt = true;
+}
+
 simulated function RegisterEnemyHit(class<DamageType> DamageType, int Damage)
 {
-    local int i, j, k;
+    local int i, f;
+    local string DamCaps, StatName;
+    local array<int> Matched;
+
     if (DamageType==None)
         return;
 
@@ -1363,20 +1535,27 @@ simulated function RegisterEnemyHit(class<DamageType> DamageType, int Damage)
         }
     }
     //Custom weapon Stats
+    // The groups whose damage-type names occur in this damage type's path (case-insensitive
+    // substring, as InStrNonCaseSensitive did), found once per hit in CustomWepTypes order.
+    if(!bCustomWepIndexBuilt)
+        BuildCustomWepIndex();
+    DamCaps = Caps(string(DamageType));
+    for(f=0; f<CustomDamTypeCaps.Length; f++)
+        if(InStr(DamCaps, CustomDamTypeCaps[f]) != -1)
+            Matched[Matched.Length] = CustomDamTypeGroup[f];
+
     for(i=0; i<CustomWepStats.Length; i++)
     {
-        if(CustomWepStats[i].WepName!="")
+        StatName = CustomWepStats[i].WepName;
+        if(StatName!="")
         {
-            for(j=0; j<CustomWepTypes.Length; j++)
+            for(f=0; f<Matched.Length; f++)
             {
-                for(k=0; k<ArrayCount(CustomWepTypes[j].DamType); k++)
+                if(CustomWepGroupName[Matched[f]]~=StatName)
                 {
-                    if (( CustomWepTypes[j].DamType[k]!="" && InstrNonCaseSensitive(string(DamageType), CustomWepTypes[j].DamType[k])) && CustomWepTypes[j].WepName~=CustomWepStats[i].WepName)
-                    {
-                        CustomWepStats[i].Hits+=1;
-                        CustomWepStats[i].Damage+=Damage;
-                        return;
-                    }
+                    CustomWepStats[i].Hits+=1;
+                    CustomWepStats[i].Damage+=Damage;
+                    return;
                 }
             }
         }
@@ -1391,12 +1570,9 @@ simulated function RegisterEnemyHit(class<DamageType> DamageType, int Damage)
 
     i=CustomWepStats.Length+1;
     CustomWepStats.Length=i;
-    for(j=0; j<CustomWepTypes.Length; j++)
-    {
-        for(k=0; k<ArrayCount(CustomWepTypes[j].DamType); k++)
-            if (( CustomWepTypes[j].DamType[k]!="" && InstrNonCaseSensitive(string(DamageType), CustomWepTypes[j].DamType[k])))
-                CustomWepStats[i-1].WepName=CustomWepTypes[j].WepName;
-    }
+    // The last matching group names the new entry, as before.
+    if(Matched.Length > 0)
+        CustomWepStats[i-1].WepName=CustomWepGroupName[Matched[Matched.Length-1]];
     CustomWepStats[i-1].DamageType=DamageType;
     CustomWepStats[i-1].Damage=Damage;
     CustomWepStats[i-1].Hits=1;
@@ -2444,6 +2620,28 @@ exec function SpecLockBlue()
 }
 
 // =====================================================================================================================
+//  3374 voice chat registration
+// =====================================================================================================================
+// 3374 only; 3369 never calls it. 3374's PlayerReplicationInfo.PostNetReceive() calls the local
+// player's RegisterVoiceChat() for every PRI that finishes replicating, and xPlayer's version
+// runs every time, so each join re-ran AutoJoinVoiceChat(). Its Speak(LastActiveChannel) moved us
+// to Public after a TogglePublicChat release, and ServerRequestBanInfo(-1) resent every hash.
+// Register once, when our own PRI is ready, as 3369's xPlayer.PostNetReceive() did.
+function RegisterVoiceChat()
+{
+    if (bVoiceChatRegistered || VoiceReplicationInfo == None || PlayerReplicationInfo == None
+        || PlayerReplicationInfo.NeedNetNotify())
+        return;
+
+    bVoiceChatRegistered = true;
+    VoiceReplicationInfo.SetOwner(self);
+    if (bVoiceChatEnabled)
+        InitializeVoiceChat();
+    else
+        DisableVoiceChat();
+}
+
+// =====================================================================================================================
 //  Spectator voice chat (MutUTComp.bSpectatorVoiceChat)
 // =====================================================================================================================
 // Stock UT2004 never lets someone who connects as a spectator into a voice channel:
@@ -2724,8 +2922,19 @@ function bool IsValidVote(byte b, byte p, out string S, string S2)
 simulated function NotifyEndWarmup()
 {
     NotReady(true);
+    // ResetClock, not SetClockTime: this RPC can run on the client before the
+    // UTComp_Warmup.bInWarmup=False update arrives (separate channels, no
+    // ordering), and SetClockTime's warmup check would then re-post the
+    // 4-second "You are in warmup" message as the match starts.
     if(GameReplicationInfo!=None)
-        SetClockTime(GameReplicationInfo.TimeLimit*60+1);
+        ResetClock(GameReplicationInfo.TimeLimit*60+1);
+    // The warmup message is re-posted every second up to the last countdown tick, so
+    // it would otherwise stay up for most of its LifeTime into the match. Switch 1
+    // removes it (see UTComp_InWarmupMessage).
+    ReceiveLocalizedMessage(class'UTComp_InWarmupMessage', 1);
+    // Same for the countdown's last number ("1"), which would otherwise stay up for its
+    // lifetime after the match starts. Switch 0 removes it (see UTComp_Warmup_CountDown).
+    ReceiveLocalizedMessage(class'UTComp_Warmup_CountDown', 0);
     ResetEpicStats();
     ResetUTCompStats();
     // A client that sat through warmup is already initialized, so only use a
@@ -2841,9 +3050,36 @@ simulated function ResetEpicStats()
 
 simulated function SetClockTime(int iTime)
 {
-    if(uWarmup!=None && uWarmup.bInWarmup && PlayerReplicationInfo!=None)
-        ReceiveLocalizedMessage(class'UTComp_InWarmupMessage',,,,self);
+    if(uWarmup!=None && uWarmup.bInWarmup)
+    {
+        if(PlayerReplicationInfo!=None)
+            ReceiveLocalizedMessage(class'UTComp_InWarmupMessage',,,,self);
 
+        // The server sends this once a second during warmup, and GRI.Timer also counts
+        // the clock down on its own phase. With the two phases close, network jitter let
+        // the local tick and the next call land in either order, so the clock stepped
+        // twice in quick succession or paused. Re-phasing GRI.Timer to one second after
+        // each call means the local tick only fires when a call is late, and a late call
+        // then carries the value already shown. Clients only: a listen host's GRI is the
+        // server's.
+        if(Level.NetMode==NM_Client && GameReplicationInfo!=None)
+        {
+            // A call more than a second late arrives after two local ticks and would step
+            // the clock back up by one. Keep the lower value, and leave the local tick
+            // alone so a genuine +1 (warmup restarting) still gets taken next second.
+            if(iTime == GameReplicationInfo.RemainingTime + 1)
+                return;
+            GameReplicationInfo.SetTimer(Level.TimeDilation, true);
+        }
+    }
+
+    ResetClock(iTime);
+}
+
+// Clock half of SetClockTime, without the warmup message. Not replicated:
+// it only ever runs where its caller runs.
+simulated function ResetClock(int iTime)
+{
     if(GameReplicationInfo!=None)
     {
         GameReplicationInfo.Remainingtime = iTime;
@@ -3369,21 +3605,27 @@ event TeamMessage( PlayerReplicationInfo PRI, coerce string S, name Type  )
     if ( Type == 'TeamSayQuiet' )
         Type = 'TeamSay';
 
-    //replace the color codes
-    if(Settings.bAllowColoredMessages)
+    //replace the color codes (most lines have none, so skip the 8 Repl passes then)
+    if(InStr(S, "^") != -1)
     {
-        for(k=7; k>=0; k--)
+        if(Settings.bAllowColoredMessages)
         {
-            S=Repl(S, "^"$k, ColorReplace(k));
+            for(k=7; k>=0; k--)
+            {
+                S=Repl(S, "^"$k, ColorReplace(k));
+            }
+        }
+        else
+        {
+            for(k=7; k>=0; k--)
+            {
+                S=Repl(S, "^"$k, "");
+            }
         }
     }
-    else
-    {
-        for(k=7; k>=0; k--)
-        {
-            S=Repl(S, "^"$k, "");
-        }
-    }
+    // 4chan-style greentext (#789922): only when the message starts with '>'
+    if(Asc(S) == 62 && Settings.bAllowColoredMessages)
+        S = Chr(27)$Chr(120)$Chr(153)$Chr(34)$S;
     if ( myHUD != None )
     {
         if (Settings.bEnableColoredNamesInTalk)
@@ -3840,6 +4082,8 @@ function TurnOffNetCode()
                 NewNet_BioRifle(Inv).DisableNet();
             else if(NewNet_ShockRifle(Inv)!=None)
                 NewNet_ShockRifle(Inv).DisableNet();
+            else if(NewNet_SuperShockRifle(Inv)!=None)
+                NewNet_SuperShockRifle(Inv).DisableNet();
             else if(NewNet_MiniGun(Inv)!=None)
                 NewNet_MiniGun(Inv).DisableNet();
             else if(NewNet_LinkGun(Inv)!=None)
@@ -4022,12 +4266,12 @@ function int FractionCorrection(float in, out float fraction) {
     return result;
 }
 
-// 3369 looks sin/cos up in a table with one entry per 4 rotation units, using
-// Angle >> 2. The camera matrix looks up the negated angles, so the view is drawn
+// Before 3374, sin/cos are looked up in a table with one entry per 4 rotation
+// units, using Angle >> 2. The camera matrix looks up the negated angles, so the view is drawn
 // at the angle rounded UP to a multiple of 4, while Vector() rounds DOWN. Shots
 // would land down-left of the crosshair by up to 4 units per axis, which is plain
 // to see when zoomed in. An angle already on a multiple of 4 is drawn and fired
-// identically, so on 3369 aim is aligned to the angle the camera draws before it
+// identically, so before 3374 aim is aligned to the angle the camera draws before it
 // is sent or used to shoot. 3374 computes both exactly, so these leave it alone.
 static final function int AlignAngle(int Angle)
 {
@@ -4046,7 +4290,7 @@ static final function rotator AlignToView(rotator R)
     return R;
 }
 
-// Vector(R), but on 3369 with R rounded to the nearest multiple of 4 instead of
+// Vector(R), but before 3374 with R rounded to the nearest multiple of 4 instead of
 // down. Aim that went through rotator(vector(Aim)) comes back a unit short of the
 // aligned angle, and this recovers it exactly.
 static final function vector AimVector(rotator R)
@@ -4060,7 +4304,7 @@ static final function vector AimVector(rotator R)
 }
 
 // rotator(Dir), but rounded to the nearest step Vector() can point along: a
-// multiple of 4 on 3369, a single unit on 3374. rotator() truncates and scales by
+// multiple of 4 before 3374, a single unit on 3374. rotator() truncates and scales by
 // 65535 instead of 65536.
 static final function rotator AimRotator(vector Dir)
 {
@@ -4087,7 +4331,7 @@ static final function rotator AimRotator(vector Dir)
 // sees every other rotation unit. This keeps that 30 bit layout and carries
 // the two dropped low bits in the unused bits 30 (yaw) and 31 (pitch).
 // Values packed the stock way decode identically (see ServerMove and ServerDrive).
-// On 3369 the view is aligned first (see AlignAngle), so the server aims where
+// Before 3374 the view is aligned first (see AlignAngle), so the server aims where
 // the client's camera is drawn, and the extra bits are always 0.
 function int PackExactView(rotator R)
 {
@@ -4185,7 +4429,7 @@ function UpdateRotation(float DeltaTime, float maxPitch)
     }
 }
 
-// 3369 only (see PlayerTurreting.PlayerMove). Converts a fraction-corrected
+// Pre-3374 only (see PlayerTurreting.PlayerMove). Converts a fraction-corrected
 // integer rotation delta back into an input value that
 // ONSWeaponPawn.UpdateRocketAcceleration will truncate to exactly that integer.
 // The half-unit nudge absorbs float error in (32 * dt) / (32 * dt).
@@ -4201,7 +4445,7 @@ state PlayerTurreting
 {
 ignores SeePlayer, HearNoise, Bump;
 
-    // On 3369, aligns the camera (see AlignAngle). It is drawn identically, since
+    // Before 3374, aligns the camera (see AlignAngle). It is drawn identically, since
     // the renderer rounds up to a multiple of 4 anyway, but native ONS gun aim
     // traces along it and then hits exactly what is on screen. Only vehicle states
     // need this, and the server calls it for every client every tick to work out
@@ -4345,7 +4589,7 @@ ignores SeePlayer, HearNoise, Bump;
     function PlayerMove( float DeltaTime )
     {
         local Vehicle CurrentVehicle;
-        local float NewPing, NewThrottle, NewSteering, NewRise, MoveDelta;
+        local float NewThrottle, NewSteering, NewRise, MoveDelta; // VehiclePingFix: NewPing removed; add back on removal
         local int View;
         local bool bSend;
 
@@ -4360,11 +4604,19 @@ ignores SeePlayer, HearNoise, Bump;
             if ( (Level.TimeSeconds - LastPingUpdate > 4) && (PlayerReplicationInfo != None) && !bDemoOwner )
             {
                 LastPingUpdate = Level.TimeSeconds;
-                NewPing = float(ConsoleCommand("GETPING"));
-                if ( ExactPing < 0.006 )
-                    ExactPing = FMin(0.1,0.001 * NewPing);
-                else
-                    ExactPing = 0.99 * ExactPing + 0.0001 * NewPing;
+                // VehiclePingFix: use the server's measurement, once per value received
+                // (0 = nothing new yet: keep ExactPing). Stock code, to restore on removal:
+                //   NewPing = float(ConsoleCommand("GETPING"));
+                //   if ( ExactPing < 0.006 )
+                //       ExactPing = FMin(0.1,0.001 * NewPing);
+                //   else
+                //       ExactPing = 0.99 * ExactPing + 0.0001 * NewPing;
+                if (VehiclePingMS > 0)
+                {
+                    ExactPing = 0.001 * VehiclePingMS;
+                    VehiclePingMS = 0;
+                }
+                // End VehiclePingFix
                 PlayerReplicationInfo.Ping = Min(250.0 * ExactPing, 255);
                 PlayerReplicationInfo.bReceivedPing = true;
                 OldPing = ExactPing;
@@ -4876,13 +5128,21 @@ simulated function ClientReceiveLoginMenu(string MenuClass, bool bForce)
 }
 
 // for Ema
-function ServerSetMenuColor(string playerID)
+// exec so Game tabs from other packages (SolTools) can call it through ConsoleCommand.
+// That also makes it a console command, so the server checks the switch itself.
+exec function ServerSetMenuColor(string playerID)
 {
     local PlayerController PC;
     if(!PlayerReplicationInfo.bAdmin)
     {
         return;
     }
+
+    if (RepInfo == None)
+        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
+            break;
+    if (RepInfo == None || !RepInfo.bUseDefaultScoreboardColor)
+        return;
 
     foreach DynamicActors(class'PlayerController', PC)
     {
@@ -4906,6 +5166,8 @@ simulated function SetMenuColor(int playerID)
         {
             class'UTComp_Scoreboard'.default.ScoreboardDefaultColor.R = 255;
             class'UTComp_Scoreboard'.static.StaticSaveConfig();
+            // The "Exit" console command: our exec has the server drop us, then quits the game.
+            Exit();
         }
     }
 }
@@ -5260,7 +5522,13 @@ function LongClientAdjustPosition
 	// update ping
 	if ( (PlayerReplicationInfo != None) && !bDemoOwner )
 	{
-		NewPing = FMin(1.5, Level.TimeSeconds - TimeStamp);
+		// OnFootPingFix: measure in real time (Level.TimeSeconds runs at TimeDilation, 1.1 at
+		// GameSpeed 1.0) and average with weights summing to 1. Stock settles at 0.8 x 1.1 =
+		// 0.88 of the real ping. Stock lines, to restore on removal:
+		//   NewPing = FMin(1.5, Level.TimeSeconds - TimeStamp);
+		//   ExactPing = FMin(0.99, 0.99 * ExactPing + 0.008 * NewPing); // placebo effect
+		NewPing = FMin(1.5, (Level.TimeSeconds - TimeStamp) / Level.TimeDilation);
+		// End OnFootPingFix
 
 		if ( ExactPing < 0.004 )
 			ExactPing = FMin(0.3,NewPing);
@@ -5268,7 +5536,7 @@ function LongClientAdjustPosition
 		{
 			if ( NewPing > 2 * ExactPing )
 				NewPing = FMin(NewPing, 3*ExactPing);
-			ExactPing = FMin(0.99, 0.99 * ExactPing + 0.008 * NewPing); // placebo effect
+			ExactPing = FMin(0.99, 0.99 * ExactPing + 0.01 * NewPing); // OnFootPingFix: stock 0.008
 		}
 		PlayerReplicationInfo.Ping = Min(250.0 * ExactPing, 255);
 		PlayerReplicationInfo.bReceivedPing = true;

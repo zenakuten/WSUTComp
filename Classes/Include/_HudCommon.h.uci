@@ -42,6 +42,13 @@ var texture HUDZAxisTex;
 // 3p crosshair "shot blocked" greying: when the 3p aim is obstructed (Is3pShotBlocked),
 // we recolor the player's crosshair grey by wrapping its texture in this ColorModifier --
 // their custom crosshair is kept, just tinted, not replaced. bGrey3pCrosshair is set only
-// around the crosshair draw (see DrawCrosshairChecked / the DrawSpriteWidget override).
+// around the crosshair draw (see DrawCrosshairChecked / DrawCrosshairSprite).
 var bool bGrey3pCrosshair;
 var ColorModifier Crosshair3pGreyMod;
+
+// Damage number (DamageIndicatorType 2): font, text and size only change with the
+// resolution or the damage total, so they are cached instead of rebuilt every frame.
+var float DmgNumClipX, DmgNumXL, DmgNumYL;
+var Font DmgNumFont;
+var int DmgNumValue;
+var string DmgNumText;

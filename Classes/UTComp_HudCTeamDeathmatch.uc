@@ -93,7 +93,7 @@ simulated function DrawUTCompCrosshair (Canvas C)
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
     for(i=0; i<CHTexture.Length; i++)
-        DrawSpriteWidget (C, CHTexture[i]);
+        DrawCrosshairSprite(C, CHTexture[i]);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
 
@@ -180,7 +180,7 @@ simulated function OldDrawCrosshair(Canvas C)
     HudScale=1;
     OldW = C.ColorModulate.W;
     C.ColorModulate.W = 1;
-    DrawSpriteWidget (C, CHTexture);
+    DrawCrosshairSprite(C, CHTexture);
     C.ColorModulate.W = OldW;
 	HudScale=OldScale;
     CHTexture.TextureScale = NormalScale;

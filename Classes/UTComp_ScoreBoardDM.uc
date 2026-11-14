@@ -6,9 +6,73 @@ var font SmallerFont;
 var UTComp_ServerReplicationInfo RepInfo;
 var string KillsText;
 
+// Warmup actor. Stays None when the server has warmup disabled (see PrepareFrame).
+var UTComp_Warmup uWarmup;
+var transient float NextWarmupSearchTime;
+// Emoticon replication info to draw names with this frame, None = plain text.
+var transient EmoticonsReplicationInfo FrameEmoteRep;
+// Cached "Press <key> for next player." text (see GetNextKeyString).
+var transient string NextKeyString;
+var transient float NextKeyStringTime;
+
 // Emoticon rendering, shared with the HUD, so player names on the scoreboard
 // render emoticons the same way chat does.
 #include Classes\Include\EmoticonsDraw.uci
+
+// Lookups shared by every row, done once at the top of UpdateScoreBoard instead
+// of once per row.
+simulated function PrepareFrame(Canvas C)
+{
+    local BS_xPlayer P;
+
+    P = BS_xPlayer(Owner);
+    if (RepInfo == None)
+    {
+        if (P != None)
+            RepInfo = P.RepInfo;
+        if (RepInfo == None)
+            foreach DynamicActors(class'UTComp_ServerReplicationInfo', RepInfo)
+                break;
+    }
+
+    // BS_xPlayer.PlayerTick already searches for the warmup actor, so reuse its
+    // result. Searching here walked every dynamic actor once per row per frame
+    // whenever the server has warmup disabled, because the actor never exists.
+    if (uWarmup == None)
+    {
+        if (P != None)
+            uWarmup = P.uWarmup;
+        else if (Level.TimeSeconds >= NextWarmupSearchTime)
+        {
+            NextWarmupSearchTime = Level.TimeSeconds + 1.0;
+            foreach DynamicActors(class'UTComp_Warmup', uWarmup)
+                break;
+        }
+    }
+
+    FrameEmoteRep = GetEmoteReplicationIfEnabled();
+}
+
+// The stock sort (ScoreBoard.SortPRIArray) is an exchange sort that calls InOrder
+// for every pair: n(n-1)/2 script calls per frame even when nothing moved, and it
+// runs every frame (scoreboard and HUD rank). This insertion sort calls InOrder
+// n-1 times on the already sorted array it gets almost every frame. It is stable,
+// so tied players keep their current order.
+simulated function SortPRIArray()
+{
+    local int i, j, n;
+    local PlayerReplicationInfo P;
+
+    n = GRI.PRIArray.Length;
+    for (i = 1; i < n; i++)
+    {
+        P = GRI.PRIArray[i];
+        for (j = i; j > 0 && !InOrder(GRI.PRIArray[j-1], P); j--)
+            GRI.PRIArray[j] = GRI.PRIArray[j-1];
+        if (j != i)
+            GRI.PRIArray[j] = P;
+    }
+}
 
 // Returns the emoticon replication info to draw names with, or None when
 // emoticons are disabled server-side, disabled client-side, or not replicated.
@@ -41,7 +105,7 @@ simulated function bool TryDrawEmoteName(Canvas C, coerce string Name)
     local EmoticonsReplicationInfo rep;
     local EmoticonsParsedText P;
 
-    rep = GetEmoteReplicationIfEnabled();
+    rep = FrameEmoteRep; // set by PrepareFrame
     if (rep == None)
         return false;
 
@@ -60,11 +124,9 @@ function DrawNetInfo(Canvas Canvas,int FontReduction,int HeaderOffsetY,int Playe
 	local float XL,YL;
 	local int i;
 	local bool bHaveHalfFont, bDrawFPH, bDrawPL;
-	local utcomp_Warmup uWarmup;
     local UTComp_PRI uPRI;
 
-    foreach dynamicactors(class'utcomp_warmup', uWarmup)
-        break;
+	// uWarmup is cached by PrepareFrame.
 	// draw admins
 	if ( GRI.bMatchHasBegun )
 	{
@@ -282,9 +344,7 @@ simulated event UpdateScoreBoard(Canvas Canvas)
 
 
 	OwnerPRI = PlayerController(Owner).PlayerReplicationInfo;
-    if (RepInfo==None)
-        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
-            break;
+    PrepareFrame(Canvas);
 
     for (i=0; i<GRI.PRIArray.Length; i++)
 	{
@@ -449,32 +509,16 @@ simulated event UpdateScoreBoard(Canvas Canvas)
 		ReducedFont = Canvas.Font;
 	}
 
+	// playername[] was filled by the loop above; only re-measure it in the
+	// (possibly reduced) name font and truncate.
 	for ( i=0; i<PlayerCount; i++ )
 	{
-		uPRI=class'UTComp_Util'.Static.GetUTCompPRI(GRI.PRIArray[i]);
-        if(class'UTComp_SCoreBoard'.default.bEnableColoredNamesOnScoreboard==True)
-        {
-           playername[i] = uPRI.ColoredName;
-           if(PlayerName[i]=="")
-              PlayerName[i]=GRI.PRIArray[i].PlayerName;
-        }
-        else
-            playername[i] = GRI.PRIArray[i].PlayerName;
 		Canvas.StrLen(playername[i], XL, YL);
 		if ( XL > MaxNamePos )
 			playername[i] = left(playername[i], MaxNamePos/XL * len(PlayerName[i]));
 	}
 	if ( OwnerOffset >= PlayerCount )
 	{
-		uPRI=class'UTComp_Util'.Static.GetUTCompPRI(GRI.PRIArray[OwnerOffset]);
-        if(class'UTComp_SCoreBoard'.default.bEnableColoredNamesOnScoreboard==True)
-        {
-           playername[OwnerOffset] = uPRI.ColoredName;
-           if(PlayerName[OwnerOffset]=="")
-              PlayerName[OwnerOffset]=GRI.PRIArray[OwnerOffset].PlayerName;
-        }
-        else
-            playername[OwnerOffset] = GRI.PRIArray[OwnerOffset].PlayerName;
 		Canvas.StrLen(playername[OwnerOffset], XL, YL);
 		if ( XL > MaxNamePos )
 			playername[OwnerOffset] = left(playername[OwnerOffset], MaxNamePos/XL * len(PlayerName[OwnerOffset]));
@@ -588,10 +632,7 @@ simulated event UpdateScoreBoard(Canvas Canvas)
         Canvas.DrawText(NetText,true);
     }
 
-    for ( i=0; i<GRI.PRIArray.Length; i++ )
-    {
-    	PRIArray[i] = GRI.PRIArray[i];
-    }
+	// PRIArray was already copied from GRI.PRIArray above.
 	DrawNetInfo(Canvas,FontReduction,HeaderOffsetY,PlayerBoxSizeY,BoxSpaceY,BoxTextOffsetY,OwnerOffset,PlayerCount,NetXPos);
 	DrawMatchID(Canvas,FontReduction);
 }
@@ -891,7 +932,7 @@ function DrawOtherStats(Canvas C)
     local float TmpY;
     local UTComp_PRI UxP;
     local array<int> toDrawStandard;
-    local string DrawString;
+    local string DrawString, PlainTitle;
     local float TextOffsetX;
     local float TextOffsetY;
     local bool bShouldDraw;
@@ -960,12 +1001,13 @@ function DrawOtherStats(Canvas C)
     C.SetDrawColor(255,255,255,255);
 
     //Player Text
-
+    // Measured without color codes; drawn colored when enabled.
+    PlainTitle = "Stats For"@GetNonColoredName(UxP)$"."@GetNextKeyString();
     if(class'UTComp_ScoreBoard'.default.bEnableColoredNamesOnScoreboard==True)
         DrawString = "Stats For"@UxP.ColoredName$class'UTComp_Util'.static.MakeColorCode(C.MakeColor(255,255,255))$"."@GetNextKeyString();
     else
-        DrawString = "Stats For"@GetNonColoredName(UxP)$"."@GetNextKeyString();
-    C.StrLen("Stats For"@GetNonColoredName(UxP)$"."@GetNextKeyString(),StrLenX, strLenY);
+        DrawString = PlainTitle;
+    C.StrLen(PlainTitle,StrLenX, strLenY);
     C.SetPos(StartPosX+2.5*(BoxSizeX+BorderSize)-0.5*StrLenX,StartPosY-(NumColumns+2)*(BorderSize+BoxSizeY));
     C.DrawText(DrawString);
 
@@ -1074,7 +1116,7 @@ function DrawStats(Canvas C)
     local float TmpY;
     local BS_xPlayer UxP;
     local array<int> toDrawStandard;
-    local string DrawString;
+    local string DrawString, PlainTitle;
     local float TextOffsetX;
     local float TextOffsetY;
     local bool bShouldDraw;
@@ -1150,11 +1192,13 @@ function DrawStats(Canvas C)
     //Draw Text
     C.SetDrawColor(255,255,255,255);
 
+    // Measured without color codes; drawn colored when enabled.
+    PlainTitle = "Stats For"@GetNonColoredName(UxP.UTCompPRI)$"."@GetNextKeyString();
     if(class'UTComp_ScoreBoard'.default.bEnableColoredNamesOnScoreboard==True)
         DrawString = "Stats For"@UxP.UTCompPRI.ColoredName$class'UTComp_Util'.static.MakeColorCode(C.MakeColor(255,255,255))$"."@GetNextKeyString();
     else
-        DrawString = "Stats For"@GetNonColoredName(UxP.UTCompPRI)$"."@GetNextKeyString();
-    C.StrLen("Stats For"@GetNonColoredName(UxP.UTCompPRI)$"."@GetNextKeyString(),StrLenX, strLenY);
+        DrawString = PlainTitle;
+    C.StrLen(PlainTitle,StrLenX, strLenY);
     C.SetPos(StartPosX+2.5*(BoxSizeX+BorderSize)-0.5*StrLenX,StartPosY-(NumColumns+2)*(BorderSize+BoxSizeY));
     C.DrawText(DrawString);
 
@@ -1268,17 +1312,16 @@ function DrawStats(Canvas C)
     C.DrawText("Damage Given:"@UxP.DamG);
 }
 
+// GetKeyBindName runs three ConsoleCommands, and this was called twice per frame
+// while stats are shown. The binding rarely changes, so refresh every 2 seconds.
 function string GetNextKeyString()
 {
-    local string key;
-    local color Col;
-
-    key = class'GameInfo'.Static.GetKeyBindName("NextStats", BS_xPlayer(owner));
-    col.R=255;
-    Col.G=255;
-    Col.B=255;
-
-    return "Press"@key@"for next player.";
+    if (NextKeyString == "" || Level.TimeSeconds >= NextKeyStringTime)
+    {
+        NextKeyString = "Press"@class'GameInfo'.Static.GetKeyBindName("NextStats", BS_xPlayer(owner))@"for next player.";
+        NextKeyStringTime = Level.TimeSeconds + 2.0;
+    }
+    return NextKeyString;
 }
 
 

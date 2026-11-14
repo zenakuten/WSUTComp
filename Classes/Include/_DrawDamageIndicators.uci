@@ -1,27 +1,39 @@
 
 simulated function DrawDamageIndicators(Canvas C)
 {
-    local float XL, YL;
-    local string Name;
-    
+    local BS_xPlayer PC;
+
     Super.DrawDamageIndicators(C);
-    
-    if(bHideHud || BS_xPlayer(PlayerOwner) == None || BS_xPlayer(PlayerOwner).HUDSettings.DamageIndicatorType != 2)
+
+    if(bHideHud)
         return;
 
-    if(BS_xPlayer(PlayerOwner).SumDamageTime + 1 <= Level.TimeSeconds)
+    PC = BS_xPlayer(PlayerOwner);
+    if(PC == None || PC.HUDSettings.DamageIndicatorType != 2 || PC.SumDamageTime + 1 <= Level.TimeSeconds)
         return;
-    
-    if(C.ClipX >= 1600)
-        C.Font = GetFontSizeIndex(C, -2);
-    else
-        C.Font = GetFontSizeIndex(C, -1);
 
-    C.DrawColor = class'Emitter_Damage'.static.ColorRamp(BS_xPlayer(PlayerOwner).SumDamage);
-    C.DrawColor.A = Clamp(int(((BS_xPlayer(PlayerOwner).SumDamageTime + 1) - Level.TimeSeconds) * 200), 1, 200);
+    // GetFontSizeIndex only depends on ClipX; the text size also depends on the value.
+    if(C.ClipX != DmgNumClipX || DmgNumFont == None)
+    {
+        DmgNumClipX = C.ClipX;
+        if(C.ClipX >= 1600)
+            DmgNumFont = GetFontSizeIndex(C, -2);
+        else
+            DmgNumFont = GetFontSizeIndex(C, -1);
+        DmgNumText = "";
+    }
+    C.Font = DmgNumFont;
 
-    Name = string(BS_xPlayer(PlayerOwner).SumDamage);
-    C.StrLen(Name, XL, YL);
-    C.SetPos((C.ClipX - XL) * 0.5, (C.ClipY - YL) * 0.46);
-    C.DrawTextClipped(Name);
+    if(DmgNumText == "" || PC.SumDamage != DmgNumValue)
+    {
+        DmgNumValue = PC.SumDamage;
+        DmgNumText = string(DmgNumValue);
+        C.StrLen(DmgNumText, DmgNumXL, DmgNumYL);
+    }
+
+    C.DrawColor = class'Emitter_Damage'.static.ColorRamp(DmgNumValue);
+    C.DrawColor.A = Clamp(int(((PC.SumDamageTime + 1) - Level.TimeSeconds) * 200), 1, 200);
+
+    C.SetPos((C.ClipX - DmgNumXL) * 0.5, (C.ClipY - DmgNumYL) * 0.46);
+    C.DrawTextClipped(DmgNumText);
 }

@@ -1,7 +1,8 @@
 
 class NewNet_ShockBeamFire extends UTComp_ShockBeamFire;
 
-var bool bUseReplicatedInfo;
+var bool bUseReplicatedInfo; // fire from the eye position the client sent (savedVec)
+var bool bUseReplicatedRot;  // fire along the aim the client sent (savedRot)
 var rotator savedRot;
 var vector savedVec;
 
@@ -234,9 +235,12 @@ function DoFireEffect()
 
     Instigator.MakeNoise(1.0);
 
-    if(bUseReplicatedInfo)
+    if(bUseReplicatedRot)
     {
-        StartTrace=savedVec;
+        if(bUseReplicatedInfo)
+            StartTrace=savedVec;
+        else
+            StartTrace = Instigator.Location + Instigator.EyePosition();
         R=SavedRot;
         if(Instigator.PointOfView())
         {
@@ -244,6 +248,7 @@ function DoFireEffect()
             R = rotator(vector(Aim) + VRand()*FRand()*Spread);
         }
         bUseReplicatedInfo=false;
+        bUseReplicatedRot=false;
 	}
     else
     {

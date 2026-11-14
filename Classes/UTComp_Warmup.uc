@@ -42,6 +42,25 @@ var array<UTComp_PSVisDummy> PSVisDummies;
 
 const iCOUNTDOWNSECONDS = 10;
 
+// Hands this actor to the local player when it arrives, so BS_xPlayer only has
+// to search for it once instead of every tick (see BS_xPlayer.PlayerTick).
+// Covers the case where the warmup replicates after that search ran. Runs on
+// clients once the initial properties are received, and on the server at spawn
+// (no local player exists yet then; a listen host's search finds it later).
+simulated event PostNetBeginPlay()
+{
+    local BS_xPlayer P;
+
+    Super.PostNetBeginPlay();
+
+    if (Level.NetMode == NM_DedicatedServer)
+        return;
+
+    P = BS_xPlayer(Level.GetLocalPlayerController());
+    if (P != None && P.uWarmup == None)
+        P.uWarmup = self;
+}
+
 
 function InitializeWarmup()
 {
@@ -53,7 +72,11 @@ function InitializeWarmup()
     bWarmupEnded=False;
     bInFinalCountDown=False;
     iFinalCountDown=0;
-    SetTimer(1.0, True);
+    // Timers run on game time, which is Level.TimeDilation (1.1 at normal game speed)
+    // times real time. A 1.0 rate made every warmup and countdown "second" 0.91s, out
+    // of step with the clients' clock and the match clock (both on real seconds, like
+    // GameInfo's own timer).
+    SetTimer(Level.TimeDilation, True);
     if(iWarmupTime<=0)
         bTimeUnlimitedWarmup=True;
     else
@@ -206,7 +229,7 @@ function Timer()
 
 function TimedRestart(int i)
 {
-    SetTimer(1.0, true);
+    SetTimer(Level.TimeDilation, true); // real seconds, see InitializeWarmup
     bWaitingOnRestart=True;
     RestartWaitTime = i;
 }
@@ -296,6 +319,9 @@ function BeginFinalCountdown()
 {
     iFinalCountDown=iCOUNTDOWNSECONDS;
     bInFinalCountDown=True;
+    // The match starts iCOUNTDOWNSECONDS+1 Timer ticks from now (see WarmupFinalization).
+    // Set here rather than in NoTimeLeftCheck so a ready-up start gets it too.
+    SetClientTimer(iCOUNTDOWNSECONDS+1);
     KillAllPlayers();
     ResetStats();
     if(iFinalCountDown<10)
@@ -647,7 +673,12 @@ function WarmupFinalization(int iTimeRemaining)
         bInFinalCountdown=False;
     }
     if(iFinalCountDown>0)
+    {
+        // Keeps the clock on the same number as the countdown message, and re-posts the
+        // "in warmup" message (BS_xPlayer.SetClockTime) so it stays up until the match starts.
+        SetClientTimer(iFinalCountDown);
         BroadCastLocalizedMessage(class'UTComp_Warmup_CountDown', iFinalCountDown);
+    }
     iFinalCountDown--;
 }
 
@@ -660,17 +691,18 @@ function bool NoTimeLeftCheck()
         SetClientTimer(0);
         return false;
     }
-    else if(iWarmupTimeRemaining>1)
-        SetClientTimer(iWarmupTimeRemaining+12);
-    else
-        SetClientTimer(0);
     Clients=GetNumClients();
     if( Clients > 0)
         iWarmupTimeRemaining--;
     else
         iWarmupTimeRemaining=iWarmuptime;
     if(iWarmupTimeRemaining <= 0)
-        return true;
+        return true; // BeginFinalCountdown sets the clock
+    // Seconds until the match starts: the remaining warmup ticks, then the
+    // BeginFinalCountdown tick and iCOUNTDOWNSECONDS countdown ticks. This used to be
+    // +12 before the decrement (two seconds too many) and 0 on the last tick, so the
+    // clock read ~13 when players were killed and then jumped to the "10" message.
+    SetClientTimer(iWarmupTimeRemaining+iCOUNTDOWNSECONDS+1);
     return false;
 }
 
@@ -694,8 +726,15 @@ function SetClientTimer(int iTime)
         if(BS_xPlayer(C)!=None)
             BS_xPlayer(C).SetClockTime(iTime);
     }
-    //Server Times
-    Deathmatch(Level.Game).RemainingTime = Deathmatch(Level.Game).Timelimit*60+1;
+    // Hold the match clock during warmup. It used to be held at +1, so DeathMatch.Timer's
+    // decrement landed on a whole minute every second and set GRI.RemainingMinute, which
+    // replicates: each client got it once after joining and its GRI.Timer showed the full
+    // match time (e.g. 20:00) until the next SetClockTime. The +5 headroom keeps the
+    // decrement off the minute even if DeathMatch.Timer fires twice between these calls,
+    // and clearing RemainingMinute here (it then never changes again until StartMatch)
+    // means nothing is sent.
+    Deathmatch(Level.Game).RemainingTime = Deathmatch(Level.Game).Timelimit*60+5;
+    Level.Game.GameReplicationInfo.RemainingMinute = 0;
 }
 
 function SetClientTimerOnly(int iTime)
@@ -759,13 +798,11 @@ function bool PlayerIsReady(Controller C)
 
 replication
 {
-    // bWarmupEnded belongs here alongside bInWarmup. The HUDs suppress their own countdown
-    // while either is set, so that the warmup's UTComp_Warmup_CountDown broadcasts are the
-    // only voice counting down -- but a client only ever saw the default False for this one,
-    // which made the bWarmupEnded half of that test dead on every server. It worked in
-    // standalone and nowhere else.
+    // bWarmupEnded is server-only. The HUD's CheckCountdown (_HudCommon.uci) used to test it,
+    // which silenced the stock "10..1" announcer for the whole match after warmup; it now
+    // tests bInWarmup instead.
     reliable if(Role==Role_Authority)
-        bInWarmup, bWarmupEnded;
+        bInWarmup;
 }
 
 defaultproperties

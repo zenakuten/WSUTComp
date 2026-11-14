@@ -76,8 +76,10 @@ simulated function Pong()
 
 simulated function Tick(float deltatime)
 {
-    // Only clients ping, so anything else stops ticking this
-    if(Level.NetMode!=NM_Client)
+    // Clients ping on every player's NewNet_PRI; the server only answers the owner's.
+    // Don't gate this on bNetOwner: limiting it to the local player's copy (2026-11-12)
+    // broke projectile prediction. Servers never ping, so they stop ticking this.
+    if(Level.NetMode != NM_Client)
     {
         Disable('Tick');
         return;

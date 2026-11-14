@@ -29,6 +29,11 @@ var rotator RandSeed[9];
 var int RandIndex;
 var float lastDT;
 
+// A NewNet shot the server's refire timer is holding back, see ServerStartFire
+var bool bNewNetDelayed;
+var byte DelayedMode;
+var float DelayStamp;
+
 
 replication
 {
@@ -44,6 +49,43 @@ function DisableNet()
     NewNet_FlakFire(FireMode[0]).PingDT = 0.00;
     NewNet_FlakAltFire(FireMode[1]).bUseEnhancedNetCode = false;
     NewNet_FlakAltFire(FireMode[1]).PingDT = 0.00;
+    ClearClientAim();
+}
+
+// Forgets the aim and position a client sent for a shot that hasn't fired
+function ClearClientAim()
+{
+    bNewNetDelayed = false;
+    NewNet_FlakFire(FireMode[0]).bUseReplicatedInfo = false;
+    NewNet_FlakFire(FireMode[0]).bUseReplicatedRot = false;
+    NewNet_FlakAltFire(FireMode[1]).bUseReplicatedInfo = false;
+    NewNet_FlakAltFire(FireMode[1]).bUseReplicatedRot = false;
+}
+
+// A weapon that changes hands must not fire its new owner's first shot from what
+// the last owner's client sent
+simulated function BringUp(optional Weapon PrevWeapon)
+{
+    if(Role == ROLE_Authority)
+        ClearClientAim();
+    Super.BringUp(PrevWeapon);
+}
+
+// The engine starts a held-back shot through here (AWeapon::TickAuthoritative) once
+// the refire timer allows. A NewNet shot keeps what its client sent, and its catch-up
+// grows by the time it waited, so it still starts from when the client fired.
+function ServerStartFire(byte Mode)
+{
+    Super.ServerStartFire(Mode);
+
+    if(bNewNetDelayed && Mode == DelayedMode && !FireMode[Mode].bServerDelayStartFire)
+    {
+        bNewNetDelayed = false;
+        if(NewNet_FlakFire(FireMode[Mode])!=None)
+            NewNet_FlakFire(FireMode[Mode]).PingDT = FMin(NewNet_FlakFire(FireMode[Mode]).PingDT + M.ClientTimeStamp - DelayStamp, MAX_PROJECTILE_FUDGE);
+        else if(NewNet_FlakAltFire(FireMode[Mode])!=None)
+            NewNet_FlakAltFire(FireMode[Mode]).PingDT = FMin(NewNet_FlakAltFire(FireMode[Mode]).PingDT + M.ClientTimeStamp - DelayStamp, MAX_PROJECTILE_FUDGE_ALT);
+    }
 }
 
 //// client only ////
@@ -158,50 +200,48 @@ function NewNet_ServerStartFire(byte Mode, byte ClientTimeStamp, float dt, Repli
         NewNet_FlakAltFire(FireMode[Mode]).bUseEnhancedNetCode = true;
     }
 
+    // Saved before the refire test, so a shot the server holds back keeps them too.
+    // The aim is always the client's; its eye position only when it is believable.
+    ClearClientAim();
+    if(NewNet_FlakFire(FireMode[Mode])!=None)
+    {
+        NewNet_FlakFire(FireMode[Mode]).SavedVec.X = V.X;
+        NewNet_FlakFire(FireMode[Mode]).SavedVec.Y = V.Y;
+        NewNet_FlakFire(FireMode[Mode]).SavedVec.Z = V.Z;
+        NewNet_FlakFire(FireMode[Mode]).SavedRot.Yaw = R.Yaw;
+        NewNet_FlakFire(FireMode[Mode]).SavedRot.Pitch = R.Pitch;
+        NewNet_FlakFire(FireMode[Mode]).bUseReplicatedInfo=M.IsReasonableFireStart(Pawn(Owner), NewNet_FlakFire(FireMode[Mode]).SavedVec);
+        NewNet_FlakFire(FireMode[Mode]).bUseReplicatedRot=true;
+    }
+    else if(NewNet_FlakAltFire(FireMode[Mode])!=None)
+    {
+        NewNet_FlakAltFire(FireMode[Mode]).SavedVec.X = V.X;
+        NewNet_FlakAltFire(FireMode[Mode]).SavedVec.Y = V.Y;
+        NewNet_FlakAltFire(FireMode[Mode]).SavedVec.Z = V.Z;
+        NewNet_FlakAltFire(FireMode[Mode]).SavedRot.Yaw = R.Yaw;
+        NewNet_FlakAltFire(FireMode[Mode]).SavedRot.Pitch = R.Pitch;
+        NewNet_FlakAltFire(FireMode[Mode]).bUseReplicatedInfo=M.IsReasonableFireStart(Pawn(Owner), NewNet_FlakAltFire(FireMode[Mode]).SavedVec);
+        NewNet_FlakAltFire(FireMode[Mode]).bUseReplicatedRot=true;
+    }
+
     if ( (FireMode[Mode].NextFireTime <= Level.TimeSeconds + FireMode[Mode].PreFireTime)
 		&& StartFire(Mode) )
     {
         FireMode[Mode].ServerStartFireTime = Level.TimeSeconds;
         FireMode[Mode].bServerDelayStartFire = false;
-
-        if(NewNet_FlakFire(FireMode[Mode])!=None)
-        {
-            NewNet_FlakFire(FireMode[Mode]).SavedVec.X = V.X;
-            NewNet_FlakFire(FireMode[Mode]).SavedVec.Y = V.Y;
-            NewNet_FlakFire(FireMode[Mode]).SavedVec.Z = V.Z;
-            NewNet_FlakFire(FireMode[Mode]).SavedRot.Yaw = R.Yaw;
-            NewNet_FlakFire(FireMode[Mode]).SavedRot.Pitch = R.Pitch;
-            NewNet_FlakFire(FireMode[Mode]).bUseReplicatedInfo=IsReasonable(NewNet_FlakFire(FireMode[Mode]).SavedVec);
-        }
-        else if(NewNet_FlakAltFire(FireMode[Mode])!=None)
-        {
-            NewNet_FlakAltFire(FireMode[Mode]).SavedVec.X = V.X;
-            NewNet_FlakAltFire(FireMode[Mode]).SavedVec.Y = V.Y;
-            NewNet_FlakAltFire(FireMode[Mode]).SavedVec.Z = V.Z;
-            NewNet_FlakAltFire(FireMode[Mode]).SavedRot.Yaw = R.Yaw;
-            NewNet_FlakAltFire(FireMode[Mode]).SavedRot.Pitch = R.Pitch;
-            NewNet_FlakAltFire(FireMode[Mode]).bUseReplicatedInfo=IsReasonable(NewNet_FlakAltFire(FireMode[Mode]).SavedVec);
-        }
     }
     else if ( FireMode[Mode].AllowFire() )
     {
         FireMode[Mode].bServerDelayStartFire = true;
+        bNewNetDelayed = true;
+        DelayedMode = Mode;
+        DelayStamp = M.ClientTimeStamp;
 	}
 	else
+	{
+		ClearClientAim();
 		ClientForceAmmoUpdate(Mode, AmmoAmount(Mode));
-}
-
-function bool IsReasonable(Vector V)
-{
-    local vector LocDiff;
-    local float clErr;
-
-    if(Owner == none || Pawn(Owner) == none)
-        return true;
-
-    LocDiff = V - (Pawn(Owner).Location + Pawn(Owner).EyePosition());
-    clErr = (LocDiff dot LocDiff);
-    return clErr < 1250.0;
+	}
 }
 
 function SendNewRandSeed()
@@ -254,6 +294,7 @@ function NewNet_OldServerStartFire(byte Mode, byte ClientTimeStamp, float dt)
         NewNet_FlakAltFire(FireMode[Mode]).bUseEnhancedNetCode = true;
     }
 
+    ClearClientAim();
     ServerStartFire(mode);
 }
 

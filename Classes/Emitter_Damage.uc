@@ -8,13 +8,25 @@ var TexRotator TexRot;
 var Material StextureFallBack;
 var Font DrawFont;
 
+// Set on the class default around ShowDamage's Spawn: the engine already calls
+// PostNetBeginPlay inside Spawn (before Damage is known), and building the texture
+// then and again afterwards allocated two and leaked the first.
+var bool bDeferInit;
+var bool bFontLoaded; // class default: DrawFont's default holds the loaded font
+
 static function ShowDamage( Actor Dest, Vector ShowLocation, int sDamage )
 {
     local Emitter_Damage P;
 
     if ( (sDamage == 0) || Dest == none ) return;
 
+    default.bDeferInit = true;
     P = Dest.spawn( class'Emitter_Damage',,, ShowLocation, rot(16384, 0, 0) );
+    default.bDeferInit = false;
+    if ( P == None )
+        return;
+
+    P.bDeferInit = false;
     P.Damage = sDamage;
 
     if ( Dest.Level.NetMode != NM_DedicatedServer)
@@ -88,7 +100,11 @@ simulated function PostNetBeginPlay()
 		LifeSpan = 0.2f;
 		return;
 	}
-	
+
+	// ShowDamage calls this itself once Damage is set
+	if ( bDeferInit )
+		return;
+
 	FontColor = ColorRamp(Damage);
 
 	STexture = ScriptedTexture(Level.ObjectPool.AllocateObject(class'ScriptedTexture'));
@@ -101,8 +117,15 @@ simulated function PostNetBeginPlay()
 	TexRot.Rotation.Yaw = 8191;
 	TexRot.UOffset = 32;
 	TexRot.VOffset = 32;
-	DrawFont = Font( DynamicLoadObject( "UT2003Fonts.FontEurostile14", class'Font') );
-	if ( DrawFont == None ) DrawFont=Default.DrawFont;
+	// Load the font once; later emitters get it from the class default.
+	if ( !default.bFontLoaded )
+	{
+		DrawFont = Font( DynamicLoadObject( "UT2003Fonts.FontEurostile14", class'Font') );
+		if ( DrawFont != None )
+			default.DrawFont = DrawFont;
+		default.bFontLoaded = true;
+	}
+	DrawFont = default.DrawFont;
 	Texture = TexRot;
 	Skins[0] = TexRot;
 	R.Yaw = Rand(65536);

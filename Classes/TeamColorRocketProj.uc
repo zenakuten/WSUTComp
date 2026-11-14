@@ -118,6 +118,21 @@ simulated function Tick(float DT)
     }
     super.Tick(DT);
     SetupColor();
+
+    // Nothing left to do on a client once colouring is settled (subclasses add their own work)
+    if(Level.NetMode == NM_Client && ClientTickDone())
+        Disable('Tick');
+}
+
+// True once this projectile's client Tick can no longer change anything.
+simulated function bool ClientTickDone()
+{
+    local UTComp_Settings Settings;
+
+    if(bColorSet)
+        return true;
+    Settings = class'TeamColorManager'.static.LocalSettings(Level);
+    return !class'TeamColorManager'.static.ColorsStillPossible(Level, Settings != None && Settings.bTeamColorRockets);
 }
 
 // copy from projectile -> hurt radius, return true if anybody killed

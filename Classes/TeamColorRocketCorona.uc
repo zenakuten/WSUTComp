@@ -13,9 +13,11 @@ var Material TeamColorMaterial;
 var bool bColorSet, bAlphaSet;
 
 // get replicated team number from owner projectile and set texture
+// (Disabled, with the Tick overrides that called it every frame, so the corona stops
+// ticking like the stock RocketCorona does.)
+/*
 function SetColors()
 {
-    /*
     local Color color;
     if(class'Misc_Player'.default.bTeamColorRockets && !bColorSet && Alpha != None)
     {
@@ -34,8 +36,8 @@ function SetColors()
             bColorSet=true;
         }
     }
-    */
 }
+*/
 
 /*
 simulated function PostNetBeginPlay()
@@ -61,30 +63,6 @@ simulated function PostNetBeginPlay()
     SetColors();
 }
 */
-
-simulated function Tick(float DT)
-{
-    super.Tick(DT);
-    SetColors();
-}
-
-auto state Start
-{
-    simulated function Tick(float DT)
-    {
-        super.Tick(DT);
-        SetColors();
-    }
-}
-
-state End
-{
-    simulated function Tick(float DT)
-    {
-        super.Tick(DT);
-        SetColors();
-    }
-}
 
 /*
 simulated function Destroyed()

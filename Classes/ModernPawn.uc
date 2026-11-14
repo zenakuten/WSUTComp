@@ -5,7 +5,9 @@ simulated function Tick(float DeltaTime)
 {
     Super.Tick(DeltaTime);
 
-    if (Level.NetMode != NM_DedicatedServer && PlayerController(Controller) == None)
+    // Not for corpses: they don't need the animation updates, and it kept off-screen
+    // ragdolls alive for the full 8 s below instead of the stock first-timer cleanup.
+    if (!bPlayedDeath && Level.NetMode != NM_DedicatedServer && PlayerController(Controller) == None)
     {
         // Trick the client that we're always on screen so it does not stop
         // updating animations.

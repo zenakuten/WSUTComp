@@ -15,12 +15,32 @@ var float RowScale;
 var localized string  fraglimitteam ;
 var int TmpFontSize ;
 var float tmp1,tmp2,tmp3;
-var UTComp_Warmup uWarmup;
+// Fonts above (and TinyFont) were picked for this ClipX; see PrepareFrame.
+var transient float FontCacheClipX;
+var font TinyFont;
 var config bool bEnableColoredNamesOnScoreboard;
 var config bool bDrawStats;
 var config bool bDrawPickups;
 var config bool bOverrideDisplayStats;
 var config Color ScoreboardDefaultColor;
+
+// Fonts only depend on the resolution, so pick them when ClipX changes instead
+// of every frame (each pick loops over the HUD's font size table).
+simulated function PrepareFrame(Canvas C)
+{
+    if (C.ClipX != FontCacheClipX)
+    {
+        FontCacheClipX   = C.ClipX;
+        MainFont         = HUDClass.static.GetMediumFontFor(C);
+        NotReducedFont   = GetSmallerFontFor(C, TmpFontSize);
+        SortaReducedFont = GetSmallerFontFor(C, 2);
+        ReducedFont      = GetSmallerFontFor(C, 3);
+        SmallerFont      = GetSmallerFontFor(C, 4);
+        SoTiny           = GetSmallerFontFor(C, 5);
+        TinyFont         = GetSmallerFontFor(C, 6);
+    }
+    Super.PrepareFrame(C);
+}
 
 function DrawTitle2(Canvas Canvas)
 {
@@ -28,7 +48,7 @@ function DrawTitle2(Canvas Canvas)
     local float xl,yl,Full, Height, Top, MedH, SmallH;
     local float TitleXL,ScoreInfoXL;
 
-    Canvas.Font = HUDClass.static.GetMediumFontFor(Canvas);
+    Canvas.Font = MainFont; // medium font, cached by PrepareFrame
     Canvas.StrLen("W",xl,MedH);
     Height = MedH;
     Canvas.Font = HUDClass.static.GetConsoleFont(Canvas);
@@ -42,9 +62,6 @@ function DrawTitle2(Canvas Canvas)
     TitleString     = GetTitleString();
     ScoreInfoString = GetDefaultScoreInfoString();
 
-    Canvas.StrLen(TitleString, TitleXL, YL);
-    Canvas.DrawColor = HUDClass.default.GoldColor;
-
     if ( UnrealPlayer(Owner).bDisplayLoser )
         ScoreInfoString = class'HUDBase'.default.YouveLostTheMatch;
     else if ( UnrealPlayer(Owner).bDisplayWinner )
@@ -54,7 +71,6 @@ function DrawTitle2(Canvas Canvas)
         RestartString = GetRestartString();
         ScoreInfoString = RestartString;
     }
-    Canvas.StrLen(ScoreInfoString,ScoreInfoXL,YL);
 
     Canvas.Font = NotReducedFont;
     Canvas.SetDrawColor(255,150,0,255);
@@ -63,7 +79,7 @@ function DrawTitle2(Canvas Canvas)
     Canvas.DrawText(TitleString);
 
 
-    Canvas.Font = HUDClass.static.GetMediumFontFor(Canvas);
+    Canvas.Font = MainFont;
     Canvas.StrLen(ScoreInfoString,ScoreInfoXL,YL);
     Canvas.SetPos( (Canvas.ClipX/2) - (ScoreInfoXL/2), Top + (Full/2) - (YL/2));
     Canvas.DrawText(ScoreInfoString);
@@ -205,24 +221,16 @@ simulated event UpdateScoreBoard(Canvas C)
     local int i, BluePlayerCount, RedPlayerCount, RedOwnerOffset, BlueOwnerOffset, minTiles, numspecs, j, mRows;
     local float MyScale;
     local bool bOwnerDrawn;
-        // Fonts
-    MainFont     = HUDClass.static.GetMediumFontFor(C);
-    NotReducedFont  = GetSmallerFontFor (C,TmpFontSize);
-    SortaReducedFont = GetSmallerFontFor (C,2);
-    ReducedFont  = GetSmallerFontFor (C,3);
-    SmallerFont  = GetSmallerFontFor (C,4);
-    SoTiny       = GetSmallerFontFor (C,5);
-    
+
+    // Fonts, RepInfo, warmup and emoticon lookups, once per frame.
+    PrepareFrame(C);
+
     minTiles=MAXPLAYERS; // was maxtiles, not sure why we need this... pooty.
-   
+
     if(Owner!=None)
        OwnerPRI = PlayerController(Owner).PlayerReplicationInfo;
     RedOwnerOffset = -1;
     BlueOwnerOffset = -1;
-
-    if (RepInfo==None)
-        foreach DynamicActors(Class'UTComp_ServerReplicationInfo', RepInfo)
-            break;
 
     if(!GRI.bTeamGame && GRI.PRIArray.Length>10)
     {
@@ -413,7 +421,7 @@ simulated function string GetAverageTeamPing(byte team)
 simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, float XOffset, float YOffset, float Scale)
 {
     local float tmpEff;
-    local int i, otherteam;
+    local int otherteam;
     local PlayerReplicationInfo OwnerPRI;
     local UTComp_PRI uPRI;
     local string AdminString;
@@ -457,13 +465,11 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
     }
     C.ClipX=OldClipX;
 
-    for(i=0;i<MAXPLAYERS;i++)
-    {
-        if( PRI == OwnerPRI )
-            C.SetDrawColor(255,255,0,255);
-        else
-            C.SetDrawColor(255,255,255,255);
-    }
+    // Was a MAXPLAYERS loop repeating this same SetDrawColor 32 times per row.
+    if( PRI == OwnerPRI )
+        C.SetDrawColor(255,255,0,255);
+    else
+        C.SetDrawColor(255,255,255,255);
 
     // DrawScore
     if(PRI.Score>99)
@@ -541,9 +547,7 @@ simulated function DrawPlayerInformation(Canvas C, PlayerReplicationInfo PRI, fl
 
     C.SetPos(C.ClipX*0.108+XOffset, (C.ClipY*(StartY+0.030*RowScale))+YOffset);
 
-    if(uWarmup==None)
-       foreach DynamicActors(class'UTComp_Warmup', uWarmup)
-           break;
+    // uWarmup is cached by PrepareFrame (None when warmup is disabled).
     if(uWarmup!=None && uWarmup.bInWarmup)
     {
         if(uPRI != None)

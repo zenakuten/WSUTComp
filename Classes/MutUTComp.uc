@@ -779,6 +779,21 @@ static function bool IsPredicted(actor A)
    return false;
 }
 
+// Whether a NewNet shot may start from the eye position V its client sent. The
+// client's eye is smoothed (steps, crouching, view bob) and the server's isn't, so
+// the height is judged against the range a smoothed eye can be in.
+final function bool IsReasonableFireStart(Pawn P, vector V)
+{
+    local vector D;
+
+    if(P == None)
+        return true;
+
+    D = V - P.Location;
+    D.Z -= P.BaseEyeHeight;
+    return D.X*D.X + D.Y*D.Y < 1250.0 && Abs(D.Z) < 50.0;
+}
+
 
 function SetupTeamOverlay()
 {
@@ -957,16 +972,22 @@ simulated function Tick(float DeltaTime)
     if( FPM==None && Level.NetMode == NM_Client)
         FPM = Spawn(Class'FakeProjectileManager');
 
-    if(bHasInteraction)
-        return;
-    PC=Level.GetLocalPlayerController();
-
-    if(PC!=None && BS_xPlayer(PC) != None)
+    if(!bHasInteraction)
     {
-        BS_xPlayer(PC).Overlay = UTComp_Overlay(PC.Player.InteractionMaster.AddInteraction(string(class'UTComp_Overlay'), PC.Player));
-        bHasInteraction=True;
-        class'DamTypeLinkShaft'.default.bSkeletize=false;
+        PC=Level.GetLocalPlayerController();
+
+        if(PC!=None && BS_xPlayer(PC) != None)
+        {
+            BS_xPlayer(PC).Overlay = UTComp_Overlay(PC.Player.InteractionMaster.AddInteraction(string(class'UTComp_Overlay'), PC.Player));
+            bHasInteraction=True;
+            class'DamTypeLinkShaft'.default.bSkeletize=false;
+        }
     }
+
+    // A network client has nothing left to do here once both are set up (standalone
+    // keeps ticking for the end-of-game sound above).
+    if(bHasInteraction && FPM != None && Level.NetMode == NM_Client)
+        Disable('Tick');
 }
 
 simulated function float GetStamp(int stamp)
@@ -2232,10 +2253,10 @@ function InitStatsOverride()
 
 defaultproperties
 {
-     FriendlyName="Wicked Sick UTComp"
+     FriendlyName="Wicked Sick UTComp V33"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V32"
+     FriendlyVersionNumber="V33"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True
