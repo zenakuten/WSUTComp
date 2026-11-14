@@ -11,6 +11,7 @@ Release Notes
 V33
 - Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
 - Add greentext support (">" at beginning of a message)
+- Enable Spectate/Join button between rounds (Assault/Onslaught)
 - Add workaround for 3374 voice channel switching issue
   - Relevant issue: https://github.com/OldUnreal/UT2004Patches/issues/499
 - Client-side optimizations

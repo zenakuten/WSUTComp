@@ -490,17 +490,20 @@ function SetRadarVehicleDataFallback(class<Vehicle> VehicleClass, out color Rada
     RadarColour=RC;
 }
 
+// Runs every frame (HUD.PostRender). The warmup clock counts down to the match start,
+// so the stock announcer would call out "20 seconds", "10".."1" etc. over the warmup's
+// own UTComp_Warmup_CountDown voice. Stay silent for all of warmup, but keep
+// OldRemainingTime in step: the client can see bInWarmup go False while the clock
+// still reads 1 (BS_xPlayer.NotifyEndWarmup not here yet), and a stale
+// OldRemainingTime would then announce an extra "one".
 function CheckCountdown(GameReplicationInfo GRI)
 {
-    if(GRI != None 
-        && GRI.RemainingTime != 0 
-        && GRI.RemainingTime <= 10
-        && BS_xPlayer(PlayerOwner) != None 
-        && BS_xPlayer(PlayerOwner).uWarmup!=None
-        && BS_xPlayer(PlayerOwner).uWarmup.bWarmupEnded)
+    local BS_xPlayer PC;
+
+    PC = BS_xPlayer(PlayerOwner);
+    if(GRI != None && PC != None && PC.uWarmup != None && PC.uWarmup.bInWarmup)
     {
-        // fix the extra "one" at end of warmup
-        // the warmup countdown already does this
+        OldRemainingTime = GRI.RemainingTime;
         return;
     }
 
