@@ -26,23 +26,34 @@ simulated function PostNetBeginPlay()
     if(Level.NetMode == NM_DedicatedServer)
         return;
 
-    Settings = BS_xPlayer(Level.GetLocalPlayerController()).Settings;
-
-    if(Settings.bTeamColorShock && CanUseColors())
-    {
-        Alpha = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
-        Alpha.Material = TeamColorMaterial;
-        Alpha.AlphaBlend = true;
-        Alpha.RenderTwoSided = true;
-        Alpha.Color.A = 255;
-        Skins[0] = Alpha;
-        bAlphaSet=true;
-    }
+    SetColors();
 }
 
 function SetColors()
 {
     local Color color;
+
+    if(Level.NetMode == NM_DedicatedServer || bDeleteMe || bColorSet)
+        return;
+    if(Settings == None)
+        Settings = class'UTComp_Settings'.default.instance;
+    if(Settings == None)
+        return;
+    if(!Settings.bTeamColorShock || !CanUseColors() || (TeamNum != 0 && TeamNum != 1))
+        return;
+
+    if(Alpha == None)
+    {
+        Alpha = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
+        if(Alpha == None)
+            return;
+        Alpha.Material = TeamColorMaterial;
+        Alpha.AlphaBlend = true;
+        Alpha.RenderTwoSided = true;
+        Alpha.Color.A = 255;
+        Skins[0] = Alpha;
+        bAlphaSet = true;
+    }
 
     if(TeamNum == 255)
         return;
@@ -82,8 +93,10 @@ simulated function Destroyed()
 {
 	if ( bAlphaSet )
 	{
-		Level.ObjectPool.FreeObject(Skins[0]);
 		Skins[0] = None;
+		Level.ObjectPool.FreeObject(Alpha);
+		Alpha = None;
+		bAlphaSet = false;
 	}
 
 	super.Destroyed();

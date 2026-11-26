@@ -755,7 +755,7 @@ function Actor TimeTravelTrace(Actor Tracer, Pawn Shooter, out vector HitLocatio
 
     foreach Tracer.TraceActors(class'PawnCollisionCopy', C, CopyHitLocation, CopyHitNormal, NewEnd, Start)
     {
-        if(C.CopiedPawn != None && C.CopiedPawn != Shooter)
+        if(C != None && C.CopiedPawn != None && C.CopiedPawn != Shooter)
         {
             HitCopy = C;
             break;
@@ -2253,10 +2253,10 @@ function InitStatsOverride()
 
 defaultproperties
 {
-     FriendlyName="Wicked Sick UTComp V33"
+     FriendlyName="Wicked Sick UTComp V34"
      FriendlyVersionPrefix="UTComp Version"
      FriendlyVersionName="Wicked Sick"
-     FriendlyVersionNumber="V33"
+     FriendlyVersionNumber="V34"
      Description="A mutator for warmup, brightskins, hitsounds, enhanced netcode, adjustable player scoring and various other features."
      bNetTemporary=True
      bAlwaysRelevant=True

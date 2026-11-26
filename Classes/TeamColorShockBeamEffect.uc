@@ -31,22 +31,6 @@ simulated function PostNetBeginPlay()
     if(Level.NetMode == NM_DedicatedServer)
         return;
 
-    Settings = BS_xPlayer(Level.GetLocalPlayerController()).Settings;
-
-    if(Settings.bTeamColorShock)
-    {
-        if(CanUseColors())
-        {
-            Alpha = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
-            Alpha.Material = TeamColorMaterial;
-            Alpha.AlphaBlend = true;
-            Alpha.RenderTwoSided = true;
-            Alpha.Color.A = 255;
-            Skins[0] = Alpha;
-            bAlphaSet=true;
-        }
-    }
-
     SetColors();
 }
 
@@ -54,8 +38,10 @@ simulated function Destroyed()
 {
 	if ( bAlphaSet )
 	{
-		Level.ObjectPool.FreeObject(Skins[0]);
 		Skins[0] = None;
+		Level.ObjectPool.FreeObject(Alpha);
+		Alpha = None;
+		bAlphaSet = false;
 	}
 
 	super.Destroyed();
@@ -66,8 +52,13 @@ simulated function SetColors()
 {
     local Color color;
 
-    if(Level.NetMode != NM_DedicatedServer)
+    if(Level.NetMode != NM_DedicatedServer && !bDeleteMe)
     {
+        if(Settings == None)
+            Settings = class'UTComp_Settings'.default.instance;
+        if(Settings == None)
+            return;
+
         if(Settings.bTeamColorShock && !bColorSet)
         {
             if(CanUseColors())
@@ -75,6 +66,18 @@ simulated function SetColors()
                 color = class'TeamColorManager'.static.GetColor(TeamNum, Level.GetLocalPlayerController());
                 if(TeamNum == 0 || TeamNum == 1)
                 {
+                    if(Alpha == None)
+                    {
+                        Alpha = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
+                        if(Alpha == None)
+                            return;
+                        Alpha.Material = TeamColorMaterial;
+                        Alpha.AlphaBlend = true;
+                        Alpha.RenderTwoSided = true;
+                        Alpha.Color.A = 255;
+                        Skins[0] = Alpha;
+                        bAlphaSet = true;
+                    }
                     Alpha.Color.R = color.R;
                     Alpha.Color.G = color.G;
                     Alpha.Color.B = color.B;

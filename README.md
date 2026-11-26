@@ -8,6 +8,12 @@ which was in turn based on [UTComp 1.8c](https://github.com/Deaod/UTComp)
 
 Release Notes
 
+V34
+- fix missing team-color material initialization for shock beams, combos, bio and flak
+- fix accessed none warning spam in lag-compensated collision copy traces
+- fix fos client owner replication so identity reporting can initialize
+- add standalone fos connection and disconnection audit logs
+
 V33
 - Fix spectators seeing/hearing incorrect damage values while observing someone shoot a power node
 - Add greentext support (">" at beginning of a message)

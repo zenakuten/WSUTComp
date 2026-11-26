@@ -57,19 +57,6 @@ simulated function PostNetBeginPlay()
     if(Level.NetMode == NM_DedicatedServer)
         return;
 
-    Settings = BS_xPlayer(Level.GetLocalPlayerController()).Settings;
-
-    if(Settings.bTeamColorBio && CanUseColors())
-    {
-        Alpha = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
-        Alpha.Material = TeamColorMaterial;
-        Alpha.AlphaBlend = true;
-        Alpha.RenderTwoSided = true;
-        Alpha.Color.A = 255;
-        Skins[0] = Alpha;
-        bAlphaSet=true;
-    }
-
     SetupTeam();
     SetColors();
 }
@@ -79,8 +66,10 @@ simulated function Destroyed()
     local xEmitter emitter;
 	if ( bAlphaSet )
 	{
-		Level.ObjectPool.FreeObject(Skins[0]);
 		Skins[0] = None;
+		Level.ObjectPool.FreeObject(Alpha);
+		Alpha = None;
+		bAlphaSet = false;
 	}
 
     if ( !bNoFX && EffectIsRelevant(Location,false) )
@@ -104,6 +93,28 @@ simulated function Destroyed()
 simulated function SetColors()
 {
     local Color color;
+
+    if(Level.NetMode == NM_DedicatedServer || bDeleteMe || bColorSet)
+        return;
+    if(Settings == None)
+        Settings = class'UTComp_Settings'.default.instance;
+    if(Settings == None)
+        return;
+    if(!Settings.bTeamColorBio || !CanUseColors() || (TeamNum != 0 && TeamNum != 1))
+        return;
+
+    if(Alpha == None)
+    {
+        Alpha = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
+        if(Alpha == None)
+            return;
+        Alpha.Material = TeamColorMaterial;
+        Alpha.AlphaBlend = true;
+        Alpha.RenderTwoSided = true;
+        Alpha.Color.A = 255;
+        Skins[0] = Alpha;
+        bAlphaSet = true;
+    }
     if(Level.NetMode != NM_DedicatedServer)
     {
         if(Settings.bTeamColorBio && !bColorSet)
@@ -147,8 +158,8 @@ simulated function Tick(float DT)
 // True once this glob's client Tick can no longer change anything.
 simulated function bool ClientTickDone()
 {
-    return bColorSet
-        || !class'TeamColorManager'.static.ColorsStillPossible(Level, Settings != None && Settings.bTeamColorBio);
+    return bColorSet || (Settings != None
+        && !class'TeamColorManager'.static.ColorsStillPossible(Level, Settings.bTeamColorBio));
 }
 
 function BlowUp(Vector HitLocation)
